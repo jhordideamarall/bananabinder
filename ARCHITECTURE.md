@@ -71,9 +71,10 @@ bananabinder/
 1. Client kirim `cart_items[]` + `coupon_code` + `address_id` + `courier_code`.
 2. API validasi: stok tersedia, kupon valid (kuota, min purchase, expiry).
 3. API hitung ongkir via RajaOngkir.
-4. API lock harga → simpan ke `orders` + `order_items` (snapshot harga).
-5. API buat invoice Xendit → return `payment_url`.
-6. User bayar → Xendit kirim webhook → API verifikasi signature → update status `paid` → kurangi stok (atomic RPC).
+4. Jika kupon `discount_type = free_shipping` → ongkir di-set 0 (ditanggung owner).
+5. API lock harga → simpan ke `orders` + `order_items` (snapshot harga).
+6. API buat invoice Xendit → return `payment_url`.
+7. User bayar → Xendit kirim webhook → API verifikasi signature → update status `paid` → kurangi stok (atomic RPC).
 
 ### 4.3 Abandoned Cart Recovery
 - Cron job (setiap 6 jam) cek `carts` dengan `updated_at` > 24 jam yang belum checkout.
@@ -108,7 +109,7 @@ id (uuid, PK), product_id (FK), url (text), alt (text), sort_order (int)
 ### 5.3 Marketing
 ```sql
 -- coupons
-id (uuid, PK), code (text, unique), discount_type (enum: percentage/fixed), discount_value (int), min_purchase_amount (int), max_discount_amount (int, nullable), usage_limit (int), used_count (int, default 0), valid_from (timestamptz), valid_until (timestamptz), is_active (boolean)
+id (uuid, PK), code (text, unique), discount_type (enum: percentage/fixed/free_shipping), discount_value (int), min_purchase_amount (int), max_discount_amount (int, nullable), usage_limit (int), used_count (int, default 0), valid_from (timestamptz), valid_until (timestamptz), is_active (boolean)
 
 -- flash_sales
 id (uuid, PK), name (text), start_time (timestamptz), end_time (timestamptz), is_active (boolean)
@@ -120,10 +121,13 @@ id (uuid, PK), flash_sale_id (FK), product_id (FK), promo_price (int), stock_all
 ### 5.4 Transaksi
 ```sql
 -- orders
-id (uuid, PK), user_id (FK), xendit_invoice_id (text), xendit_payment_url (text), status (enum: pending/paid/processing/shipped/delivered/cancelled), subtotal (int), shipping_cost (int), coupon_id (FK, nullable), discount_amount (int, default 0), total_amount (int), shipping_address (jsonb), courier_details (jsonb), tracking_number (text, nullable), paid_at (timestamptz), shipped_at (timestamptz), created_at, updated_at
+id (uuid, PK), user_id (FK), xendit_invoice_id (text), xendit_payment_url (text), status (enum: pending/paid/processing/shipped/delivered/cancelled), refund_status (enum: none/refund_pending/refunded, default 'none'), subtotal (int), shipping_cost (int), coupon_id (FK, nullable), discount_amount (int, default 0), total_amount (int), shipping_address (jsonb), courier_details (jsonb), tracking_number (text, nullable), paid_at (timestamptz), shipped_at (timestamptz), cancelled_at (timestamptz), cancel_reason (text), created_at, updated_at
 
 -- order_items
 id (uuid, PK), order_id (FK), variant_id (FK), product_name (text), variant_label (text), quantity (int), price_at_time (int)
+
+-- refunds
+id (uuid, PK), order_id (FK → orders), amount (int), method (text), status (enum: pending/processed/failed), processed_by (FK → profiles, nullable), notes (text), created_at, processed_at (timestamptz)
 ```
 
 ### 5.5 Keranjang

@@ -29,6 +29,7 @@ Membangun platform e-commerce yang aman, cepat, dan scalable untuk brand **Banan
 | Ongkir (RajaOngkir Pro) | Perhitungan ongkir akurat hingga kecamatan. Multi-kurir. |
 | Payment (Xendit) | VA, E-Wallet, QRIS, Kartu Kredit. Otomatis via webhook. |
 | Tracking Pesanan | Status real-time: pending → paid → processing → shipped → delivered. |
+| Batalkan Pesanan | User bisa batalkan pesanan selama status masih `pending` atau `paid`. Refund otomatis. |
 | Multi-Alamat | User bisa simpan beberapa alamat pengiriman. |
 
 ### 4.2 Admin
@@ -37,7 +38,7 @@ Membangun platform e-commerce yang aman, cepat, dan scalable untuk brand **Banan
 |-------|-----------|
 | Dashboard Analytics | Penjualan, konversi, produk terlaris, alert stok menipis. |
 | Manajemen Produk | CRUD produk + multi-varian (ukuran ring, warna cover, jenis kertas, jumlah lembar). Multi-gambar per produk. |
-| Kupon | Buat kode diskon (% atau nominal), kuota, tanggal kadaluarsa. |
+| Kupon | Buat kode diskon (% atau nominal atau gratis ongkir), kuota, tanggal kadaluarsa. Admin bebas set jenis diskon. |
 | Flash Sale | Atur periode + harga promo untuk produk tertentu. |
 | Abandoned Cart | Lihat cart yang ditinggalkan, kirim notifikasi pengingat (WA/email). |
 | Fulfillment | Proses pesanan, cetak label, input resi. |
@@ -46,8 +47,13 @@ Membangun platform e-commerce yang aman, cepat, dan scalable untuk brand **Banan
 ## 5. Order Status Flow
 ```
 pending → paid → processing → shipped → delivered
-                                      → cancelled (dari pending/paid)
+   ↓        ↓
+cancelled  cancelled → refund_pending → refunded
 ```
+- User bisa cancel saat `pending` (belum bayar) → langsung cancelled.
+- User bisa cancel saat `paid` (sudah bayar, dalam 24 jam) → status jadi `cancelled`, trigger refund.
+- Lewat 24 jam setelah bayar → tidak bisa cancel/refund.
+- Setelah status `processing`, pembatalan tidak bisa dilakukan oleh user (harus hubungi admin).
 
 ## 6. Non-Functional Requirements
 - **Scalability:** Serverless architecture (Vercel + Supabase). Handle traffic spike saat flash sale.

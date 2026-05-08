@@ -89,6 +89,7 @@ packages/
 
 ## UI & Design Standards
 
+- **Mobile First & Native Feel**: Semua halaman WAJIB didesain mobile-first. Harus terasa native di Safari iOS, Chrome Android, dan Chrome iOS. Gunakan touch-friendly sizing (min 44px tap targets), smooth scrolling, no hover-only interactions, dan proper viewport handling.
 - **Brand Colors**: Biru lembut (`#7EC8E3`), Pink (`#F2A7C3`), Kuning lembut (`#F9E79F`)
 - **Font**: Inter (heading bold, body regular)
 - **Component Library**: Shadcn UI + custom theming
