@@ -163,6 +163,13 @@ id (uuid, PK), cart_id (FK), variant_id (FK), quantity (int)
 - **Webhook Verification:** Validasi `x-callback-token` dari Xendit sebelum proses.
 - **OTP Security:** Hash OTP, expiry 5 menit, max 3 attempts, rate limit per nomor.
 - **Input Validation:** Zod schema di semua API routes.
+- **DDoS & Rate Limiting:**
+  - Infrastructure: Vercel Edge Network (auto DDoS mitigation).
+  - Application: Upstash Redis rate limiter per endpoint.
+  - `/api/auth/otp/request` → max 3 req/nomor/15 menit.
+  - `/api/checkout` → max 5 req/user/jam.
+  - `/api/shipping/cost` → cached per kecamatan + max 10 req/user/menit.
+  - `/api/webhooks/xendit` → signature reject = instant 401, no processing.
 
 ## 8. Turborepo Pipeline
 

@@ -104,6 +104,8 @@ Turborepo Monorepo
 | OTP Security | SHA-256 hash, 5min TTL, max 3 attempts, rate limiting |
 | Input Validation | Zod schemas on every API route |
 | Zero `any` Policy | Strict TypeScript — no implicit or explicit `any` |
+| DDoS Protection | Vercel Edge Network auto-mitigation + Upstash Redis rate limiter |
+| Rate Limiting | Per-endpoint throttling (OTP: 3/15min, Checkout: 5/hr, Shipping: 10/min) |
 
 ---
 
