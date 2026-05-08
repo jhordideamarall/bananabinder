@@ -1,0 +1,7 @@
+{
+  "extends": "@bananasbindery/tsconfig/library.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["*.ts"]
+}
