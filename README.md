@@ -157,22 +157,6 @@ pnpm build
 
 ---
 
-## Project Status
-
-| Phase | Status |
-|-------|--------|
-| 1. Project Setup (Turborepo) | ✅ Complete |
-| 2. Database & Auth | 🔲 Schema ready, pending Supabase project |
-| 3. Storefront UI | 🔲 Pending |
-| 4. Cart & Checkout | 🔲 Pending |
-| 5. Marketing Engine | 🔲 Pending |
-| 6. Admin Dashboard | 🔲 Pending |
-| 7. SEO & AI Visibility | 🔲 Pending |
-| 8. Testing & QA | 🔲 Pending |
-| 9. Production Deploy | 🔲 Pending |
-
----
-
 ## License
 
 MIT License © 2026 [Jhordi Deamarall](https://github.com/jhordideamarall)
