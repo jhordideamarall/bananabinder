@@ -27,14 +27,20 @@ export const useCart = create<CartStore>()(
     (set, get) => ({
       items: [],
       addItem: async (item) => {
-        const existing = get().items.find((i) => i.variantId === item.variantId);
-        const newQuantity = existing ? existing.quantity + item.quantity : item.quantity;
+        const existing = get().items.find(
+          (i) => i.variantId === item.variantId
+        );
+        const newQuantity = existing
+          ? existing.quantity + item.quantity
+          : item.quantity;
 
         // Optimistic UI update
         if (existing) {
           set({
             items: get().items.map((i) =>
-              i.variantId === item.variantId ? { ...i, quantity: newQuantity } : i
+              i.variantId === item.variantId
+                ? { ...i, quantity: newQuantity }
+                : i
             ),
           });
         } else {
@@ -45,7 +51,10 @@ export const useCart = create<CartStore>()(
         try {
           await fetch("/api/cart", {
             method: "POST",
-            body: JSON.stringify({ variant_id: item.variantId, quantity: newQuantity }),
+            body: JSON.stringify({
+              variant_id: item.variantId,
+              quantity: newQuantity,
+            }),
             headers: { "Content-Type": "application/json" },
           });
         } catch (e) {
@@ -107,7 +116,8 @@ export const useCart = create<CartStore>()(
               productId: item.variant.product.id,
               name: item.variant.product.name,
               image: item.variant.product.productImages[0]?.url || "",
-              price: item.variant.price_override || item.variant.product.base_price,
+              price:
+                item.variant.price_override || item.variant.product.base_price,
               quantity: item.quantity,
               variantLabel: `${item.variant.cover_color} - ${item.variant.ring_size}`,
             }));
@@ -117,8 +127,10 @@ export const useCart = create<CartStore>()(
           console.error("Failed to sync cart with server", e);
         }
       },
-      totalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
-      totalPrice: () => get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+      totalItems: () =>
+        get().items.reduce((acc, item) => acc + item.quantity, 0),
+      totalPrice: () =>
+        get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
     }),
     {
       name: "bananasbindery-cart",

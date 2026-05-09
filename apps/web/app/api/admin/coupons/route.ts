@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
-import { 
-  getAdminCoupons, 
-  createAdminCoupon, 
-  updateAdminCoupon, 
-  deleteAdminCoupon 
+import {
+  getAdminCoupons,
+  createAdminCoupon,
+  updateAdminCoupon,
+  deleteAdminCoupon,
 } from "@bananasbindery/db";
 
 export async function GET() {
@@ -19,7 +19,10 @@ export async function GET() {
     const data = await getAdminCoupons(db);
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -34,7 +37,10 @@ export async function POST(req: Request) {
     const data = await createAdminCoupon(db, body);
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -49,7 +55,10 @@ export async function PATCH(req: Request) {
     const data = await updateAdminCoupon(db, id, updates);
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -68,6 +77,9 @@ export async function DELETE(req: Request) {
     const result = await deleteAdminCoupon(db, id);
     return NextResponse.json(result);
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

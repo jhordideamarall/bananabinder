@@ -20,7 +20,9 @@ export const profiles = pgTable("profiles", {
 
 export const addresses = pgTable("addresses", {
   id: uuid("id").defaultRandom().primaryKey(),
-  user_id: uuid("user_id").references(() => profiles.id).notNull(),
+  user_id: uuid("user_id")
+    .references(() => profiles.id)
+    .notNull(),
   label: text("label"), // Rumah, Kantor, dll
   receiver_name: text("receiver_name").notNull(),
   phone: text("phone").notNull(),
@@ -51,7 +53,9 @@ export const products = pgTable("products", {
 
 export const productVariants = pgTable("product_variants", {
   id: uuid("id").defaultRandom().primaryKey(),
-  product_id: uuid("product_id").references(() => products.id).notNull(),
+  product_id: uuid("product_id")
+    .references(() => products.id)
+    .notNull(),
   ring_size: text("ring_size"), // A5 (20 ring), B5 (26 ring)
   ring_count: integer("ring_count"),
   cover_color: text("cover_color"),
@@ -65,7 +69,9 @@ export const productVariants = pgTable("product_variants", {
 
 export const productImages = pgTable("product_images", {
   id: uuid("id").defaultRandom().primaryKey(),
-  product_id: uuid("product_id").references(() => products.id).notNull(),
+  product_id: uuid("product_id")
+    .references(() => products.id)
+    .notNull(),
   url: text("url").notNull(),
   alt: text("alt"),
   sort_order: integer("sort_order").default(0),
@@ -98,8 +104,12 @@ export const flashSales = pgTable("flash_sales", {
 
 export const flashSaleItems = pgTable("flash_sale_items", {
   id: uuid("id").defaultRandom().primaryKey(),
-  flash_sale_id: uuid("flash_sale_id").references(() => flashSales.id).notNull(),
-  variant_id: uuid("variant_id").references(() => productVariants.id).notNull(),
+  flash_sale_id: uuid("flash_sale_id")
+    .references(() => flashSales.id)
+    .notNull(),
+  variant_id: uuid("variant_id")
+    .references(() => productVariants.id)
+    .notNull(),
   discount_price: integer("discount_price").notNull(),
   stock_limit: integer("stock_limit").notNull(),
   sold_count: integer("sold_count").default(0),
@@ -107,7 +117,9 @@ export const flashSaleItems = pgTable("flash_sale_items", {
 
 export const orders = pgTable("orders", {
   id: uuid("id").defaultRandom().primaryKey(),
-  user_id: uuid("user_id").references(() => profiles.id).notNull(),
+  user_id: uuid("user_id")
+    .references(() => profiles.id)
+    .notNull(),
   status: text("status").default("pending").notNull(), // pending, processing, shipped, completed, cancelled
   subtotal: integer("subtotal").notNull(),
   shipping_cost: integer("shipping_cost").notNull(),
@@ -134,7 +146,9 @@ export const orders = pgTable("orders", {
 
 export const refunds = pgTable("refunds", {
   id: uuid("id").defaultRandom().primaryKey(),
-  order_id: uuid("order_id").references(() => orders.id).notNull(),
+  order_id: uuid("order_id")
+    .references(() => orders.id)
+    .notNull(),
   amount: integer("amount").notNull(),
   xendit_refund_id: text("xendit_refund_id"),
   status: text("status").default("pending").notNull(), // pending, completed, failed
@@ -146,8 +160,12 @@ export const refunds = pgTable("refunds", {
 
 export const orderItems = pgTable("order_items", {
   id: uuid("id").defaultRandom().primaryKey(),
-  order_id: uuid("order_id").references(() => orders.id).notNull(),
-  variant_id: uuid("variant_id").references(() => productVariants.id).notNull(),
+  order_id: uuid("order_id")
+    .references(() => orders.id)
+    .notNull(),
+  variant_id: uuid("variant_id")
+    .references(() => productVariants.id)
+    .notNull(),
   product_name: text("product_name").notNull(),
   variant_label: text("variant_label"),
   quantity: integer("quantity").notNull(),
@@ -156,21 +174,31 @@ export const orderItems = pgTable("order_items", {
 
 export const carts = pgTable("carts", {
   id: uuid("id").defaultRandom().primaryKey(),
-  user_id: uuid("user_id").references(() => profiles.id).notNull(),
+  user_id: uuid("user_id")
+    .references(() => profiles.id)
+    .notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const cartItems = pgTable("cart_items", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  cart_id: uuid("cart_id").references(() => carts.id).notNull(),
-  variant_id: uuid("variant_id").references(() => productVariants.id).notNull(),
-  quantity: integer("quantity").notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
-}, (t) => ({
-  unq: uniqueIndex("cart_variant_unique").on(t.cart_id, t.variant_id),
-}));
+export const cartItems = pgTable(
+  "cart_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    cart_id: uuid("cart_id")
+      .references(() => carts.id)
+      .notNull(),
+    variant_id: uuid("variant_id")
+      .references(() => productVariants.id)
+      .notNull(),
+    quantity: integer("quantity").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    unq: uniqueIndex("cart_variant_unique").on(t.cart_id, t.variant_id),
+  })
+);
 
 export const otpCodes = pgTable("otp_codes", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -190,13 +218,16 @@ export const productRelations = relations(products, ({ many }) => ({
   productImages: many(productImages),
 }));
 
-export const productVariantRelations = relations(productVariants, ({ one, many }) => ({
-  product: one(products, {
-    fields: [productVariants.product_id],
-    references: [products.id],
-  }),
-  orderItems: many(orderItems),
-}));
+export const productVariantRelations = relations(
+  productVariants,
+  ({ one, many }) => ({
+    product: one(products, {
+      fields: [productVariants.product_id],
+      references: [products.id],
+    }),
+    orderItems: many(orderItems),
+  })
+);
 
 export const productImageRelations = relations(productImages, ({ one }) => ({
   product: one(products, {

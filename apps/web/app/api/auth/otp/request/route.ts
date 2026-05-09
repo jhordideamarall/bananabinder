@@ -7,14 +7,17 @@ export async function POST(req: Request) {
     const { phone } = await req.json();
 
     if (!phone) {
-      return NextResponse.json({ error: "Nomor WhatsApp wajib diisi" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Nomor WhatsApp wajib diisi" },
+        { status: 400 }
+      );
     }
 
     const result = await requestOTP(db, phone);
 
     return NextResponse.json({
       message: "OTP berhasil dikirim",
-      ...result
+      ...result,
     });
   } catch (error: unknown) {
     console.error("OTP Request Error:", error);

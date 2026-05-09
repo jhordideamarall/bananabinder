@@ -11,10 +11,7 @@ export async function GET(
     const { slug } = params;
 
     const product = await db.query.products.findFirst({
-      where: and(
-        eq(products.slug, slug),
-        eq(products.is_active, true)
-      ),
+      where: and(eq(products.slug, slug), eq(products.is_active, true)),
       with: {
         productImages: true,
         productVariants: true,
@@ -22,10 +19,7 @@ export async function GET(
     });
 
     if (!product) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     return NextResponse.json({ data: product });

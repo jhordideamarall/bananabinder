@@ -22,9 +22,15 @@ interface ProductWithVariants {
   product_images?: Array<{ url: string }>;
 }
 
-export default function ProductInteraction({ product }: { product: ProductWithVariants }) {
+export default function ProductInteraction({
+  product,
+}: {
+  product: ProductWithVariants;
+}) {
   const { addItem } = useCart();
-  const [selectedVariant, setSelectedVariant] = useState(product.product_variants[0]);
+  const [selectedVariant, setSelectedVariant] = useState(
+    product.product_variants[0]
+  );
   const [quantity] = useState(1);
 
   const handleAddToCart = () => {
@@ -36,7 +42,8 @@ export default function ProductInteraction({ product }: { product: ProductWithVa
       image: product.product_images?.[0]?.url || "",
       price: selectedVariant.price_override || product.base_price,
       quantity: quantity,
-      variantLabel: `${selectedVariant.cover_color || ""} ${selectedVariant.paper_type || ""} ${selectedVariant.ring_size || ""}`.trim(),
+      variantLabel:
+        `${selectedVariant.cover_color || ""} ${selectedVariant.paper_type || ""} ${selectedVariant.ring_size || ""}`.trim(),
     });
     alert("Berhasil ditambahkan ke keranjang! 🍌");
   };
@@ -45,7 +52,9 @@ export default function ProductInteraction({ product }: { product: ProductWithVa
     <div className="space-y-8">
       {/* Variants */}
       <div>
-        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3">Pilih Varian</h3>
+        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3">
+          Pilih Varian
+        </h3>
         <div className="flex flex-wrap gap-2">
           {product.product_variants.map((variant) => (
             <button
@@ -56,36 +65,47 @@ export default function ProductInteraction({ product }: { product: ProductWithVa
                 selectedVariant.id === variant.id
                   ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20"
                   : variant.stock === 0
-                  ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                  : "hover:border-primary hover:text-primary border-gray-200"
+                    ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                    : "hover:border-primary hover:text-primary border-gray-200"
               }`}
             >
-              {variant.cover_color || ""} {variant.paper_type || ""} {variant.ring_size || ""}
+              {variant.cover_color || ""} {variant.paper_type || ""}{" "}
+              {variant.ring_size || ""}
             </button>
           ))}
         </div>
         {selectedVariant.stock < 10 && selectedVariant.stock > 0 && (
-           <p className="text-xs text-orange-500 mt-2 font-medium">Sisa {selectedVariant.stock} item lagi!</p>
+          <p className="text-xs text-orange-500 mt-2 font-medium">
+            Sisa {selectedVariant.stock} item lagi!
+          </p>
         )}
       </div>
 
       {/* Actions */}
       <div className="pt-8 flex flex-col sm:flex-row gap-4">
         <div className="flex-grow">
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             onClick={handleAddToCart}
             disabled={selectedVariant.stock === 0}
             className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
           >
-            <IconShoppingBag className="w-5 h-5 mr-2" /> 
+            <IconShoppingBag className="w-5 h-5 mr-2" />
             {selectedVariant.stock === 0 ? "Stok Habis" : "Tambah ke Keranjang"}
           </Button>
         </div>
-        <Button variant="outline" size="lg" className="h-14 w-14 p-0 rounded-2xl border-gray-200">
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-14 w-14 p-0 rounded-2xl border-gray-200"
+        >
           <IconHeart className="w-6 h-6 text-gray-400" />
         </Button>
-        <Button variant="outline" size="lg" className="h-14 w-14 p-0 rounded-2xl border-gray-200">
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-14 w-14 p-0 rounded-2xl border-gray-200"
+        >
           <IconShare className="w-6 h-6 text-gray-400" />
         </Button>
       </div>

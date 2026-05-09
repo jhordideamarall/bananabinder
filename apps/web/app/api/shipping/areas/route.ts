@@ -13,6 +13,9 @@ export async function GET(req: Request) {
     const areas = await searchBiteshipAreas(q);
     return NextResponse.json({ areas });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

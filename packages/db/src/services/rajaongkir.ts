@@ -42,7 +42,7 @@ export async function getShippingCosts(options: ShippingCostOptions) {
   });
 
   const data = await response.json();
-  
+
   if (data.rajaongkir.status.code !== 200) {
     throw new Error(data.rajaongkir.status.description);
   }

@@ -14,13 +14,15 @@ export async function POST(req: Request) {
 
     const result = await processAbandonedCarts(db);
 
-    return NextResponse.json({ 
-      success: true, 
-      ...result
+    return NextResponse.json({
+      success: true,
+      ...result,
     });
-
   } catch (error: unknown) {
     console.error("Cron Abandoned Cart Error:", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

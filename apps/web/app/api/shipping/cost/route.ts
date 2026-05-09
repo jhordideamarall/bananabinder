@@ -15,7 +15,10 @@ export async function POST(req: Request) {
     const { addressId, items } = await req.json();
 
     if (!addressId || !items || items.length === 0) {
-      return NextResponse.json({ error: "Data tidak lengkap" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Data tidak lengkap" },
+        { status: 400 }
+      );
     }
 
     // 1. Get Address Details
@@ -24,11 +27,18 @@ export async function POST(req: Request) {
     });
 
     if (!addr || !addr.biteship_area_id) {
-      return NextResponse.json({ error: "Alamat tidak valid atau area Biteship belum diset" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Alamat tidak valid atau area Biteship belum diset" },
+        { status: 400 }
+      );
     }
 
     // 2. Calculate Rates via Biteship Logic
-    const rates = await calculateShippingRates(db, addr.biteship_area_id, items);
+    const rates = await calculateShippingRates(
+      db,
+      addr.biteship_area_id,
+      items
+    );
 
     return NextResponse.json({ rates });
   } catch (error: unknown) {

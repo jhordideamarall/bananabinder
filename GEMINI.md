@@ -68,15 +68,18 @@ Work efficiently, safely, and without breaking existing behavior.
 ## 🛡️ Monorepo Integrity Mandates (STRICT)
 
 ### 1. Zero-Leakage Policy
+
 - **CORE LOGIC**: Kalkulasi (ongkir, diskon, kupon, stock), validasi bisnis, dan algoritma **DILARANG** berada di `apps/`. Wajib ditaruh di `packages/db` atau dedicated package.
 - **API CLIENTS**: Semua panggilan Supabase RPC atau 3rd Party API (Xendit, RajaOngkir, Fonnte) wajib dibungkus dalam package terpisah. Jangan panggil langsung di Page/Component.
 - **UI PRIMITIVES**: Komponen murni UI (Button, Card, Badge, PriceTag) wajib berada di `packages/ui`. `apps/web` hanya berisi komponen koordinasi (Layout, Page-Specific Blocks).
 
 ### 2. Service Portability
+
 - **RULE**: Jangan mengimpor `createClient` langsung ke dalam logic yang bersifat reusable.
 - **ACTION**: Logic harus menerima `supabaseClient` sebagai parameter atau menggunakan abstraksi dari package. Ini agar future mobile app bisa pakai logic yang sama.
 
 ### 3. Package Boundaries
+
 ```
 packages/
 ├── ui/          → Pure UI components (Shadcn-based)

@@ -18,7 +18,9 @@ export async function requestOTP(
   });
 
   if (recent.length >= 3) {
-    throw new Error("Terlalu banyak permintaan OTP. Silakan coba lagi dalam 15 menit.");
+    throw new Error(
+      "Terlalu banyak permintaan OTP. Silakan coba lagi dalam 15 menit."
+    );
   }
 
   const otp = generateOTP();
@@ -32,7 +34,7 @@ export async function requestOTP(
   });
 
   const message = `Kode OTP Bananasbindery kamu adalah: ${otp}. Jangan bagikan kode ini kepada siapapun.`;
-  
+
   try {
     await sendWhatsAppMessage(phone, message);
   } catch (error) {
@@ -40,7 +42,10 @@ export async function requestOTP(
     if (process.env.NODE_ENV !== "development") throw error;
   }
 
-  return { success: true, debug_otp: process.env.NODE_ENV === "development" ? otp : undefined };
+  return {
+    success: true,
+    debug_otp: process.env.NODE_ENV === "development" ? otp : undefined,
+  };
 }
 
 export async function verifyOTP(
@@ -63,27 +68,30 @@ export async function verifyOTP(
   const isValid = await verifyOTPHash(otp, record.otp_hash);
 
   if (!isValid) {
-    await db.update(otpCodes)
+    await db
+      .update(otpCodes)
       .set({ attempts: (record.attempts || 0) + 1 })
       .where(eq(otpCodes.id, record.id));
     throw new Error("Kode OTP salah");
   }
 
-  await db.update(otpCodes)
+  await db
+    .update(otpCodes)
     .set({ used: true })
     .where(eq(otpCodes.id, record.id));
 
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    phone: phone,
-    phone_confirm: true,
-  });
+  const { data: authData, error: authError } =
+    await supabaseAdmin.auth.admin.createUser({
+      phone: phone,
+      phone_confirm: true,
+    });
 
   let user = authData.user;
 
   if (authError) {
     if (authError.message.includes("already registered")) {
       const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-      user = existingUser?.users.find(u => u.phone === phone) || null;
+      user = existingUser?.users.find((u) => u.phone === phone) || null;
     } else {
       throw authError;
     }
@@ -91,13 +99,16 @@ export async function verifyOTP(
 
   if (!user) throw new Error("Gagal memproses user");
 
-  await db.insert(profiles).values({
-    id: user.id,
-    phone: phone,
-  }).onConflictDoUpdate({
-    target: profiles.id,
-    set: { updated_at: new Date() }
-  });
+  await db
+    .insert(profiles)
+    .values({
+      id: user.id,
+      phone: phone,
+    })
+    .onConflictDoUpdate({
+      target: profiles.id,
+      set: { updated_at: new Date() },
+    });
 
   // Instead of createSession (which is restricted), return user to let the API handle the sign-in flow
   // Typically, for custom OTP, we use signInWithOtp on the client side.

@@ -24,15 +24,22 @@ interface ProductDetail {
 }
 
 async function getProduct(slug: string): Promise<ProductDetail | null> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/products/${slug}`, {
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/products/${slug}`,
+    {
+      cache: "no-store",
+    }
+  );
   if (!res.ok) return null;
   const data = await res.json();
   return data.data;
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
   const product = await getProduct(params.slug);
   if (!product) return { title: "Produk Tidak Ditemukan" };
 
@@ -40,12 +47,18 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: `${product.name} | Bananasbindery`,
     description: product.description,
     openGraph: {
-      images: product.product_images?.[0]?.url ? [product.product_images[0].url] : [],
+      images: product.product_images?.[0]?.url
+        ? [product.product_images[0].url]
+        : [],
     },
   };
 }
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default async function ProductDetailPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const product = await getProduct(params.slug);
   if (!product) notFound();
 
@@ -64,15 +77,30 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         <div className="space-y-4">
           <div className="aspect-square bg-gray-100 rounded-3xl overflow-hidden relative border border-gray-100">
             {product.product_images?.[0] ? (
-              <Image src={product.product_images[0].url} alt={product.name} fill className="object-cover" />
+              <Image
+                src={product.product_images[0].url}
+                alt={product.name}
+                fill
+                className="object-cover"
+              />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-9xl">📚</div>
+              <div className="w-full h-full flex items-center justify-center text-9xl">
+                📚
+              </div>
             )}
           </div>
           <div className="grid grid-cols-4 gap-4">
             {product.product_images?.slice(1, 5).map((img, idx) => (
-              <div key={idx} className="aspect-square bg-gray-100 rounded-2xl overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-primary transition-all">
-                <Image src={img.url} alt={`${product.name} ${idx}`} fill className="object-cover" />
+              <div
+                key={idx}
+                className="aspect-square bg-gray-100 rounded-2xl overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+              >
+                <Image
+                  src={img.url}
+                  alt={`${product.name} ${idx}`}
+                  fill
+                  className="object-cover"
+                />
               </div>
             ))}
           </div>
@@ -89,13 +117,21 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 leading-tight">{product.name}</h1>
-          <p className="text-primary font-black text-3xl mt-4">Rp {product.base_price.toLocaleString('id-ID')}</p>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 leading-tight">
+            {product.name}
+          </h1>
+          <p className="text-primary font-black text-3xl mt-4">
+            Rp {product.base_price.toLocaleString("id-ID")}
+          </p>
 
           <div className="mt-8 space-y-6">
             <div>
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3">Deskripsi</h3>
-              <p className="text-gray-600 leading-relaxed">{product.description}</p>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3">
+                Deskripsi
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {product.description}
+              </p>
             </div>
 
             {/* Client Interaction Component */}
@@ -103,14 +139,22 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
             {/* Service Badges */}
             <div className="grid grid-cols-2 gap-4 pt-10 border-t border-gray-100 mt-10">
-               <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-50 rounded-lg text-green-600"><IconShieldCheck className="w-5 h-5" /></div>
-                  <span className="text-xs font-medium text-gray-600">Garansi Kualitas 100%</span>
-               </div>
-               <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><IconTruck className="w-5 h-5" /></div>
-                  <span className="text-xs font-medium text-gray-600">Pengiriman Seluruh RI</span>
-               </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                  <IconShieldCheck className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-medium text-gray-600">
+                  Garansi Kualitas 100%
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                  <IconTruck className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-medium text-gray-600">
+                  Pengiriman Seluruh RI
+                </span>
+              </div>
             </div>
           </div>
         </div>

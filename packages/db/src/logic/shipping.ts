@@ -6,8 +6,8 @@ import * as schema from "../schema";
 
 export async function calculateShippingRates(
   db: PostgresJsDatabase<typeof schema>,
-  destinationAreaId: string, 
-  items: { variantId: string, quantity: number }[]
+  destinationAreaId: string,
+  items: { variantId: string; quantity: number }[]
 ) {
   // 1. Get origin area (Static from config for now)
   const originAreaId = process.env.BITESHIP_ORIGIN_AREA_ID || "IDNP0101"; // Default to Jakarta/Tangerang

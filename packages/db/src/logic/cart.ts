@@ -3,7 +3,10 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../schema";
 import { carts, cartItems, productVariants } from "../schema";
 
-export async function getCart(db: PostgresJsDatabase<typeof schema>, userId: string) {
+export async function getCart(
+  db: PostgresJsDatabase<typeof schema>,
+  userId: string
+) {
   const cart = await db.query.carts.findFirst({
     where: eq(carts.user_id, userId),
     with: {
@@ -13,23 +16,23 @@ export async function getCart(db: PostgresJsDatabase<typeof schema>, userId: str
             with: {
               product: {
                 with: {
-                  productImages: true
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  productImages: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   return cart || { items: [] };
 }
 
 export async function addToCart(
-  db: PostgresJsDatabase<typeof schema>, 
-  userId: string, 
-  variantId: string, 
+  db: PostgresJsDatabase<typeof schema>,
+  userId: string,
+  variantId: string,
   quantity: number
 ) {
   // 1. Check stock
@@ -46,26 +49,35 @@ export async function addToCart(
   });
 
   if (!cart) {
-    const [newCart] = await db.insert(carts).values({ user_id: userId }).returning();
+    const [newCart] = await db
+      .insert(carts)
+      .values({ user_id: userId })
+      .returning();
     cart = newCart;
   }
 
   if (!cart) throw new Error("Gagal membuat keranjang");
 
   // 3. Add/Update item
-  await db.insert(cartItems).values({
-    cart_id: cart.id,
-    variant_id: variantId,
-    quantity: quantity,
-  }).onConflictDoUpdate({
-    target: [cartItems.cart_id, cartItems.variant_id],
-    set: { quantity: quantity }
-  });
+  await db
+    .insert(cartItems)
+    .values({
+      cart_id: cart.id,
+      variant_id: variantId,
+      quantity: quantity,
+    })
+    .onConflictDoUpdate({
+      target: [cartItems.cart_id, cartItems.variant_id],
+      set: { quantity: quantity },
+    });
 
   return { success: true };
 }
 
-export async function removeFromCart(db: PostgresJsDatabase<typeof schema>, itemId: string) {
+export async function removeFromCart(
+  db: PostgresJsDatabase<typeof schema>,
+  itemId: string
+) {
   await db.delete(cartItems).where(eq(cartItems.id, itemId));
   return { success: true };
 }

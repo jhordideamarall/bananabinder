@@ -4,7 +4,9 @@ import * as schema from "../schema";
 import { carts } from "../schema";
 import { sendWhatsAppMessage } from "../services/fonnte";
 
-export async function processAbandonedCarts(db: PostgresJsDatabase<typeof schema>) {
+export async function processAbandonedCarts(
+  db: PostgresJsDatabase<typeof schema>
+) {
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
@@ -35,7 +37,7 @@ export async function processAbandonedCarts(db: PostgresJsDatabase<typeof schema
     if (itemsCount === 0) continue;
 
     const firstItemName = cart.items[0]?.variant?.product?.name || "produk";
-    const message = `Halo ${cart.user.full_name || 'Kak'}! Kamu masih punya ${itemsCount} item di keranjang Bananasbindery (termasuk ${firstItemName}). Selesaikan pesananmu sekarang sebelum stok habis! 🍌`;
+    const message = `Halo ${cart.user.full_name || "Kak"}! Kamu masih punya ${itemsCount} item di keranjang Bananasbindery (termasuk ${firstItemName}). Selesaikan pesananmu sekarang sebelum stok habis! 🍌`;
 
     try {
       await sendWhatsAppMessage(cart.user.phone, message);

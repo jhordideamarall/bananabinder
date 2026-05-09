@@ -16,13 +16,15 @@ export async function POST(req: Request) {
     const { external_id, status } = body;
 
     if (!external_id || !status) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
     const result = await handleOrderPayment(db, external_id, status);
 
     return NextResponse.json(result);
-
   } catch (error: unknown) {
     console.error("Xendit Webhook Error:", error);
     return NextResponse.json(

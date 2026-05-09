@@ -19,16 +19,21 @@ export async function GET() {
 
     const { data, error } = await supabaseAdmin
       .from("flash_sales")
-      .select(`
+      .select(
+        `
         *,
         flash_sale_items (*)
-      `)
+      `
+      )
       .order("start_time", { ascending: false });
 
     if (error) throw error;
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -53,13 +58,21 @@ export async function POST(req: Request) {
     if (items && items.length > 0) {
       const { error: itemsError } = await supabaseAdmin
         .from("flash_sale_items")
-        .insert(items.map((item: FlashSaleItem) => ({ ...item, flash_sale_id: sale.id })));
-      
+        .insert(
+          items.map((item: FlashSaleItem) => ({
+            ...item,
+            flash_sale_id: sale.id,
+          }))
+        );
+
       if (itemsError) throw itemsError;
     }
 
     return NextResponse.json({ success: true, id: sale.id });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

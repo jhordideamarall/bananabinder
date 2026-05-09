@@ -18,17 +18,20 @@ export async function GET(req: Request) {
 
     const result = await getAdminOrders(db, { status, page, limit });
 
-    return NextResponse.json({ 
-      data: result.data, 
+    return NextResponse.json({
+      data: result.data,
       pagination: {
         total: result.total,
         page,
         limit,
-        totalPages: Math.ceil(result.total / limit)
-      }
+        totalPages: Math.ceil(result.total / limit),
+      },
     });
   } catch (error: unknown) {
     console.error("Admin Orders Error:", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

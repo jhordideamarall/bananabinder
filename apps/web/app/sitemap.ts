@@ -1,40 +1,40 @@
-import { MetadataRoute } from "next";
-import { createSupabaseClient } from "@bananasbindery/db";
+import { MetadataRoute } from 'next'
+import { db } from '@/lib/db'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bananasbindery.com'
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bananasbindery.com";
+  // Get all products for dynamic routes
+  const products = await db.query.products.findMany({
+    where: (products, { eq }) => eq(products.is_active, true),
+  })
 
-  // Fetch all active products
-  const { data: products } = await supabase
-    .from("products")
-    .select("slug, updated_at")
-    .eq("is_active", true);
-
-  const productEntries: MetadataRoute.Sitemap = (products || []).map((product) => ({
-    url: `${baseUrl}/products/${product.slug}`,
-    lastModified: new Date(product.updated_at),
-    changeFrequency: "weekly",
+  const productUrls = products.map((p) => ({
+    url: `${baseUrl}/products/${p.slug}`,
+    lastModified: p.updated_at || p.created_at,
+    changeFrequency: 'weekly' as const,
     priority: 0.8,
-  }));
+  }))
 
   return [
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: "daily",
+      changeFrequency: 'daily',
       priority: 1,
     },
     {
-      url: `${baseUrl}/auth`,
+      url: `${baseUrl}/products`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
       priority: 0.5,
     },
-    ...productEntries,
-  ];
+    ...productUrls,
+  ]
 }

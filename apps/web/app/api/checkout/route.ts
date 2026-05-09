@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { 
-  createOrder,
-  createXenditInvoice,
-  orders,
-} from "@bananasbindery/db";
+import { createOrder, createXenditInvoice, orders } from "@bananasbindery/db";
 import { eq } from "drizzle-orm";
 import { getUser } from "@/lib/auth";
 
@@ -12,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const user = await getUser();
     if (!user) {
-       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -23,7 +19,10 @@ export async function POST(req: Request) {
     }
 
     if (!addressId) {
-      return NextResponse.json({ error: "Alamat pengiriman wajib diisi" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Alamat pengiriman wajib diisi" },
+        { status: 400 }
+      );
     }
 
     // 1. Create Order using Shared Logic (Handles Stock & Transaction)
@@ -41,7 +40,7 @@ export async function POST(req: Request) {
       amount: order.total_amount,
       payerEmail: user.email || "customer@example.com",
       description: `Order #${order.id.slice(0, 8)} - Bananasbindery`,
-      items: calculation.items.map(i => ({
+      items: calculation.items.map((i) => ({
         name: i.name,
         quantity: i.quantity,
         price: i.price,
@@ -49,18 +48,18 @@ export async function POST(req: Request) {
     });
 
     // 3. Update Order with Invoice ID
-    await db.update(orders)
-      .set({ 
+    await db
+      .update(orders)
+      .set({
         xendit_invoice_id: invoice.externalId,
-        xendit_payment_url: invoice.invoiceUrl 
+        xendit_payment_url: invoice.invoiceUrl,
       })
       .where(eq(orders.id, order.id));
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       orderId: order.id,
-      invoiceUrl: invoice.invoiceUrl 
+      invoiceUrl: invoice.invoiceUrl,
     });
-
   } catch (error: unknown) {
     console.error("Checkout Error:", error);
     return NextResponse.json(

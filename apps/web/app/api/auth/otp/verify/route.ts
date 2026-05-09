@@ -8,16 +8,18 @@ export async function POST(req: Request) {
     const { phone, otp } = await req.json();
 
     if (!phone || !otp) {
-      return NextResponse.json({ error: "Nomor WhatsApp dan OTP wajib diisi" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Nomor WhatsApp dan OTP wajib diisi" },
+        { status: 400 }
+      );
     }
 
     const result = await verifyOTP(db, supabaseAdmin, phone, otp);
 
     return NextResponse.json({
       success: true,
-      ...result
+      ...result,
     });
-
   } catch (error: unknown) {
     console.error("OTP Verify Error:", error);
     return NextResponse.json(

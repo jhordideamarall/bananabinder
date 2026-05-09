@@ -25,7 +25,8 @@ export async function calculateOrderTotal(
     });
 
     if (!variant) throw new Error(`Varian ${item.variantId} tidak ditemukan`);
-    if (variant.stock < item.quantity) throw new Error(`Stok ${variant.product.name} tidak mencukupi`);
+    if (variant.stock < item.quantity)
+      throw new Error(`Stok ${variant.product.name} tidak mencukupi`);
 
     // Check for Flash Sale
     const now = new Date();
@@ -37,16 +38,18 @@ export async function calculateOrderTotal(
     });
 
     let price = variant.price_override || variant.product.base_price;
-    
-    if (flashSaleItem?.flashSale && 
-        flashSaleItem.flashSale.is_active && 
-        flashSaleItem.flashSale.start_time <= now && 
-        flashSaleItem.flashSale.end_time >= now) {
+
+    if (
+      flashSaleItem?.flashSale &&
+      flashSaleItem.flashSale.is_active &&
+      flashSaleItem.flashSale.start_time <= now &&
+      flashSaleItem.flashSale.end_time >= now
+    ) {
       price = flashSaleItem.discount_price;
     }
 
     const lineTotal = price * item.quantity;
-    
+
     subtotal += lineTotal;
     processedItems.push({
       variantId: variant.id,
@@ -106,40 +109,46 @@ export async function handleOrderPayment(
     if (!order) throw new Error(`Pesanan ${orderId} tidak ditemukan`);
 
     if (status === "PAID" || status === "SETTLED") {
-      if (order.status === "paid") return { success: true, message: "Sudah diproses" };
+      if (order.status === "paid")
+        return { success: true, message: "Sudah diproses" };
 
-      await tx.update(orders)
-        .set({ 
-          status: "paid", 
+      await tx
+        .update(orders)
+        .set({
+          status: "paid",
           paid_at: new Date(),
-          updated_at: new Date()
+          updated_at: new Date(),
         })
         .where(eq(orders.id, orderId));
 
       // 3. Increment Coupon Usage
       if (order.coupon_code) {
-        await tx.update(schema.coupons)
+        await tx
+          .update(schema.coupons)
           .set({ used_count: sql`${schema.coupons.used_count} + 1` })
           .where(eq(schema.coupons.code, order.coupon_code));
       }
-        
+
       return { success: true, status: "paid" };
-    } 
-    
+    }
+
     if (status === "EXPIRED") {
-      if (order.status === "cancelled") return { success: true, message: "Sudah dibatalkan" };
+      if (order.status === "cancelled")
+        return { success: true, message: "Sudah dibatalkan" };
 
       // 1. Mark as cancelled
-      await tx.update(orders)
-        .set({ 
-          status: "cancelled", 
-          updated_at: new Date() 
+      await tx
+        .update(orders)
+        .set({
+          status: "cancelled",
+          updated_at: new Date(),
         })
         .where(eq(orders.id, orderId));
 
       // 2. RESTORE STOCK (Mandate: Atomic stock handling)
       for (const item of order.items) {
-        await tx.update(productVariants)
+        await tx
+          .update(productVariants)
           .set({ stock: sql`${productVariants.stock} + ${item.quantity}` })
           .where(eq(productVariants.id, item.variant_id));
       }
@@ -169,35 +178,45 @@ export async function createOrder(
 ) {
   // 1. Get Address
   const address = await db.query.addresses.findFirst({
-    where: and(eq(schema.addresses.id, options.addressId), eq(schema.addresses.user_id, userId)),
+    where: and(
+      eq(schema.addresses.id, options.addressId),
+      eq(schema.addresses.user_id, userId)
+    ),
   });
 
   if (!address) throw new Error("Alamat tidak ditemukan");
 
   // 2. Calculate Totals
-  const calculation = await calculateOrderTotal(db, options.items, options.couponCode);
+  const calculation = await calculateOrderTotal(
+    db,
+    options.items,
+    options.couponCode
+  );
 
   // 3. Create Order in Transaction
   return await db.transaction(async (tx) => {
-    const [newOrder] = await tx.insert(orders).values({
-      user_id: userId,
-      subtotal: calculation.subtotal,
-      discount_amount: calculation.discount,
-      tax_amount: calculation.tax,
-      shipping_cost: options.shippingCost,
-      total_amount: calculation.total + options.shippingCost,
-      status: "pending",
-      coupon_id: calculation.couponId,
-      coupon_code: calculation.couponCode,
-      shipping_address: {
-        receiver_name: address.receiver_name,
-        phone: address.phone,
-        full_address: address.full_address,
-        postal_code: address.postal_code,
-        biteship_area_id: address.biteship_area_id,
-      },
-      courier_details: options.courierDetails || { service: options.courier },
-    }).returning();
+    const [newOrder] = await tx
+      .insert(orders)
+      .values({
+        user_id: userId,
+        subtotal: calculation.subtotal,
+        discount_amount: calculation.discount,
+        tax_amount: calculation.tax,
+        shipping_cost: options.shippingCost,
+        total_amount: calculation.total + options.shippingCost,
+        status: "pending",
+        coupon_id: calculation.couponId,
+        coupon_code: calculation.couponCode,
+        shipping_address: {
+          receiver_name: address.receiver_name,
+          phone: address.phone,
+          full_address: address.full_address,
+          postal_code: address.postal_code,
+          biteship_area_id: address.biteship_area_id,
+        },
+        courier_details: options.courierDetails || { service: options.courier },
+      })
+      .returning();
 
     if (!newOrder) throw new Error("Gagal membuat pesanan");
 
@@ -211,12 +230,15 @@ export async function createOrder(
         price_at_time: item.price,
       });
 
-      const [updated] = await tx.update(productVariants)
+      const [updated] = await tx
+        .update(productVariants)
         .set({ stock: sql`${productVariants.stock} - ${item.quantity}` })
-        .where(and(
-          eq(productVariants.id, item.variantId),
-          sql`${productVariants.stock} >= ${item.quantity}`
-        ))
+        .where(
+          and(
+            eq(productVariants.id, item.variantId),
+            sql`${productVariants.stock} >= ${item.quantity}`
+          )
+        )
         .returning();
 
       if (!updated) {
@@ -248,35 +270,45 @@ export async function cancelOrder(
     if (!order) throw new Error("Pesanan tidak ditemukan");
 
     // 1. Check if Cancellable
-    if (order.status === "shipped" || order.status === "delivered" || order.status === "cancelled") {
-      throw new Error(`Pesanan dengan status ${order.status} tidak bisa dibatalkan.`);
+    if (
+      order.status === "shipped" ||
+      order.status === "delivered" ||
+      order.status === "cancelled"
+    ) {
+      throw new Error(
+        `Pesanan dengan status ${order.status} tidak bisa dibatalkan.`
+      );
     }
 
     if (order.status === "paid") {
       const now = new Date();
       const paidAt = order.paid_at || order.created_at;
       const diffHours = (now.getTime() - paidAt.getTime()) / (1000 * 60 * 60);
-      
+
       if (diffHours > 24) {
-        throw new Error("Pembatalan hanya bisa dilakukan dalam 24 jam setelah pembayaran.");
+        throw new Error(
+          "Pembatalan hanya bisa dilakukan dalam 24 jam setelah pembayaran."
+        );
       }
     }
 
     // 2. Update Order Status
     const isPaid = order.status === "paid";
-    await tx.update(orders)
-      .set({ 
-        status: "cancelled", 
+    await tx
+      .update(orders)
+      .set({
+        status: "cancelled",
         cancel_reason: reason,
         refund_status: isPaid ? "refund_pending" : "none",
         cancelled_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       })
       .where(eq(orders.id, orderId));
 
     // 3. Restore Stock
     for (const item of order.items) {
-      await tx.update(productVariants)
+      await tx
+        .update(productVariants)
         .set({ stock: sql`${productVariants.stock} + ${item.quantity}` })
         .where(eq(productVariants.id, item.variant_id));
     }
@@ -292,5 +324,18 @@ export async function cancelOrder(
     }
 
     return { success: true, refundTriggered: isPaid };
+  });
+}
+
+export async function getUserOrders(
+  db: PostgresJsDatabase<typeof schema>,
+  userId: string
+) {
+  return await db.query.orders.findMany({
+    where: eq(schema.orders.user_id, userId),
+    orderBy: [desc(schema.orders.created_at)],
+    with: {
+      items: true,
+    },
   });
 }

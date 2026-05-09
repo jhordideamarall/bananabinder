@@ -24,7 +24,9 @@ export default function AuthTestPage() {
 
       const data = await res.json();
       if (data.success) {
-        setMessage("OTP sent! " + (data.debug_otp ? `(Debug: ${data.debug_otp})` : ""));
+        setMessage(
+          "OTP sent! " + (data.debug_otp ? `(Debug: ${data.debug_otp})` : "")
+        );
         setStep(2);
       } else {
         setMessage(data.error || "Failed to send OTP");
@@ -65,11 +67,13 @@ export default function AuthTestPage() {
   return (
     <div className="p-8 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-4">Auth Test (WhatsApp OTP)</h1>
-      
+
       {step === 1 ? (
         <form onSubmit={handleRequest} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Phone Number (62...)</label>
+            <label className="block text-sm font-medium">
+              Phone Number (62...)
+            </label>
             <input
               type="text"
               value={phone}
@@ -119,7 +123,9 @@ export default function AuthTestPage() {
       )}
 
       {message && (
-        <div className={`mt-4 p-2 rounded ${message.includes("Error") || message.includes("Failed") ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
+        <div
+          className={`mt-4 p-2 rounded ${message.includes("Error") || message.includes("Failed") ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
+        >
           {message}
         </div>
       )}

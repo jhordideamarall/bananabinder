@@ -5,7 +5,7 @@ export async function sendWhatsAppMessage(target: string, message: string) {
   const response = await fetch("https://api.fonnte.com/send", {
     method: "POST",
     headers: {
-      "Authorization": token,
+      Authorization: token,
     },
     body: new URLSearchParams({
       target: target,

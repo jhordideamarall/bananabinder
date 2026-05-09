@@ -16,6 +16,9 @@ export async function GET() {
     return NextResponse.json({ data: stats });
   } catch (error: unknown) {
     console.error("Admin Stats Error:", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

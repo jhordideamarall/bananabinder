@@ -20,7 +20,10 @@ export async function hashOTP(otp: string): Promise<string> {
 /**
  * Verifies if a plain OTP matches a stored hash.
  */
-export async function verifyOTPHash(otp: string, hash: string): Promise<boolean> {
+export async function verifyOTPHash(
+  otp: string,
+  hash: string
+): Promise<boolean> {
   const currentHash = await hashOTP(otp);
   return currentHash === hash;
 }

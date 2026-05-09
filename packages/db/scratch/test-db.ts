@@ -14,7 +14,7 @@ async function main() {
   }
 
   console.log("Connecting to:", dbUrl.replace(/:([^:@]+)@/, ":****@"));
-  
+
   const db = createDrizzleClient(dbUrl);
 
   try {

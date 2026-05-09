@@ -25,14 +25,19 @@ export async function PATCH(
     });
 
     if (!updatedOrder) {
-      return NextResponse.json({ error: "Gagal memperbarui pesanan" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Gagal memperbarui pesanan" },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({ data: updatedOrder });
   } catch (error: unknown) {
     console.error("Admin Order Update Error:", error);
     return NextResponse.json(
-      { error: (error as Error).message || "Gagal memproses pembaruan pesanan" },
+      {
+        error: (error as Error).message || "Gagal memproses pembaruan pesanan",
+      },
       { status: 500 }
     );
   }

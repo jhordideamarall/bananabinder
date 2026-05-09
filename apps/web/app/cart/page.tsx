@@ -4,7 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/store/useCart";
-import { IconTrash, IconMinus, IconPlus, IconArrowRight, IconShoppingBag } from "@tabler/icons-react";
+import {
+  IconTrash,
+  IconMinus,
+  IconPlus,
+  IconArrowRight,
+  IconShoppingBag,
+} from "@tabler/icons-react";
 import { Button, Card, CardContent } from "@bananasbindery/ui";
 
 export default function CartPage() {
@@ -25,7 +31,8 @@ export default function CartPage() {
         </div>
         <h1 className="text-2xl font-bold">Keranjangmu masih kosong</h1>
         <p className="text-gray-500 mt-2 mb-8 text-center max-w-xs">
-          Sepertinya kamu belum memilih binder impianmu. Yuk, intip koleksi terbaru kami!
+          Sepertinya kamu belum memilih binder impianmu. Yuk, intip koleksi
+          terbaru kami!
         </p>
         <Link href="/products">
           <Button size="lg" className="rounded-full px-8">
@@ -47,23 +54,37 @@ export default function CartPage() {
         {/* Items List */}
         <div className="lg:col-span-2 space-y-6">
           {items.map((item) => (
-            <Card key={item.variantId} className="overflow-hidden border-none shadow-sm bg-white hover:shadow-md transition-shadow">
+            <Card
+              key={item.variantId}
+              className="overflow-hidden border-none shadow-sm bg-white hover:shadow-md transition-shadow"
+            >
               <CardContent className="p-4 flex gap-6">
                 <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 relative">
                   {item.image ? (
-                    <Image src={item.image} alt={item.name} fill className="object-cover" />
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                    />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">📚</div>
+                    <div className="w-full h-full flex items-center justify-center text-2xl">
+                      📚
+                    </div>
                   )}
                 </div>
 
                 <div className="flex-grow flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{item.variantLabel}</p>
+                      <h3 className="font-bold text-lg text-gray-900">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {item.variantLabel}
+                      </p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => removeItem(item.variantId)}
                       className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                     >
@@ -73,15 +94,21 @@ export default function CartPage() {
 
                   <div className="flex justify-between items-end mt-4">
                     <div className="flex items-center gap-3 bg-gray-50 rounded-full p-1 border border-gray-100">
-                      <button 
-                        onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.variantId, item.quantity - 1)
+                        }
                         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm transition-all"
                       >
                         <IconMinus className="w-4 h-4" />
                       </button>
-                      <span className="w-4 text-center font-bold text-sm">{item.quantity}</span>
-                      <button 
-                        onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                      <span className="w-4 text-center font-bold text-sm">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.variantId, item.quantity + 1)
+                        }
                         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm transition-all"
                       >
                         <IconPlus className="w-4 h-4" />
@@ -103,7 +130,7 @@ export default function CartPage() {
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary" />
             <CardContent className="p-8">
               <h2 className="text-xl font-bold mb-6">Ringkasan Belanja</h2>
-              
+
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({items.length} item)</span>
@@ -128,14 +155,14 @@ export default function CartPage() {
               </Link>
 
               <div className="mt-6 flex flex-col gap-3">
-                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                    Pembayaran aman via Xendit
-                 </div>
-                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                    Dukung kurir seluruh Indonesia
-                 </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  Pembayaran aman via Xendit
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                  Dukung kurir seluruh Indonesia
+                </div>
               </div>
             </CardContent>
           </Card>

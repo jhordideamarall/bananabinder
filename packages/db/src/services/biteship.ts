@@ -23,7 +23,7 @@ export async function getBiteshipRates(input: BiteshipRateInput) {
   const response = await fetch("https://api.biteship.com/v1/rates", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(input),
@@ -78,7 +78,7 @@ export async function createBiteshipOrder(input: BiteshipOrderInput) {
   const response = await fetch("https://api.biteship.com/v1/orders", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(input),
@@ -96,11 +96,14 @@ export async function getBiteshipTracking(waybill: string, courier: string) {
   const apiKey = process.env.BITESHIP_API_KEY;
   if (!apiKey) throw new Error("BITESHIP_API_KEY is not set");
 
-  const response = await fetch(`https://api.biteship.com/v1/trackings/${waybill}/couriers/${courier}`, {
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-    },
-  });
+  const response = await fetch(
+    `https://api.biteship.com/v1/trackings/${waybill}/couriers/${courier}`,
+    {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    }
+  );
 
   const data = await response.json();
   if (!response.ok) {
@@ -114,11 +117,14 @@ export async function searchBiteshipAreas(input: string) {
   const apiKey = process.env.BITESHIP_API_KEY;
   if (!apiKey) throw new Error("BITESHIP_API_KEY is not set");
 
-  const response = await fetch(`https://api.biteship.com/v1/maps/areas?countries=ID&input=${encodeURIComponent(input)}`, {
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-    },
-  });
+  const response = await fetch(
+    `https://api.biteship.com/v1/maps/areas?countries=ID&input=${encodeURIComponent(input)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    }
+  );
 
   const data = await response.json();
   if (!response.ok) {
@@ -132,11 +138,14 @@ export async function reverseGeocodeBiteship(lat: number, lng: number) {
   const apiKey = process.env.BITESHIP_API_KEY;
   if (!apiKey) throw new Error("BITESHIP_API_KEY is not set");
 
-  const response = await fetch(`https://api.biteship.com/v1/maps/areas?countries=ID&latitude=${lat}&longitude=${lng}`, {
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-    },
-  });
+  const response = await fetch(
+    `https://api.biteship.com/v1/maps/areas?countries=ID&latitude=${lat}&longitude=${lng}`,
+    {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    }
+  );
 
   const data = await response.json();
   if (!response.ok) {
