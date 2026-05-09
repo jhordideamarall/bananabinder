@@ -5,6 +5,12 @@ import { otpCodes, profiles } from "../schema";
 import { generateOTP, hashOTP, verifyOTPHash } from "../otp";
 import { sendWhatsAppMessage } from "../services/fonnte";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import crypto from "crypto";
+
+export function getDeterministicPassword(phone: string): string {
+  const secret = process.env.OTP_AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret";
+  return crypto.createHash("sha256").update(`${phone}:${secret}`).digest("hex");
+}
 
 export async function requestOTP(
   db: PostgresJsDatabase<typeof schema>,
@@ -80,18 +86,40 @@ export async function verifyOTP(
     .set({ used: true })
     .where(eq(otpCodes.id, record.id));
 
+  const password = getDeterministicPassword(phone);
+
   const { data: authData, error: authError } =
     await supabaseAdmin.auth.admin.createUser({
       phone: phone,
+      password: password,
       phone_confirm: true,
     });
 
   let user = authData.user;
 
   if (authError) {
-    if (authError.message.includes("already registered")) {
-      const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-      user = existingUser?.users.find((u) => u.phone === phone) || null;
+    if (authError.message.toLowerCase().includes("already registered")) {
+      // Find user via profiles table since we can't query auth.users directly by phone
+      const profile = await db.query.profiles.findFirst({
+        where: eq(profiles.phone, phone),
+      });
+
+      if (profile) {
+        const { data: userAuth } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+        user = userAuth?.user || null;
+        
+        if (user) {
+          // Update the user's password to the deterministic password to fix legacy users
+          await supabaseAdmin.auth.admin.updateUserById(user.id, { password: password });
+        }
+      } else {
+        // Fallback to listing users if profile isn't found
+        const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+        user = existingUser?.users.find((u) => u.phone === phone) || null;
+        if (user) {
+          await supabaseAdmin.auth.admin.updateUserById(user.id, { password: password });
+        }
+      }
     } else {
       throw authError;
     }
@@ -110,10 +138,9 @@ export async function verifyOTP(
       set: { updated_at: new Date() },
     });
 
-  // Instead of createSession (which is restricted), return user to let the API handle the sign-in flow
-  // Typically, for custom OTP, we use signInWithOtp on the client side.
-  // But since we verified manually, we can return the user info.
   return {
     user: user,
+    // Return the password so the API route can use it to issue a session cookie
+    hidden_password: password,
   };
 }
