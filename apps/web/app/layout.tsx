@@ -10,6 +10,10 @@ export const metadata: Metadata = {
     "Buku binder premium dengan desain estetik untuk pelajar, mahasiswa, dan pekerja Indonesia.",
 };
 
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import LenisProvider from "@/components/LenisProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -17,7 +21,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <LenisProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </div>
+        </LenisProvider>
+      </body>
     </html>
   );
 }
