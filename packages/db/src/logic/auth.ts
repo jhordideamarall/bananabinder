@@ -8,7 +8,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
 export function getDeterministicPassword(phone: string): string {
-  const secret = process.env.OTP_AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret";
+  const secret =
+    process.env.OTP_AUTH_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "fallback_secret";
   return crypto.createHash("sha256").update(`${phone}:${secret}`).digest("hex");
 }
 
@@ -71,13 +74,35 @@ export async function verifyOTP(
 
   if (!record) throw new Error("OTP tidak valid atau sudah kadaluarsa");
 
+  const currentAttempts = record.attempts || 0;
+
+  if (currentAttempts >= 5) {
+    await db
+      .update(otpCodes)
+      .set({ used: true })
+      .where(eq(otpCodes.id, record.id));
+    throw new Error(
+      "Terlalu banyak percobaan salah. Silakan request OTP baru."
+    );
+  }
+
   const isValid = await verifyOTPHash(otp, record.otp_hash);
 
   if (!isValid) {
+    const newAttempts = currentAttempts + 1;
     await db
       .update(otpCodes)
-      .set({ attempts: (record.attempts || 0) + 1 })
+      .set({
+        attempts: newAttempts,
+        used: newAttempts >= 5 ? true : false,
+      })
       .where(eq(otpCodes.id, record.id));
+
+    if (newAttempts >= 5) {
+      throw new Error(
+        "Terlalu banyak percobaan salah. Silakan request OTP baru."
+      );
+    }
     throw new Error("Kode OTP salah");
   }
 
@@ -105,19 +130,26 @@ export async function verifyOTP(
       });
 
       if (profile) {
-        const { data: userAuth } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+        const { data: userAuth } = await supabaseAdmin.auth.admin.getUserById(
+          profile.id
+        );
         user = userAuth?.user || null;
-        
+
         if (user) {
           // Update the user's password to the deterministic password to fix legacy users
-          await supabaseAdmin.auth.admin.updateUserById(user.id, { password: password });
+          await supabaseAdmin.auth.admin.updateUserById(user.id, {
+            password: password,
+          });
         }
       } else {
         // Fallback to listing users if profile isn't found
-        const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+        const { data: existingUser } =
+          await supabaseAdmin.auth.admin.listUsers();
         user = existingUser?.users.find((u) => u.phone === phone) || null;
         if (user) {
-          await supabaseAdmin.auth.admin.updateUserById(user.id, { password: password });
+          await supabaseAdmin.auth.admin.updateUserById(user.id, {
+            password: password,
+          });
         }
       }
     } else {
