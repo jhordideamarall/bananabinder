@@ -11,8 +11,10 @@ export * from "./logic/admin";
 export * from "./logic/marketing";
 export * from "./logic/cart";
 export * from "./logic/profiles";
+export * from "./logic/shipping";
 
 // Service Wrappers
 export * from "./services/xendit";
 export * from "./services/fonnte";
 export * from "./services/rajaongkir";
+export * from "./services/biteship";

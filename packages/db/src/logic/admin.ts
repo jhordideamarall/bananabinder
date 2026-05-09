@@ -239,20 +239,25 @@ export async function createAdminProduct(
 
   return await db.transaction(async (tx) => {
     // 1. Create Product
-    const [product] = await tx.insert(schema.products).values(productData).returning();
+    const [product] = await tx
+      .insert(schema.products)
+      .values(productData)
+      .returning();
+
+    if (!product) throw new Error("Gagal membuat produk");
 
     // 2. Create Variants if any
     if (variants && variants.length > 0) {
-      await tx.insert(schema.productVariants).values(
-        variants.map((v) => ({ ...v, product_id: product.id }))
-      );
+      await tx
+        .insert(schema.productVariants)
+        .values(variants.map((v) => ({ ...v, product_id: product.id })));
     }
 
     // 3. Create Images if any
     if (images && images.length > 0) {
-      await tx.insert(schema.productImages).values(
-        images.map((img) => ({ ...img, product_id: product.id }))
-      );
+      await tx
+        .insert(schema.productImages)
+        .values(images.map((img) => ({ ...img, product_id: product.id })));
     }
 
     return product;
@@ -279,21 +284,25 @@ export async function updateAdminProduct(
 
     // 2. Handle Variants (Simplistic: Replace All)
     if (variants) {
-      await tx.delete(schema.productVariants).where(eq(schema.productVariants.product_id, id));
+      await tx
+        .delete(schema.productVariants)
+        .where(eq(schema.productVariants.product_id, id));
       if (variants.length > 0) {
-        await tx.insert(schema.productVariants).values(
-          variants.map((v) => ({ ...v, product_id: id }))
-        );
+        await tx
+          .insert(schema.productVariants)
+          .values(variants.map((v) => ({ ...v, product_id: id })));
       }
     }
 
     // 3. Handle Images (Simplistic: Replace All)
     if (images) {
-      await tx.delete(schema.productImages).where(eq(schema.productImages.product_id, id));
+      await tx
+        .delete(schema.productImages)
+        .where(eq(schema.productImages.product_id, id));
       if (images.length > 0) {
-        await tx.insert(schema.productImages).values(
-          images.map((img) => ({ ...img, product_id: id }))
-        );
+        await tx
+          .insert(schema.productImages)
+          .values(images.map((img) => ({ ...img, product_id: id })));
       }
     }
 

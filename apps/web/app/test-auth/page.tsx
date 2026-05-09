@@ -2,13 +2,21 @@
 
 import { useState } from "react";
 
+interface SessionData {
+  user: {
+    id: string;
+    email?: string;
+  };
+  access_token: string;
+}
+
 export default function AuthTestPage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState(1); // 1: request, 2: verify
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [session, setSession] = useState<unknown>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
 
   const handleRequest = async (e: React.FormEvent) => {
     e.preventDefault();

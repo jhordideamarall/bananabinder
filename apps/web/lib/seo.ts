@@ -1,5 +1,5 @@
 interface ProductVariant {
-  sku: string;
+  sku?: string;
   price_override?: number;
   stock: number;
 }
@@ -8,7 +8,7 @@ interface ProductImage {
   url: string;
 }
 
-interface ProductWithRelations {
+export interface ProductWithRelations {
   name: string;
   slug: string;
   description: string;

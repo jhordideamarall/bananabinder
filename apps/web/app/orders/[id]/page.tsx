@@ -9,6 +9,7 @@ import {
   IconChevronLeft,
   IconMapPin,
   IconTruck,
+  IconCheck,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,10 +23,11 @@ interface ShippingAddress {
 export default async function OrderDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const order = await db.query.orders.findFirst({
-    where: eq(orders.id, params.id),
+    where: eq(orders.id, id),
     with: {
       items: true,
       user: true,
@@ -127,47 +129,93 @@ export default async function OrderDetailPage({
 
         <div className="space-y-6">
           <Card className="border-none shadow-xl shadow-gray-100/50 bg-primary/5">
-             <CardContent className="p-6">
-                <h3 className="font-bold mb-6 flex items-center gap-2 text-primary">
-                  <IconTruck className="w-4 h-4" /> Order Journey
-                </h3>
-                <div className="space-y-6 relative">
-                   <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gray-200"></div>
-                   
-                   {[
-                     { label: "Pesanan Dibuat", status: "pending", time: order.created_at },
-                     { label: "Pembayaran Berhasil", status: "paid", time: order.paid_at },
-                     { label: "Sedang Diproses", status: "processing", time: null },
-                     { label: "Dalam Pengiriman", status: "shipped", time: order.shipped_at },
-                     { label: "Pesanan Diterima", status: "delivered", time: order.delivered_at }
-                   ].map((step, idx) => {
-                     const isDone = order.status === step.status || 
-                                    (step.status === "pending") ||
-                                    (step.status === "paid" && ["paid", "processing", "shipped", "delivered"].includes(order.status)) ||
-                                    (step.status === "processing" && ["processing", "shipped", "delivered"].includes(order.status)) ||
-                                    (step.status === "shipped" && ["shipped", "delivered"].includes(order.status)) ||
-                                    (step.status === "delivered" && order.status === "delivered");
-                     
-                     return (
-                       <div key={idx} className="flex gap-4 items-start relative">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center z-10 transition-colors ${
-                            isDone ? "bg-primary text-white" : "bg-gray-200 text-gray-400"
-                          }`}>
-                             {isDone ? <IconCheck className="w-3.5 h-3.5 font-black" /> : <div className="w-2 h-2 rounded-full bg-current" />}
-                          </div>
-                          <div>
-                             <p className={`text-sm font-black ${isDone ? "text-gray-900" : "text-gray-400"}`}>{step.label}</p>
-                             {step.time && (
-                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-                                 {new Date(step.time).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                               </p>
-                             )}
-                          </div>
-                       </div>
-                     )
-                   })}
-                </div>
-             </CardContent>
+            <CardContent className="p-6">
+              <h3 className="font-bold mb-6 flex items-center gap-2 text-primary">
+                <IconTruck className="w-4 h-4" /> Order Journey
+              </h3>
+              <div className="space-y-6 relative">
+                <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gray-200"></div>
+
+                {[
+                  {
+                    label: "Pesanan Dibuat",
+                    status: "pending",
+                    time: order.created_at,
+                  },
+                  {
+                    label: "Pembayaran Berhasil",
+                    status: "paid",
+                    time: order.paid_at,
+                  },
+                  {
+                    label: "Sedang Diproses",
+                    status: "processing",
+                    time: null,
+                  },
+                  {
+                    label: "Dalam Pengiriman",
+                    status: "shipped",
+                    time: order.shipped_at,
+                  },
+                  {
+                    label: "Pesanan Diterima",
+                    status: "delivered",
+                    time: order.delivered_at,
+                  },
+                ].map((step, idx) => {
+                  const isDone =
+                    order.status === step.status ||
+                    step.status === "pending" ||
+                    (step.status === "paid" &&
+                      ["paid", "processing", "shipped", "delivered"].includes(
+                        order.status
+                      )) ||
+                    (step.status === "processing" &&
+                      ["processing", "shipped", "delivered"].includes(
+                        order.status
+                      )) ||
+                    (step.status === "shipped" &&
+                      ["shipped", "delivered"].includes(order.status)) ||
+                    (step.status === "delivered" &&
+                      order.status === "delivered");
+
+                  return (
+                    <div key={idx} className="flex gap-4 items-start relative">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center z-10 transition-colors ${
+                          isDone
+                            ? "bg-primary text-white"
+                            : "bg-gray-200 text-gray-400"
+                        }`}
+                      >
+                        {isDone ? (
+                          <IconCheck className="w-3.5 h-3.5 font-black" />
+                        ) : (
+                          <div className="w-2 h-2 rounded-full bg-current" />
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          className={`text-sm font-black ${isDone ? "text-gray-900" : "text-gray-400"}`}
+                        >
+                          {step.label}
+                        </p>
+                        {step.time && (
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+                            {new Date(step.time).toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
           </Card>
 
           <Card className="border-none shadow-xl shadow-gray-100/50 bg-gray-50/50">

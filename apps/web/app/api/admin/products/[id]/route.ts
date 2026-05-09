@@ -20,6 +20,9 @@ export async function PATCH(
     return NextResponse.json({ data });
   } catch (error: unknown) {
     console.error("Admin Product PATCH Error:", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

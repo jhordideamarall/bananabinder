@@ -139,6 +139,7 @@ export const orders = pgTable("orders", {
   cancel_reason: text("cancel_reason"),
   paid_at: timestamp("paid_at"),
   shipped_at: timestamp("shipped_at"),
+  delivered_at: timestamp("delivered_at"),
   cancelled_at: timestamp("cancelled_at"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),

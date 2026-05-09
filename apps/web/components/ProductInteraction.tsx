@@ -28,7 +28,7 @@ export default function ProductInteraction({
   product: ProductWithVariants;
 }) {
   const { addItem } = useCart();
-  const [selectedVariant, setSelectedVariant] = useState(
+  const [selectedVariant, setSelectedVariant] = useState<Variant | undefined>(
     product.product_variants[0]
   );
   const [quantity] = useState(1);
@@ -62,7 +62,7 @@ export default function ProductInteraction({
               onClick={() => setSelectedVariant(variant)}
               disabled={variant.stock === 0}
               className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                selectedVariant.id === variant.id
+                selectedVariant?.id === variant.id
                   ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20"
                   : variant.stock === 0
                     ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
@@ -74,7 +74,7 @@ export default function ProductInteraction({
             </button>
           ))}
         </div>
-        {selectedVariant.stock < 10 && selectedVariant.stock > 0 && (
+        {selectedVariant && selectedVariant.stock < 10 && selectedVariant.stock > 0 && (
           <p className="text-xs text-orange-500 mt-2 font-medium">
             Sisa {selectedVariant.stock} item lagi!
           </p>
@@ -87,11 +87,11 @@ export default function ProductInteraction({
           <Button
             size="lg"
             onClick={handleAddToCart}
-            disabled={selectedVariant.stock === 0}
+            disabled={!selectedVariant || selectedVariant.stock === 0}
             className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
           >
             <IconShoppingBag className="w-5 h-5 mr-2" />
-            {selectedVariant.stock === 0 ? "Stok Habis" : "Tambah ke Keranjang"}
+            {!selectedVariant ? "Pilih Varian" : selectedVariant.stock === 0 ? "Stok Habis" : "Tambah ke Keranjang"}
           </Button>
         </div>
         <Button

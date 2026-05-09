@@ -168,14 +168,15 @@ export default async function HomePage() {
                         📚
                       </div>
                     )}
-                    {product.product_variants?.[0]?.stock < 10 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute top-2 left-2"
-                      >
-                        Stok Menipis
-                      </Badge>
-                    )}
+                    {product.product_variants?.[0] &&
+                      product.product_variants[0].stock < 10 && (
+                        <Badge
+                          variant="destructive"
+                          className="absolute top-2 left-2"
+                        >
+                          Stok Menipis
+                        </Badge>
+                      )}
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">

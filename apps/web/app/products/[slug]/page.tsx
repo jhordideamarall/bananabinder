@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { IconShieldCheck, IconTruck, IconStar } from "@tabler/icons-react";
 import { Badge } from "@bananasbindery/ui";
-import { generateProductStructuredData } from "@/lib/seo";
+import { generateProductStructuredData, type ProductWithRelations } from "@/lib/seo";
 import ProductInteraction from "@/components/ProductInteraction";
 
 interface ProductDetail {
@@ -18,6 +18,7 @@ interface ProductDetail {
     cover_color?: string;
     paper_type?: string;
     ring_size?: string;
+    sku?: string;
     stock: number;
     price_override?: number;
   }>;
@@ -38,9 +39,10 @@ async function getProduct(slug: string): Promise<ProductDetail | null> {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const product = await getProduct(params.slug);
+  const { slug } = await params;
+  const product = await getProduct(slug);
   if (!product) return { title: "Produk Tidak Ditemukan" };
 
   return {
@@ -57,12 +59,13 @@ export async function generateMetadata({
 export default async function ProductDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const product = await getProduct(params.slug);
+  const { slug } = await params;
+  const product = await getProduct(slug);
   if (!product) notFound();
 
-  const structuredData = generateProductStructuredData(product);
+  const structuredData = generateProductStructuredData(product as ProductWithRelations);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

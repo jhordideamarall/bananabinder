@@ -15,7 +15,10 @@ export async function GET() {
     return NextResponse.json({ data });
   } catch (error: unknown) {
     console.error("Admin Products GET Error:", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -31,6 +34,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ data });
   } catch (error: unknown) {
     console.error("Admin Products POST Error:", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
