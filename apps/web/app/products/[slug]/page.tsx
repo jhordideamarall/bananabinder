@@ -3,7 +3,10 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { IconShieldCheck, IconTruck, IconStar } from "@tabler/icons-react";
 import { Badge } from "@bananasbindery/ui";
-import { generateProductStructuredData, type ProductWithRelations } from "@/lib/seo";
+import {
+  generateProductStructuredData,
+  type ProductWithRelations,
+} from "@/lib/seo";
 import ProductInteraction from "@/components/ProductInteraction";
 
 interface ProductDetail {
@@ -65,7 +68,9 @@ export default async function ProductDetailPage({
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const structuredData = generateProductStructuredData(product as ProductWithRelations);
+  const structuredData = generateProductStructuredData(
+    product as ProductWithRelations
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

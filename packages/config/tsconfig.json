@@ -1,13 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@bananasbindery/tsconfig/library.json",
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "declaration": true,
-    "declarationMap": true,
-    "jsx": "react-jsx",
     "outDir": "dist"
   },
   "include": ["*.ts"]

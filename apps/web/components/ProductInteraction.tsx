@@ -74,11 +74,13 @@ export default function ProductInteraction({
             </button>
           ))}
         </div>
-        {selectedVariant && selectedVariant.stock < 10 && selectedVariant.stock > 0 && (
-          <p className="text-xs text-orange-500 mt-2 font-medium">
-            Sisa {selectedVariant.stock} item lagi!
-          </p>
-        )}
+        {selectedVariant &&
+          selectedVariant.stock < 10 &&
+          selectedVariant.stock > 0 && (
+            <p className="text-xs text-orange-500 mt-2 font-medium">
+              Sisa {selectedVariant.stock} item lagi!
+            </p>
+          )}
       </div>
 
       {/* Actions */}
@@ -91,7 +93,11 @@ export default function ProductInteraction({
             className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
           >
             <IconShoppingBag className="w-5 h-5 mr-2" />
-            {!selectedVariant ? "Pilih Varian" : selectedVariant.stock === 0 ? "Stok Habis" : "Tambah ke Keranjang"}
+            {!selectedVariant
+              ? "Pilih Varian"
+              : selectedVariant.stock === 0
+                ? "Stok Habis"
+                : "Tambah ke Keranjang"}
           </Button>
         </div>
         <Button

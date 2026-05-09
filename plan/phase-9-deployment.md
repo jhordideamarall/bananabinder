@@ -1,6 +1,7 @@
 # Phase 9 — Deployment & Production
 
 ## Objective
+
 Deploy ke production dengan semua environment variables dan monitoring.
 
 ## Tasks
@@ -17,6 +18,7 @@ Deploy ke production dengan semua environment variables dan monitoring.
 - [x] Go live 🚀
 
 ## Output
+
 - Website live di production domain
 - Payment working (real money)
 - Monitoring active

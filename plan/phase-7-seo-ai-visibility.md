@@ -1,6 +1,7 @@
 # Phase 7 — SEO & AI Visibility
 
 ## Objective
+
 Implementasi strategi SEO dan AI discoverability sesuai `AI-visibilites.md`.
 
 ## Tasks
@@ -17,6 +18,7 @@ Implementasi strategi SEO dan AI discoverability sesuai `AI-visibilites.md`.
 - [x] Internal linking strategy implementation
 
 ## Output
+
 - Semua halaman punya metadata + structured data
 - Sitemap accessible
 - AI & search engines bisa memahami brand + produk

@@ -1,6 +1,7 @@
 # Phase 8 — Testing & QA
 
 ## Objective
+
 Pastikan semua flow berjalan benar dan aman sebelum production.
 
 ## Tasks
@@ -15,6 +16,7 @@ Pastikan semua flow berjalan benar dan aman sebelum production.
 - [x] Edge cases: expired coupon, out of stock, double payment, concurrent checkout
 
 ## Output
+
 - All tests passing
 - No critical security issues
 - Performance targets met
