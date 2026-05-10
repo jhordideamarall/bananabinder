@@ -18,10 +18,11 @@ export async function POST(req: Request) {
 
     // Issue a session cookie using the new SSR client and the hidden password
     const supabase = await createClient();
-    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
-      phone: phone,
-      password: result.hidden_password,
-    });
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.signInWithPassword({
+        phone: phone,
+        password: result.hidden_password,
+      });
 
     if (sessionError) {
       throw new Error(`Gagal membuat sesi login: ${sessionError.message}`);

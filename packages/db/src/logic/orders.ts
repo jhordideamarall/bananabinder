@@ -2,6 +2,7 @@ import { productVariants, orders } from "../schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../schema";
+import { validateCoupon } from "./marketing";
 
 export interface OrderItemInput {
   variantId: string;
@@ -63,24 +64,30 @@ export async function calculateOrderTotal(
 
   let discount = 0;
   let couponId: string | undefined;
+  let isFreeShipping = false;
 
   if (couponCode) {
-    const coupon = await db.query.coupons.findFirst({
-      where: and(
-        eq(schema.coupons.code, couponCode),
-        eq(schema.coupons.is_active, true)
-      ),
-    });
+    const coupon = await validateCoupon(db, couponCode, subtotal);
+    couponId = coupon.id;
 
-    if (coupon) {
-      couponId = coupon.id;
-      // Basic percentage discount for now
+    if (coupon.discount_type === "percentage") {
       discount = Math.round((subtotal * coupon.discount_value) / 100);
+      if (
+        coupon.max_discount_amount &&
+        discount > coupon.max_discount_amount
+      ) {
+        discount = coupon.max_discount_amount;
+      }
+    } else if (coupon.discount_type === "fixed") {
+      discount = coupon.discount_value;
+    } else if (coupon.discount_type === "free_shipping") {
+      isFreeShipping = true;
     }
   }
 
-  const tax = Math.round((subtotal - discount) * 0.11); // 11% Tax
-  const total = subtotal - discount + tax;
+  const taxableAmount = Math.max(0, subtotal - discount);
+  const tax = Math.round(taxableAmount * 0.11); // 11% Tax
+  const total = taxableAmount + tax;
 
   return {
     subtotal,
@@ -90,6 +97,7 @@ export async function calculateOrderTotal(
     items: processedItems,
     couponId,
     couponCode: couponCode || null,
+    isFreeShipping,
   };
 }
 
@@ -202,8 +210,10 @@ export async function createOrder(
         subtotal: calculation.subtotal,
         discount_amount: calculation.discount,
         tax_amount: calculation.tax,
-        shipping_cost: options.shippingCost,
-        total_amount: calculation.total + options.shippingCost,
+        shipping_cost: calculation.isFreeShipping ? 0 : options.shippingCost,
+        total_amount:
+          calculation.total +
+          (calculation.isFreeShipping ? 0 : options.shippingCost),
         status: "pending",
         coupon_id: calculation.couponId,
         coupon_code: calculation.couponCode,

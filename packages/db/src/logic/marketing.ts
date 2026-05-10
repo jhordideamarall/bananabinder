@@ -3,6 +3,40 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../schema";
 import { carts } from "../schema";
 import { sendWhatsAppMessage } from "../services/fonnte";
+import { eq } from "drizzle-orm";
+
+export async function validateCoupon(
+  db: PostgresJsDatabase<typeof schema>,
+  code: string,
+  subtotal: number
+) {
+  const coupon = await db.query.coupons.findFirst({
+    where: and(
+      eq(schema.coupons.code, code),
+      eq(schema.coupons.is_active, true)
+    ),
+  });
+
+  if (!coupon) throw new Error("Kupon tidak ditemukan atau tidak aktif");
+
+  const now = new Date();
+  if (coupon.valid_from > now) throw new Error("Kupon belum bisa digunakan");
+  if (coupon.valid_until < now) throw new Error("Kupon sudah kadaluarsa");
+
+  if (coupon.usage_limit && (coupon.used_count || 0) >= coupon.usage_limit) {
+    throw new Error("Kuota penggunaan kupon sudah habis");
+  }
+
+  if (subtotal < (coupon.min_purchase_amount || 0)) {
+    throw new Error(
+      `Minimal pembelian untuk kupon ini adalah Rp ${(
+        coupon.min_purchase_amount || 0
+      ).toLocaleString("id-ID")}`
+    );
+  }
+
+  return coupon;
+}
 
 export async function processAbandonedCarts(
   db: PostgresJsDatabase<typeof schema>
