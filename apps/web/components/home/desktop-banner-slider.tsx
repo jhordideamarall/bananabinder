@@ -15,6 +15,7 @@ interface Banner {
   link: string;
   bg: string;
   accent: string;
+  image: string;
 }
 
 export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
@@ -29,12 +30,7 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
     return () => clearInterval(timer);
   }, [banners.length]);
 
-  const images = [
-    '1583337130417-3346a1be7dee',
-    '1548546738-8509cb246ed3',
-    '1585110396000-c9ffd4e4b308',
-    '1583337130417-3346a1be7dee',
-  ];
+
 
   return (
     <div className="hidden lg:block mx-auto max-w-[1100px] px-6">
@@ -57,10 +53,10 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
               className="absolute inset-0"
             >
               <Image
-                src={`https://images.unsplash.com/photo-${images[current % images.length]}?w=1400&q=85`}
+                src={banner.image}
                 alt=""
                 fill
-                className="object-cover opacity-70"
+                className="object-cover"
                 sizes="1100px"
               />
             </m.div>
@@ -68,7 +64,7 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
               className="absolute inset-0"
               style={{
                 background: `linear-gradient(90deg, ${banner.bg} 0%, transparent 80%)`,
-                opacity: 0.9,
+                opacity: 0,
               }}
             />
           </m.div>

@@ -151,6 +151,7 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
         className="absolute inset-0 z-0"
         style={{
           background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.1) 75%, transparent 100%)',
+          opacity: 0,
         }}
       />
       <div
