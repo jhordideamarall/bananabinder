@@ -236,7 +236,7 @@ export function Header() {
       >
         <div className="pt-3"></div>
 
-        <LayoutGroup>
+        <div>
           {/* ── Title row ── */}
           <m.div
             className="flex items-center justify-between px-[clamp(16px,5vw,20px)]"
@@ -485,7 +485,7 @@ export function Header() {
               </m.div>
             )}
           </AnimatePresence>
-        </LayoutGroup>
+        </div>
       </m.div>
     </>
   );
