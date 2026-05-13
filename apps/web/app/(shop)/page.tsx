@@ -31,7 +31,7 @@ const BANNERS = [
     cta: 'Belanja sekarang',
     link: '/products?sale=true',
     bg: 'linear-gradient(135deg, #1A1714 0%, #3D2F1E 100%)',
-    accent: '#7EC8E3',
+    accent: '#FFD54C',
     image: '/images/products/binder-denim-pink-blue-01.jpg',
   },
   {
@@ -53,7 +53,7 @@ const BANNERS = [
     cta: 'Cek Promo',
     link: '/products',
     bg: 'linear-gradient(135deg, #1E2D24 0%, #244A35 100%)',
-    accent: '#7EC8E3',
+    accent: '#FFD54C',
     image: '/images/products/binder-bundling-01.jpg',
   },
   {
@@ -64,15 +64,15 @@ const BANNERS = [
     cta: 'Mulai Custom',
     link: '/custom',
     bg: 'linear-gradient(135deg, #1A1714 0%, #2D1E3D 100%)',
-    accent: '#7EC8E3',
+    accent: '#FFD54C',
     image: '/images/products/binder-custom-nama-01.jpg',
   },
 ];
 
 const FEATURES = [
   { label: 'Same day', sub: 'Order Before 14:00', bg: '#F2A7C3', text: '#FFFFFF' },
-  { label: 'Artisan binder', sub: 'Hand crafting', bg: '#7EC8E3', text: '#FFFFFF' },
-  { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: '#E07B39', text: '#FFFFFF' },
+  { label: 'Artisan binder', sub: 'Hand crafting', bg: '#FFD54C', text: '#FFFFFF' },
+  { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: 'linear-gradient(135deg, #7EC8E3 0%, #5BBADF 100%)', text: '#FFFFFF' },
 ];
 
 interface BannerCardProps {
@@ -531,7 +531,7 @@ export default function HomePage() {
               {
                 title: 'Edisi Terbatas',
                 sub: 'Koleksi Pastel 2024',
-                bg: 'linear-gradient(135deg, #7EC8E3 0%, #A5DBF0 100%)',
+                bg: 'linear-gradient(135deg, #FFD54C 0%, #FFE082 100%)',
                 icon: '🌸',
                 link: '/products',
               },

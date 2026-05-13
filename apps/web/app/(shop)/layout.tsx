@@ -23,7 +23,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
           <div key="mobile-header-group">
             <div
               key="mobile-bg-blob"
-              className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#F5F3F0] lg:hidden"
+              className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#FFD54C] lg:hidden"
               style={{ maxWidth: 430, height: '40vh' }}
             />
             <div key="mobile-header-wrapper" className="lg:hidden">

@@ -227,7 +227,7 @@ export function Header() {
         }}
         style={{
           paddingTop: 'env(safe-area-inset-top)',
-          background: '#FDFCFB',
+          background: '#FFD54C',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderBottomLeftRadius: 24,
@@ -352,14 +352,14 @@ export function Header() {
                 onClick={() => setSearchOpen(true)}
                 animate={{
                   boxShadow: searchOpen
-                    ? '0 0 0 2px #7EC8E3, 0 0 18px rgba(126,200,227,0.5), 0 0 36px rgba(126,200,227,0.22)'
+                    ? '0 0 0 2px #FFD54C, 0 0 18px rgba(126,200,227,0.5), 0 0 36px rgba(126,200,227,0.22)'
                     : '0 0 0 0px rgba(126,200,227,0)',
                 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                className="flex items-center gap-2.5 rounded-full border border-[#7EC8E3]/30 bg-stone/60 px-4 cursor-pointer hover:bg-stone/80"
+                className="flex items-center gap-2.5 rounded-full border border-[#FFD54C]/30 bg-white px-4 cursor-pointer hover:bg-stone/80"
                 style={{ paddingTop: searchPy, paddingBottom: searchPy }}
               >
-                <m.span layout className="flex items-center text-[#7EC8E3]">
+                <m.span layout className="flex items-center text-[#FFD54C]">
                   <SearchIcon />
                 </m.span>
                 <m.span layout className="font-sans text-sm text-[#A09890] truncate">
@@ -381,8 +381,8 @@ export function Header() {
                   <m.button
                     layout
                     whileTap={{ scale: 0.9 }}
-                    className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border border-[#7EC8E3]/30 transition-colors shadow-lg shadow-[#7EC8E3]/20 ${
-                      showFilters ? 'bg-white text-[#7EC8E3]' : 'bg-[#7EC8E3] text-white'
+                    className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border border-[#FFD54C]/30 transition-colors shadow-lg shadow-[#FFD54C]/20 ${
+                      showFilters ? 'bg-[#7EC8E3] text-white' : 'bg-white text-[#1A1714]'
                     }`}
                     onClick={() => setShowFilters(!showFilters)}
                     aria-label="Filter"

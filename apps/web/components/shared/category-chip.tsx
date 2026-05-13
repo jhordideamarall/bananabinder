@@ -15,7 +15,7 @@ export function CategoryChip({ label, active = false, onClick, href }: CategoryC
     alignItems: 'center',
     padding: '7px 16px',
     borderRadius: 9999,
-    border: `1px solid ${active ? '#7EC8E3' : '#D8D4CE/60'}`,
+    border: `1px solid ${active ? '#7EC8E3' : 'rgba(216,212,206,0.6)'}`,
     background: active ? '#7EC8E3' : '#FDFCFB',
     color: active ? 'white' : '#3D3830',
     fontFamily: 'var(--font-heading)',
