@@ -173,7 +173,7 @@
   --color-primary-light: #FFF9E6;
   --color-primary-mid: #FFC107;
   --color-primary-dark: #FBC02D;
-  --color-active-blue: #7EC8E3;
+  --color-active-blue: #FFD54C;
   --color-ink: #1a1714;
   --color-ink-2: #3d3830;
   --color-ink-3: #6b6460;
@@ -249,14 +249,14 @@
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 18px;
-  color: #7EC8E3;
+  color: #FFD54C;
 }
 
 .t-price-sm {
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 14px;
-  color: #7EC8E3;
+  color: #FFD54C;
 }
 
 /* ─── Chip / pill ──────────────────────────────────────────────── */
@@ -273,7 +273,7 @@
 
 .chip-primary {
   background: #E3F2FD;
-  color: #1976D2;
+  color: #FBC02D;
 }
 
 .chip-green {
@@ -367,8 +367,8 @@
 }
 
 .slot-pill.active {
-  border-color: #7EC8E3;
-  background: #7EC8E3;
+  border-color: #FFD54C;
+  background: #FFD54C;
   color: white;
 }
 
@@ -435,7 +435,7 @@
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 13px;
-  color: #7EC8E3;
+  color: #FFD54C;
   background: none;
   border: none;
   cursor: pointer;
@@ -457,7 +457,7 @@
 }
 
 .radio-card.selected {
-  border-color: #7EC8E3;
+  border-color: #FFD54C;
   background: #E3F2FD;
 }
 
@@ -475,14 +475,14 @@
 }
 
 .radio-dot.selected {
-  border-color: #7EC8E3;
+  border-color: #FFD54C;
 }
 
 .radio-dot-inner {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #7EC8E3;
+  background: #FFD54C;
 }
 
 /* ─── Tab bar ──────────────────────────────────────────────────── */
@@ -502,8 +502,8 @@
 }
 
 .tab-btn.active {
-  color: #7EC8E3;
-  border-bottom-color: #7EC8E3;
+  color: #FFD54C;
+  border-bottom-color: #FFD54C;
 }
 
 /* ─── Safe area ────────────────────────────────────────────────── */
@@ -544,10 +544,10 @@
     transform: translateX(-50%);
     width: 100vw;
     height: 755px;
-    background: linear-gradient(160deg, #1976D2 0%, #7EC8E3 40%, #64B5F6 100%);
+    background: linear-gradient(160deg, #FBC02D 0%, #FFD54C 40%, #FFF9E6 100%);
     z-index: 0;
     clip-path: ellipse(130% 100% at 50% 0%);
-    box-shadow: 0 10px 50px rgba(126, 200, 227, 0.2);
+    box-shadow: 0 10px 50px rgba(255, 213, 76, 0.2);
   }
 }
 

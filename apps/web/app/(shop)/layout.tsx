@@ -17,7 +17,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
         <div className="desktop-hero-bg" />
       </div>
 
-      <div className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent">
+      <div className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FFFDF5] lg:bg-transparent">
         {/* Mobile-only Background & Header */}
         {!isProductDetail && (
           <div key="mobile-header-group">
