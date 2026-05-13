@@ -156,15 +156,17 @@ export function Footer() {
             lineHeight: 1.6,
           }}
         >
-          Ruko Pisa Grande 2 Blok K No 19, Curug Sangereng,
+          Taman Yasmin Sektor V Tahap II Jl. Cijahe 1 No.60,
           <br />
-          Kec. Kelapa Dua, Kab. Tangerang, Banten 15811
+          Kel. Cilendek Timur, Kec. Bogor Barat, Kota Bogor, Jawa Barat 16112
           <br />
-          <a href="tel:085810075612" style={{ color: '#F5A46A', textDecoration: 'none' }}>
-            0858-1007-5612
+          <a href="tel:089519541180" style={{ color: '#F5A46A', textDecoration: 'none' }}>
+            0895-1954-1180
           </a>
           <br />
-          Buka setiap hari 09:00 - 21:00 WIB
+          <a href="mailto:banastuff@gmail.com" style={{ color: '#A09890', textDecoration: 'none', fontSize: '12px' }}>
+            banastuff@gmail.com
+          </a>
         </p>
       </div>
 
