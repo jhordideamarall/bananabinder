@@ -45,8 +45,8 @@ export function VariantSelector({ variants, selectedId, onSelect }: VariantSelec
                 height: 38,
                 padding: '0 16px',
                 borderRadius: 12,
-                border: isSelected ? '1.5px solid #E07B39' : '1.5px solid var(--color-stone-3)',
-                background: isSelected ? '#E07B39' : '#FFFFFF',
+                border: isSelected ? '1.5px solid #7EC8E3' : '1.5px solid var(--color-stone-3)',
+                background: isSelected ? '#7EC8E3' : '#FFFFFF',
                 cursor: isOutOfStock ? 'not-allowed' : 'pointer',
                 opacity: isOutOfStock ? 0.4 : 1,
                 transition: 'all 0.2s ease',
@@ -74,7 +74,7 @@ export function VariantSelector({ variants, selectedId, onSelect }: VariantSelec
                 style={{
                   fontFamily: 'var(--font-sans)',
                   fontSize: 10,
-                  color: '#E07B39',
+                  color: '#7EC8E3',
                   fontWeight: 600,
                 }}
               >

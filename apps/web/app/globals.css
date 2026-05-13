@@ -69,7 +69,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.78 0.12 215); /* Cerulean Blue */
+  --primary: oklch(0.88 0.17 90); /* Banana Yellow */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -169,10 +169,11 @@
 
 /* ─── Design tokens (hex) ───────────────────────────────────────── */
 :root {
-  --color-primary: #7EC8E3;
-  --color-primary-light: #E3F2FD;
-  --color-primary-mid: #64B5F6;
-  --color-primary-dark: #1976D2;
+  --color-primary: #FFD54C;
+  --color-primary-light: #FFF9E6;
+  --color-primary-mid: #FFC107;
+  --color-primary-dark: #FBC02D;
+  --color-active-blue: #7EC8E3;
   --color-ink: #1a1714;
   --color-ink-2: #3d3830;
   --color-ink-3: #6b6460;

@@ -125,7 +125,7 @@ export function NotificationSheet({ isOpen, onClose }: NotificationSheetProps) {
                   <Link href="/login" onClick={onClose}>
                     <m.button
                       whileTap={{ scale: 0.96 }}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#7EC8E3] py-2.5 font-heading text-xs font-bold text-white shadow-lg shadow-[#7EC8E3]/20"
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#FFD54C] py-2.5 font-heading text-xs font-bold text-ink shadow-lg shadow-[#FFD54C]/20"
                     >
                       <LogIn size={14} /> Masuk Sekarang
                     </m.button>
@@ -153,7 +153,7 @@ export function NotificationSheet({ isOpen, onClose }: NotificationSheetProps) {
                       <div
                         className={`w-1.5 flex-shrink-0 rounded-full my-1 ${
                           notif.type === 'order'
-                            ? 'bg-[#2D7D52]'
+                            ? 'bg-[#FFD54C]'
                             : notif.type === 'promo'
                               ? 'bg-[#7EC8E3]'
                               : 'bg-[#A09890]'

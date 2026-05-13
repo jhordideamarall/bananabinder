@@ -31,7 +31,7 @@ const PawIcon = () => (
 );
 
 const actionStyle: CSSProperties = {
-  background: '#E07B39',
+  background: '#FFD54C',
   color: 'white',
   padding: '12px 24px',
   borderRadius: 9999,
