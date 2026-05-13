@@ -18,20 +18,22 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
       </div>
 
       <div key="shop-layout-shell" className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent">
-        {/* Mobile-only Background & Header */}
-        {!isProductDetail ? (
-          <div key="header-group-active">
-            <div
-              className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#F5F3F0] lg:hidden"
-              style={{ maxWidth: 430, height: '40vh' }}
-            />
-            <div className="lg:hidden">
-              <Header />
-            </div>
-          </div>
-        ) : (
-          <div key="header-group-hidden" />
+        {/* Mobile Background Blob - Conditional */}
+        {!isProductDetail && (
+          <div
+            key="mobile-bg-blob"
+            className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#F5F3F0] lg:hidden"
+            style={{ maxWidth: 430, height: '40vh' }}
+          />
         )}
+
+        {/* Header - Stay Mounted but Hide on Product Detail */}
+        <div 
+          key="global-header-wrapper" 
+          className={`lg:hidden transition-opacity duration-300 ${isProductDetail ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        >
+          <Header />
+        </div>
 
         <main
           key="main-content-area"
@@ -49,14 +51,13 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
 
-        {/* Floating BottomNav Overlay - Mobile only */}
-        {!isProductDetail ? (
-          <div key="nav-group-active" className="lg:hidden">
-            <BottomNav />
-          </div>
-        ) : (
-          <div key="nav-group-hidden" />
-        )}
+        {/* Floating BottomNav Overlay - Mobile only - Stay Mounted */}
+        <div 
+          key="global-mobile-nav" 
+          className={`lg:hidden transition-opacity duration-300 ${isProductDetail ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        >
+          <BottomNav />
+        </div>
       </div>
 
       <div className="hidden lg:block">
