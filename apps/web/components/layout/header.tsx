@@ -404,6 +404,7 @@ export function Header() {
           <AnimatePresence>
             {isProductPage && showFilters && (
               <m.div
+                key="category-chips-container"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{
                   height: 'auto',
