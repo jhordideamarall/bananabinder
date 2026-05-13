@@ -91,7 +91,7 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
               </p>
               <Link
                 href={banner.link as Route}
-                className="mt-10 inline-flex w-fit items-center rounded-full bg-white px-9 py-4 font-heading text-[16px] font-bold text-ink no-underline shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-all hover:scale-105 hover:shadow-[0_15px_35px_rgba(0,0,0,0.2)]"
+                className="mt-10 inline-flex w-fit items-center rounded-full bg-white px-9 py-4 font-heading text-[16px] font-bold text-ink no-underline shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all hover:scale-105 hover:shadow-[0_12px_30px_rgba(0,0,0,0.1)]"
               >
                 {banner.cta}
               </Link>

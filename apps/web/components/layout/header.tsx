@@ -222,8 +222,8 @@ export function Header() {
         animate={{
           boxShadow:
             isProductPage && showFilters
-              ? '0 12px 40px rgba(0,0,0,0.12)'
-              : '0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)',
+              ? '0 8px 30px rgba(0,0,0,0.06)'
+              : '0 6px 20px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04)',
         }}
         style={{
           paddingTop: 'env(safe-area-inset-top)',

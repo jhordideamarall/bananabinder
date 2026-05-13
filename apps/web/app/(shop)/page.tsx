@@ -133,7 +133,7 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
         rotateY,
         opacity,
         zIndex,
-        boxShadow: '0 15px 45px rgba(0,0,0,0.25)',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
       }}
     >
       <div className="absolute inset-0 z-0">
