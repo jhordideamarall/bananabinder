@@ -70,9 +70,9 @@ const BANNERS = [
 ];
 
 const FEATURES = [
-  { label: 'Same day', sub: 'Order Before 14:00', bg: '#F2A7C3', text: '#FFFFFF' },
+  { label: 'Same day', sub: 'Order Before 14:00', bg: 'linear-gradient(135deg, #F2A7C3 0%, #F8C3D6 100%)', text: '#FFFFFF' },
   { label: 'Artisan binder', sub: 'Hand crafting', bg: 'linear-gradient(135deg, #693C6B 0%, #B76590 100%)', text: '#FFFFFF' },
-  { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: '#E07B39', text: '#FFFFFF' },
+  { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: 'linear-gradient(135deg, #E07B39 0%, #F2A16B 100%)', text: '#FFFFFF' },
 ];
 
 interface BannerCardProps {
