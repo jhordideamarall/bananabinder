@@ -222,12 +222,12 @@ export function Header() {
         animate={{
           boxShadow:
             isProductPage && showFilters
-              ? '0 8px 30px rgba(0,0,0,0.06)'
-              : '0 6px 20px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04)',
+              ? '0 12px 40px rgba(0,0,0,0.12)'
+              : '0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)',
         }}
         style={{
           paddingTop: 'env(safe-area-inset-top)',
-          background: 'linear-gradient(to bottom, rgba(255, 245, 248, 0.95), rgba(255, 255, 255, 0.9))',
+          background: '#FDFCFB',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderBottomLeftRadius: 24,
@@ -404,7 +404,6 @@ export function Header() {
           <AnimatePresence>
             {isProductPage && showFilters && (
               <m.div
-                key="category-chips-container"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{
                   height: 'auto',

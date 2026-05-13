@@ -12,18 +12,18 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <div key="desktop-header-section" className="hidden lg:block">
+      <div className="hidden lg:block">
         <DesktopNav />
         <div className="desktop-hero-bg" />
       </div>
 
-      <div key="mobile-content-shell" className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent">
+      <div className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent">
         {/* Mobile-only Background & Header */}
         {!isProductDetail && (
           <div key="mobile-header-group">
             <div
               key="mobile-bg-blob"
-              className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#7EC8E3] lg:hidden"
+              className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#F5F3F0] lg:hidden"
               style={{ maxWidth: 430, height: '40vh' }}
             />
             <div key="mobile-header-wrapper" className="lg:hidden">
@@ -56,7 +56,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
         )}
       </div>
 
-      <div key="desktop-footer-section" className="hidden lg:block">
+      <div className="hidden lg:block">
         <Footer />
       </div>
     </div>

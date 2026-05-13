@@ -70,9 +70,9 @@ const BANNERS = [
 ];
 
 const FEATURES = [
-  { label: 'Same day', sub: 'Order Before 14:00', bg: 'linear-gradient(135deg, #F2A7C3 0%, #E58FB2 100%)', text: '#FFFFFF' },
-  { label: 'Artisan binder', sub: 'Hand crafting', bg: 'linear-gradient(135deg, #693C6B 0%, #B76590 100%)', text: '#FFFFFF' },
-  { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: 'linear-gradient(135deg, #E07B39 0%, #CC6F32 100%)', text: '#FFFFFF' },
+  { label: 'Same day', sub: 'Order Before 14:00', bg: '#F2A7C3', text: '#FFFFFF' },
+  { label: 'Artisan binder', sub: 'Hand crafting', bg: '#7EC8E3', text: '#FFFFFF' },
+  { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: '#E07B39', text: '#FFFFFF' },
 ];
 
 interface BannerCardProps {
@@ -133,7 +133,7 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
         rotateY,
         opacity,
         zIndex,
-        boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+        boxShadow: '0 15px 45px rgba(0,0,0,0.25)',
       }}
     >
       <div className="absolute inset-0 z-0">
@@ -151,7 +151,6 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
         className="absolute inset-0 z-0"
         style={{
           background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.1) 75%, transparent 100%)',
-          opacity: 0,
         }}
       />
       <div
@@ -289,7 +288,7 @@ export default function HomePage() {
           left: 0,
           right: 0,
           height: 200,
-          background: '#7EC8E3',
+          background: '#F5F3F0',
           zIndex: 0,
         }}
       />
@@ -297,7 +296,7 @@ export default function HomePage() {
       {/* Top Section (Grey Background) - Banner & Same Day */}
       <div
         style={{ paddingBottom: 48 }}
-        className="bg-[#7EC8E3] lg:bg-transparent lg:rounded-3xl lg:mx-6 lg:pb-6"
+        className="bg-[#F5F3F0] lg:bg-transparent lg:rounded-3xl lg:mx-6 lg:pb-6"
       >
         {/* Desktop simple slider */}
         <DesktopBannerSlider banners={BANNERS} />

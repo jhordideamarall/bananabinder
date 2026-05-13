@@ -15,7 +15,6 @@ interface Banner {
   link: string;
   bg: string;
   accent: string;
-  image: string;
 }
 
 export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
@@ -30,7 +29,12 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
     return () => clearInterval(timer);
   }, [banners.length]);
 
-
+  const images = [
+    '1583337130417-3346a1be7dee',
+    '1548546738-8509cb246ed3',
+    '1585110396000-c9ffd4e4b308',
+    '1583337130417-3346a1be7dee',
+  ];
 
   return (
     <div className="hidden lg:block mx-auto max-w-[1100px] px-6">
@@ -53,10 +57,10 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
               className="absolute inset-0"
             >
               <Image
-                src={banner.image}
+                src={`https://images.unsplash.com/photo-${images[current % images.length]}?w=1400&q=85`}
                 alt=""
                 fill
-                className="object-cover"
+                className="object-cover opacity-70"
                 sizes="1100px"
               />
             </m.div>
@@ -64,7 +68,7 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
               className="absolute inset-0"
               style={{
                 background: `linear-gradient(90deg, ${banner.bg} 0%, transparent 80%)`,
-                opacity: 0,
+                opacity: 0.9,
               }}
             />
           </m.div>
@@ -91,7 +95,7 @@ export function DesktopBannerSlider({ banners }: { banners: Banner[] }) {
               </p>
               <Link
                 href={banner.link as Route}
-                className="mt-10 inline-flex w-fit items-center rounded-full bg-white px-9 py-4 font-heading text-[16px] font-bold text-ink no-underline shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all hover:scale-105 hover:shadow-[0_12px_30px_rgba(0,0,0,0.1)]"
+                className="mt-10 inline-flex w-fit items-center rounded-full bg-white px-9 py-4 font-heading text-[16px] font-bold text-ink no-underline shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-all hover:scale-105 hover:shadow-[0_15px_35px_rgba(0,0,0,0.2)]"
               >
                 {banner.cta}
               </Link>
