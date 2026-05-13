@@ -17,7 +17,11 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
         <div className="desktop-hero-bg" />
       </div>
 
-      <div key="shop-layout-shell" className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent">
+      <div 
+        key="shop-layout-shell" 
+        className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent"
+        style={{ transform: 'translateZ(0)' }}
+      >
         {/* Mobile Background Blob - Conditional */}
         {!isProductDetail && (
           <div
@@ -54,7 +58,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
         {/* Floating BottomNav Overlay - Mobile only - Stay Mounted */}
         <div 
           key="global-mobile-nav" 
-          className={`lg:hidden transition-opacity duration-300 ${isProductDetail ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          className={`lg:hidden transition-opacity duration-300 ${isProductDetail ? 'hidden' : 'opacity-100'}`}
         >
           <BottomNav />
         </div>
