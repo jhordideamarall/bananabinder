@@ -12,35 +12,28 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <div key="desktop-nav-outer" className="hidden lg:block">
+      <div className="hidden lg:block">
         <DesktopNav />
         <div className="desktop-hero-bg" />
       </div>
 
-      <div 
-        key="shop-layout-shell" 
-        className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent"
-        style={{ transform: 'translateZ(0)' }}
-      >
-        {/* Mobile Background Blob - Conditional */}
+      <div className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FDFCFB] lg:bg-transparent">
+        {/* Mobile-only Background & Header */}
         {!isProductDetail && (
-          <div
-            key="mobile-bg-blob"
-            className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#F5F3F0] lg:hidden"
-            style={{ maxWidth: 430, height: '40vh' }}
-          />
+          <div key="mobile-header-group">
+            <div
+              key="mobile-bg-blob"
+              className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#F5F3F0] lg:hidden"
+              style={{ maxWidth: 430, height: '40vh' }}
+            />
+            <div key="mobile-header-wrapper" className="lg:hidden">
+              <Header />
+            </div>
+          </div>
         )}
 
-        {/* Header - Stay Mounted but Hide on Product Detail */}
-        <div 
-          key="global-header-wrapper" 
-          className={`lg:hidden transition-opacity duration-300 ${isProductDetail ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-        >
-          <Header />
-        </div>
-
         <main
-          key="main-content-area"
+          key="main-view-container"
           className="relative z-10 flex min-h-[100dvh] flex-col bg-transparent lg:pb-12"
           style={{
             paddingTop: isProductDetail
@@ -51,20 +44,19 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
               : 'calc(100px + env(safe-area-inset-bottom))',
           }}
         >
-          <div key="desktop-spacer-top" className="hidden lg:block h-16" />
+          <div key="desktop-spacer" className="hidden lg:block h-16" />
           {children}
         </main>
 
-        {/* Floating BottomNav Overlay - Mobile only - Stay Mounted */}
-        <div 
-          key="global-mobile-nav" 
-          className={`lg:hidden transition-opacity duration-300 ${isProductDetail ? 'hidden' : 'opacity-100'}`}
-        >
-          <BottomNav />
-        </div>
+        {/* Floating BottomNav Overlay - Mobile only */}
+        {!isProductDetail && (
+          <div key="mobile-nav-group" className="lg:hidden">
+            <BottomNav />
+          </div>
+        )}
       </div>
 
-      <div key="desktop-footer-outer" className="hidden lg:block">
+      <div className="hidden lg:block">
         <Footer />
       </div>
     </div>

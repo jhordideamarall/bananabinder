@@ -236,14 +236,14 @@ export function Header() {
       >
         <div className="pt-3"></div>
 
-        <div>
+        <LayoutGroup>
           {/* ── Title row ── */}
           <m.div
             className="flex items-center justify-between px-[clamp(16px,5vw,20px)]"
             style={{ marginBottom: titleRowMb }}
           >
             <Link href="/" className="flex flex-col no-underline group justify-center">
-              <m.div className="mb-0.5 flex items-center gap-1.5 h-11" whileHover="hover">
+              <m.div layout className="mb-0.5 flex items-center gap-1.5 h-11" whileHover="hover">
                 <m.div
                   initial={{ rotate: -180, scale: 0, opacity: 0 }}
                   animate={{ rotate: 0, scale: 1, opacity: 1 }}
@@ -272,6 +272,7 @@ export function Header() {
                 </m.div>
               </m.div>
               <m.button
+                layout
                 onClick={() => setPromptOpen(true)}
                 className="flex items-center gap-1 overflow-hidden active:opacity-60 transition-opacity"
                 style={{ opacity: locationOpacity, height: locationHeight }}
@@ -285,7 +286,7 @@ export function Header() {
               </m.button>
             </Link>
 
-            <m.div className="flex h-11 items-center gap-2">
+            <m.div layout className="flex gap-2">
               <m.button
                 whileHover={{ scale: 1.05, background: 'rgba(245,243,240,0.9)' }}
                 whileTap={{ scale: 0.94 }}
@@ -485,7 +486,7 @@ export function Header() {
               </m.div>
             )}
           </AnimatePresence>
-        </div>
+        </LayoutGroup>
       </m.div>
     </>
   );
