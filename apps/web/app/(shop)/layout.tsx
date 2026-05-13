@@ -12,7 +12,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <div className="hidden lg:block">
+      <div key="desktop-nav-outer" className="hidden lg:block">
         <DesktopNav />
         <div className="desktop-hero-bg" />
       </div>
@@ -60,7 +60,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <div className="hidden lg:block">
+      <div key="desktop-footer-outer" className="hidden lg:block">
         <Footer />
       </div>
     </div>
