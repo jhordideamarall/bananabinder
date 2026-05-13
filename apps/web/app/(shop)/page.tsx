@@ -71,7 +71,7 @@ const BANNERS = [
 
 const FEATURES = [
   { label: 'Same day', sub: 'Order Before 14:00', bg: '#F2A7C3', text: '#FFFFFF' },
-  { label: 'Artisan binder', sub: 'Hand crafting', bg: '#7EC8E3', text: '#FFFFFF' },
+  { label: 'Artisan binder', sub: 'Hand crafting', bg: 'linear-gradient(135deg, #693C6B 0%, #B76590 100%)', text: '#FFFFFF' },
   { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: '#E07B39', text: '#FFFFFF' },
 ];
 
