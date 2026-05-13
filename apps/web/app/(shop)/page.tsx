@@ -289,7 +289,7 @@ export default function HomePage() {
           left: 0,
           right: 0,
           height: 200,
-          background: '#F5F3F0',
+          background: '#7EC8E3',
           zIndex: 0,
         }}
       />
@@ -297,7 +297,7 @@ export default function HomePage() {
       {/* Top Section (Grey Background) - Banner & Same Day */}
       <div
         style={{ paddingBottom: 48 }}
-        className="bg-[#F5F3F0] lg:bg-transparent lg:rounded-3xl lg:mx-6 lg:pb-6"
+        className="bg-[#7EC8E3] lg:bg-transparent lg:rounded-3xl lg:mx-6 lg:pb-6"
       >
         {/* Desktop simple slider */}
         <DesktopBannerSlider banners={BANNERS} />
