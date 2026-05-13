@@ -1,0 +1,39 @@
+- generic [ref=e2]:
+    - generic [ref=e3]:
+        - generic [ref=e4]:
+            - link "Bananasbindery Jakarta Selatan" [ref=e5] [cursor=pointer]:
+                - /url: /
+                - generic [ref=e6]:
+                    - img [ref=e7]
+                    - generic [ref=e13]: Bananasbindery
+                - generic [ref=e14]:
+                    - img [ref=e16]
+                    - generic [ref=e19]: Jakarta Selatan
+            - generic [ref=e20]:
+                - button "Notifikasi" [ref=e21] [cursor=pointer]:
+                    - img [ref=e22]
+                - link "Keranjang" [ref=e26] [cursor=pointer]:
+                    - /url: /cart
+                    - img [ref=e29]
+        - link "Cari produk untuk peliharaanmu..." [ref=e34] [cursor=pointer]:
+            - /url: /search
+            - img [ref=e36]
+            - generic [ref=e39]: Cari produk untuk peliharaanmu...
+    - main [ref=e40]
+    - navigation "Navigasi utama" [ref=e46]:
+        - link "Home" [ref=e47] [cursor=pointer]:
+            - /url: /
+            - img [ref=e48]
+            - generic [ref=e51]: Home
+        - link "Produk" [ref=e52] [cursor=pointer]:
+            - /url: /products
+            - img [ref=e53]
+            - generic [ref=e56]: Produk
+        - link "Booking" [ref=e57] [cursor=pointer]:
+            - /url: /booking
+            - img [ref=e58]
+            - generic [ref=e64]: Booking
+        - link "Akun" [ref=e65] [cursor=pointer]:
+            - /url: /account
+            - img [ref=e66]
+            - generic [ref=e69]: Akun

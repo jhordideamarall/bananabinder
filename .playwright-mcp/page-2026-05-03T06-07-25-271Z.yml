@@ -1,0 +1,55 @@
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - banner [ref=e3]:
+            - button "Kembali" [ref=e4]:
+                - img [ref=e5]
+            - heading "Keranjang" [level=1] [ref=e7]
+            - generic [ref=e8]: 10 item
+        - main [ref=e9]:
+            - generic [ref=e10]:
+                - generic [ref=e11]:
+                    - img "Obat Kutu Frontline" [ref=e13]
+                    - generic [ref=e14]:
+                        - heading "Obat Kutu Frontline" [level=2] [ref=e15]
+                        - paragraph [ref=e16]: Rp 220.000
+                        - generic [ref=e18]:
+                            - button "Hapus Obat Kutu Frontline" [ref=e19] [cursor=pointer]:
+                                - img [ref=e20]
+                            - generic [ref=e21]: '2'
+                            - button "Tambah Obat Kutu Frontline" [ref=e22] [cursor=pointer]:
+                                - img [ref=e23]
+                    - paragraph [ref=e24]: Rp 440.000
+                - generic [ref=e25]:
+                    - img "Makanan Anjing Pedigree - 400g" [ref=e27]
+                    - generic [ref=e28]:
+                        - heading "Makanan Anjing Pedigree - 400g" [level=2] [ref=e29]
+                        - paragraph [ref=e30]: Rp 55.000
+                        - generic [ref=e32]:
+                            - button "Hapus Makanan Anjing Pedigree - 400g" [ref=e33] [cursor=pointer]:
+                                - img [ref=e34]
+                            - generic [ref=e35]: '8'
+                            - button "Tambah Makanan Anjing Pedigree - 400g" [ref=e36] [cursor=pointer]:
+                                - img [ref=e37]
+                    - paragraph [ref=e38]: Rp 440.000
+            - generic [ref=e39]:
+                - generic [ref=e40]:
+                    - img [ref=e41]
+                    - generic [ref=e44]: Voucher
+                - generic [ref=e45]:
+                    - textbox "Kode voucher" [ref=e46]
+                    - button "Pakai" [ref=e47]
+                - paragraph [ref=e48]: 'Coba kode: PETSHOP10'
+            - generic [ref=e49]:
+                - heading "Ringkasan Pesanan" [level=2] [ref=e50]
+                - generic [ref=e51]:
+                    - generic [ref=e52]: Subtotal
+                    - generic [ref=e53]: Rp 880.000
+                - generic [ref=e54]:
+                    - generic [ref=e55]: Ongkir
+                    - generic [ref=e56]: Gratis
+                - generic [ref=e58]:
+                    - generic [ref=e59]: Total
+                    - generic [ref=e60]: Rp 880.000
+        - link "Lanjut ke Checkout" [ref=e62] [cursor=pointer]:
+            - /url: /checkout
+    - alert [ref=e64]

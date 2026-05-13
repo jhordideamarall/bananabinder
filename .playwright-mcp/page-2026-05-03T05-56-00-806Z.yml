@@ -1,0 +1,68 @@
+- generic [active] [ref=e1]:
+    - main [ref=e3]:
+        - generic [ref=e4]:
+            - generic [ref=e5]:
+                - button [ref=e6] [cursor=pointer]:
+                    - img [ref=e7]
+                - generic [ref=e9]: Detail Produk
+                - generic [ref=e10]:
+                    - link [ref=e11] [cursor=pointer]:
+                        - /url: /cart
+                        - button [ref=e12]:
+                            - img [ref=e13]
+                    - button [ref=e17] [cursor=pointer]:
+                        - img [ref=e18]
+            - generic [ref=e20]:
+                - generic [ref=e21]:
+                    - img "Obat Kutu Frontline - foto 1" [ref=e24]
+                    - button "Thumbnail 1" [ref=e26] [cursor=pointer]:
+                        - img "Thumbnail 1" [ref=e28]
+                - generic [ref=e29]:
+                    - heading "Obat Kutu Frontline" [level=1] [ref=e31]
+                    - generic [ref=e34]: Rp 220.000
+                    - generic [ref=e35]:
+                        - generic [ref=e36]:
+                            - generic [ref=e38]: ★★★★☆
+                            - generic [ref=e39]: 4,8
+                            - generic [ref=e40]: (201)
+                        - generic [ref=e42]: 890 terjual
+                        - generic [ref=e44]: Stok 99
+                    - generic [ref=e46]:
+                        - paragraph [ref=e47]: Jumlah
+                        - generic [ref=e48]:
+                            - button [disabled] [ref=e49] [cursor=pointer]:
+                                - img [ref=e50]
+                            - generic [ref=e51]: '1'
+                            - button [ref=e52] [cursor=pointer]:
+                                - img [ref=e53]
+                    - generic [ref=e54]:
+                        - button "Deskripsi" [ref=e55] [cursor=pointer]
+                        - button "Ulasan (201)" [ref=e56] [cursor=pointer]
+                        - button "Pengiriman" [ref=e57] [cursor=pointer]
+                    - generic [ref=e60]:
+                        - paragraph [ref=e61]:
+                            - strong [ref=e62]: Obat Kutu Frontline
+                            - text: adalah obat & vitamin pilihan untuk kebutuhan harian peliharaan Anda.
+                        - generic [ref=e64]:
+                            - generic [ref=e65]: ·
+                            - generic [ref=e66]: Produk dikurasi untuk kualitas dan kenyamanan
+                        - generic [ref=e67]:
+                            - generic [ref=e68]: ·
+                            - generic [ref=e69]: Cocok untuk kebutuhan perawatan rutin
+                        - generic [ref=e70]:
+                            - generic [ref=e71]: ·
+                            - generic [ref=e72]: Stok dan harga dapat berubah sesuai ketersediaan
+            - generic [ref=e73]:
+                - generic [ref=e74]:
+                    - paragraph [ref=e75]: Total · 1 item
+                    - generic [ref=e76]: Rp 220.000
+                - generic [ref=e77]:
+                    - button "Keranjang" [ref=e78] [cursor=pointer]:
+                        - img [ref=e79]
+                        - generic [ref=e83]: Keranjang
+                    - button "Beli Sekarang" [ref=e84] [cursor=pointer]:
+                        - generic [ref=e85]: Beli Sekarang
+                        - img [ref=e86]
+    - button "Open Next.js Dev Tools" [ref=e93] [cursor=pointer]:
+        - img [ref=e94]
+    - alert [ref=e97]

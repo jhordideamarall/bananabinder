@@ -1,9 +1,20 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "XENDIT_SECRET_KEY",
+        "XENDIT_PUBLIC_KEY",
+        "NEXT_PUBLIC_XENDIT_PUBLIC_KEY",
+        "BITESHIP_API_KEY",
+        "BITESHIP_ORIGIN_AREA_ID"
+      ]
     },
     "dev": {
       "cache": false,
@@ -13,7 +24,19 @@
       "dependsOn": ["^build"]
     },
     "type-check": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "test:coverage": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "clean": {
+      "cache": false
     }
   }
 }

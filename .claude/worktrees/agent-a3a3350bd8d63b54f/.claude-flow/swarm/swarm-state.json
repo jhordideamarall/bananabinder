@@ -1,0 +1,23 @@
+{
+  "swarms": {
+    "swarm-1777715874504-gce5ve": {
+      "swarmId": "swarm-1777715874504-gce5ve",
+      "topology": "hierarchical-mesh",
+      "maxAgents": 15,
+      "status": "running",
+      "agents": [],
+      "tasks": [],
+      "config": {
+        "topology": "hierarchical-mesh",
+        "maxAgents": 15,
+        "strategy": "specialized",
+        "communicationProtocol": "message-bus",
+        "autoScaling": true,
+        "consensusMechanism": "majority"
+      },
+      "createdAt": "2026-05-02T09:57:54.504Z",
+      "updatedAt": "2026-05-02T09:57:54.504Z"
+    }
+  },
+  "version": "3.0.0"
+}

@@ -1,0 +1,97 @@
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - generic [ref=e4]:
+            - generic [ref=e5]: Flash Sale · Hari Ini
+            - heading "Diskon hingga 50%" [level=1] [ref=e6]:
+                - text: Diskon
+                - text: hingga 50%
+            - paragraph [ref=e7]: Makanan & aksesoris premium
+            - link "Belanja sekarang" [ref=e8] [cursor=pointer]:
+                - /url: /products
+        - generic [ref=e9]:
+            - generic [ref=e10]:
+                - generic [ref=e11]: Pengiriman sama hari
+                - generic [ref=e12]: Order sebelum 14:00
+            - generic [ref=e14]:
+                - generic [ref=e15]: Produk original
+                - generic [ref=e16]: Bergaransi resmi
+            - generic [ref=e18]:
+                - generic [ref=e19]: Poin loyalty
+                - generic [ref=e20]: Setiap pembelian
+        - generic [ref=e21]:
+            - generic [ref=e22]:
+                - generic [ref=e23]: Kategori
+                - link "Lihat semua" [ref=e24] [cursor=pointer]:
+                    - /url: /products
+            - generic [ref=e25]:
+                - link "Makanan" [ref=e26] [cursor=pointer]:
+                    - /url: /products?category=makanan
+                - link "Aksesoris" [ref=e27] [cursor=pointer]:
+                    - /url: /products?category=aksesoris
+                - link "Obat & Vitamin" [ref=e28] [cursor=pointer]:
+                    - /url: /products?category=obat-vitamin
+                - link "Kandang" [ref=e29] [cursor=pointer]:
+                    - /url: /products?category=kandang
+                - link "Grooming" [ref=e30] [cursor=pointer]:
+                    - /url: /products?category=grooming
+                - link "Frozen" [ref=e31] [cursor=pointer]:
+                    - /url: /products?category=frozen
+        - generic [ref=e32]:
+            - img [ref=e34]
+            - generic [ref=e40]:
+                - generic [ref=e41]: Grooming & Pet Hotel
+                - generic [ref=e42]: Booking jadwal sekarang, slot terbatas
+            - link "Booking" [ref=e43] [cursor=pointer]:
+                - /url: /booking
+                - text: Booking
+                - img [ref=e44]
+        - generic [ref=e46]:
+            - generic [ref=e47]:
+                - generic [ref=e48]:
+                    - text: Penawaran Terbaik
+                    - generic [ref=e49]:
+                        - generic [ref=e50]: Berakhir dalam
+                        - generic [ref=e51]: 02:14:38
+                - link "Semua" [ref=e52] [cursor=pointer]:
+                    - /url: /products?sale=true
+            - generic [ref=e53]:
+                - generic [ref=e54]:
+                    - generic [ref=e55]:
+                        - generic [ref=e56]: Dog Food
+                        - generic [ref=e57]: '-14%'
+                        - button [ref=e58] [cursor=pointer]:
+                            - img [ref=e59]
+                    - generic [ref=e60]:
+                        - generic [ref=e61]: Dog Food
+                        - generic [ref=e62]: Rp 385.000
+                        - generic [ref=e63]: Rp 450.000
+                - generic [ref=e64]:
+                    - generic [ref=e65]:
+                        - generic [ref=e66]: Cat Food
+                        - generic [ref=e67]: '-19%'
+                        - button [ref=e68] [cursor=pointer]:
+                            - img [ref=e69]
+                    - generic [ref=e70]:
+                        - generic [ref=e71]: Cat Food
+                        - generic [ref=e72]: Rp 72.000
+                        - generic [ref=e73]: Rp 89.000
+                - generic [ref=e74]:
+                    - generic [ref=e75]:
+                        - generic [ref=e76]: Vitamin
+                        - button [ref=e77] [cursor=pointer]:
+                            - img [ref=e78]
+                    - generic [ref=e79]:
+                        - generic [ref=e80]: Vitamin
+                        - generic [ref=e81]: Rp 145.000
+                - generic [ref=e82]:
+                    - generic [ref=e83]:
+                        - generic [ref=e84]: Collar
+                        - generic [ref=e85]: '-22%'
+                        - button [ref=e86] [cursor=pointer]:
+                            - img [ref=e87]
+                    - generic [ref=e88]:
+                        - generic [ref=e89]: Collar
+                        - generic [ref=e90]: Rp 98.000
+                        - generic [ref=e91]: Rp 125.000
+    - region "Notifications alt+T"
+    - alert [ref=e92]

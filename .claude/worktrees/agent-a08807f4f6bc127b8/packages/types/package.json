@@ -1,0 +1,18 @@
+{
+  "name": "@bananasbindery/types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./domain": "./src/domain/index.ts",
+    "./enums": "./src/enums.ts",
+    "./supabase": "./src/supabase.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@bananasbindery/tsconfig": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

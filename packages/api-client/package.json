@@ -1,0 +1,58 @@
+{
+  "name": "@bananasbindery/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./orders": "./src/orders.ts",
+    "./addresses": "./src/addresses.ts",
+    "./products": "./src/products.ts",
+    "./shipping": "./src/shipping.ts",
+    "./loyalty": "./src/loyalty.ts",
+    "./wishlist": "./src/wishlist.ts",
+    "./types": "./src/types.ts",
+    "./bookings": "./src/bookings.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "orders": [
+        "./src/orders.ts"
+      ],
+      "addresses": [
+        "./src/addresses.ts"
+      ],
+      "products": [
+        "./src/products.ts"
+      ],
+      "shipping": [
+        "./src/shipping.ts"
+      ],
+      "loyalty": [
+        "./src/loyalty.ts"
+      ],
+      "wishlist": [
+        "./src/wishlist.ts"
+      ],
+      "types": [
+        "./src/types.ts"
+      ],
+      "bookings": [
+        "./src/bookings.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@bananasbindery/types": "workspace:*",
+    "@supabase/supabase-js": "^2.105.1"
+  },
+  "devDependencies": {
+    "@bananasbindery/tsconfig": "workspace:*",
+    "@types/node": "^22.19.17",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  }
+}

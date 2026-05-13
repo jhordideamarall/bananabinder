@@ -1,0 +1,6 @@
+[     177ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/afa34_next_dist_client_9206905b._.js:5949
+[     184ms] [LOG] [Fast Refresh] done in 108ms @ http://localhost:3000/_next/static/chunks/afa34_next_dist_client_9206905b._.js:5809
+[     415ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:14537
+[     445ms] [WARNING] Image with src "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&q=80" was detected as the Largest Contentful Paint (LCP). Please add the "priority" property if this image is above the fold.
+Read more: https://nextjs.org/docs/api-reference/next/image#priority @ http://localhost:3000/_next/static/chunks/afa34_next_dist_ac59402a._.js:968
+[     446ms] [WARNING] Image with src "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&q=80" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes @ http://localhost:3000/_next/static/chunks/afa34_next_dist_ac59402a._.js:968

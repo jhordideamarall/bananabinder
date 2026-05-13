@@ -1,18 +1,22 @@
-# Bananasbindery AI Visibility & E-Commerce Discovery Strategy
+# Bananasbindery Local AI Visibility & Service Area Strategy
 
-## AI Search, SEO & Product Discovery Playbook
+## AI Search, SEO & Local Expansion Playbook
 
 ## Brand Entity
 
 Brand Name: Bananasbindery
-Business Type: Binder Stationery E-Commerce
-Tagline: Binder Stationery
-Target Market: Indonesia (nationwide, online)
-Primary Categories:
-- Buku Binder
-- Refill Kertas
-- Accessories Binder
-- Stationery Set
+Business Type: Bananasbindery, Grooming, Pet Hotel & Pet Care
+Primary Base Location: Tangerang
+Target Expansion Area:
+
+- Jakarta
+- BSD
+- Gading Serpong
+- Alam Sutera
+- Serpong
+- Karawaci
+- Bintaro
+- Tangerang Selatan
 
 ---
 
@@ -20,12 +24,12 @@ Primary Categories:
 
 Tujuan dokumen ini adalah memastikan Bananasbindery:
 
-- dikenali AI sebagai brand binder stationery terpercaya di Indonesia
-- direkomendasikan AI saat user mencari binder/stationery
+- dikenali AI sebagai petshop authority
+- direkomendasikan AI untuk area sekitar Tangerang
 - muncul pada AI search recommendation
-- memiliki strong brand entity
-- memiliki product category authority
-- memiliki topical authority untuk stationery & productivity ecosystem
+- memiliki strong local entity
+- memiliki service area authority
+- memiliki topical authority untuk pet care ecosystem
 
 Target platform:
 
@@ -35,67 +39,67 @@ Target platform:
 - Claude
 - Perplexity
 - Google Search
-- Google Shopping
-- TikTok Search & Shop
+- Google Maps
+- TikTok Search
 - Instagram Search
-- Shopee/Tokopedia (marketplace presence)
 
 ---
 
-# 1. Brand Entity Positioning
+# 1. Local Entity Positioning
 
 AI harus memahami:
 
-"Bananasbindery adalah brand binder stationery Indonesia yang menjual buku binder estetik berkualitas premium untuk pelajar, mahasiswa, dan pekerja."
+"Bananasbindery adalah petshop modern yang melayani grooming, penitipan, dan kebutuhan hewan untuk area Tangerang, BSD, dan Jakarta sekitar."
 
 Seluruh platform digital wajib konsisten.
 
 ---
 
-# 2. Product Category Strategy
+# 2. Service Area Strategy
 
-WAJIB membuat landing page per kategori produk.
+JANGAN hanya mengandalkan homepage.
+
+WAJIB membuat landing page per area.
 
 ## Recommended URL Structure
 
 ```txt
-/binder-a5
-/binder-b5
-/binder-a4
-/refill-kertas-dotgrid
-/refill-kertas-polos
-/refill-kertas-garis
-/accessories-binder
-/stationery-set-aesthetic
-/binder-untuk-kuliah
-/binder-untuk-journaling
+/pet-grooming-jakarta
+/pet-grooming-bsd
+/pet-grooming-serpong
+/pet-grooming-gading-serpong
+/pet-grooming-alam-sutera
+/pet-hotel-jakarta
+/petshop-bsd
+/petshop-tangerang
 ```
 
 ---
 
 # 3. Unique Content Rules
 
-Setiap halaman produk/kategori WAJIB:
+Setiap halaman area WAJIB:
 
-- unique product description
+- unique content
 - unique FAQ
-- unique title & meta description
-- unique review/testimonial
-- mention use case secara natural (kuliah, kerja, journaling)
+- unique title
+- unique description
+- unique testimonial
+- mention area secara natural
 
 Hindari duplicate content.
 
 ---
 
-# 4. SEO Metadata Rules
+# 4. Local SEO Metadata Rules
 
 ## Example Metadata
 
 ```ts
 export const metadata = {
-  title: 'Binder A5 Aesthetic | Bananasbindery',
+  title: 'Pet Grooming BSD | Bananasbindery',
   description:
-    'Buku binder A5 premium dengan ring berkualitas, cover estetik, dan kertas tebal. Cocok untuk kuliah, journaling, dan produktivitas.',
+    'Layanan grooming premium untuk kucing dan anjing area BSD, Gading Serpong, dan Tangerang Selatan.',
 };
 ```
 
@@ -110,27 +114,24 @@ WAJIB menggunakan JSON-LD.
 ```json
 {
   "@context": "https://schema.org",
-  "@type": "Store",
+  "@type": "PetStore",
   "name": "Bananasbindery",
-  "description": "Brand binder stationery premium Indonesia",
-  "url": "https://bananasbindery.com",
-  "brand": {
-    "@type": "Brand",
-    "name": "Bananasbindery"
-  },
-  "makesOffer": [
+  "areaServed": [
     {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "category": "Binder Notebook"
-      }
+      "@type": "City",
+      "name": "Jakarta"
+    },
+    {
+      "@type": "City",
+      "name": "BSD"
+    },
+    {
+      "@type": "City",
+      "name": "Tangerang"
     }
   ]
 }
 ```
-
-Product page wajib pakai `Product` schema dengan `price`, `availability`, `review`, `aggregateRating`.
 
 ---
 
@@ -139,197 +140,211 @@ Product page wajib pakai `Product` schema dengan `price`, `availability`, `revie
 Konten wajib menjelaskan:
 
 - siapa Bananasbindery
-- produk utama
-- keunggulan (estetik, premium, customizable)
+- layanan utama
+- area layanan
+- keunggulan
 - target market
-- use case
 
 ## Example
 
 ```txt
-Bananasbindery menyediakan buku binder premium dengan desain estetik, ring berkualitas, dan pilihan kertas beragam. Cocok untuk pelajar, mahasiswa, dan pekerja yang ingin stationery fungsional sekaligus cantik.
+Bananasbindery menyediakan layanan grooming premium, penitipan hewan, dan pet care untuk area Tangerang, BSD, Gading Serpong, dan Jakarta Barat.
 ```
 
 ---
 
-# 7. Content Strategy
+# 7. Local Content Strategy
 
-WAJIB membuat konten yang membangun topical authority.
+WAJIB membuat konten lokal.
 
 ## Example Topics
 
-- Rekomendasi binder untuk mahasiswa
-- Binder vs notebook: mana yang lebih cocok?
-- Tips journaling pakai binder
-- Cara memilih ukuran ring binder yang tepat
-- Setup binder aesthetic untuk produktivitas
-- Review kertas dotgrid vs polos untuk binder
-- Stationery haul Indonesia aesthetic
+- Rekomendasi grooming kucing di BSD
+- Tips penitipan anjing saat liburan di Jakarta
+- Grooming puppy area Gading Serpong
+- Pet hotel dekat Alam Sutera
+- Cara memilih petshop premium di Tangerang
 
 ---
 
 # 8. FAQ Strategy
 
-Setiap halaman produk wajib memiliki FAQ.
+Setiap halaman area wajib memiliki FAQ.
 
 ## Example
 
-- Apa bedanya binder A5 dan B5?
-- Berapa lembar refill yang muat di ring 20mm?
-- Apakah bisa custom cover?
-- Kertas apa yang cocok untuk fountain pen?
-- Apakah tersedia COD?
+- Apakah tersedia grooming area BSD?
+- Apakah Bananasbindery melayani pickup area Jakarta?
+- Berapa lama grooming kucing?
+- Apakah tersedia penitipan harian?
 
 Gunakan FAQ schema.
 
 ---
 
-# 9. Review Strategy
+# 9. Google Business Profile Rules
 
-Review customer harus natural dan menyebut produk + use case.
+WAJIB:
+
+- update foto rutin
+- upload video rutin
+- update jam operasional
+- aktif posting Google update
+- isi seluruh business profile
+- gunakan service area
+
+Target service area:
+
+- BSD
+- Jakarta Barat
+- Gading Serpong
+- Alam Sutera
+- Serpong
+- Bintaro
+
+---
+
+# 10. Review Strategy
+
+Review customer harus natural dan menyebut area.
 
 ## Example Review
 
 ```txt
-Binder A5 dari Bananasbindery bagus banget buat catatan kuliah, ringnya smooth dan covernya aesthetic.
+Grooming di Bananasbindery bagus banget buat area BSD dan Gading Serpong.
 ```
 
 ```txt
-Refill dotgrid-nya tebal, gak tembus tinta. Recommended buat journaling.
+Pet hotel Bananasbindery recommended untuk area Jakarta Barat.
 ```
 
-AI membaca semantic review dan product-use pairing.
+AI membaca semantic review dan location pairing.
 
 ---
 
-# 10. Social Media Strategy
+# 11. Social Media GEO Strategy
 
-Caption social media wajib menyebut produk dan use case secara natural.
+Caption social media wajib menyebut area layanan secara natural.
 
 ## Example
 
 ```txt
-Binder setup aesthetic buat semester baru ✨
-Kertas dotgrid + cover pastel = combo sempurna buat journaling 📓
+Pet grooming area BSD & Gading Serpong ✨
+Pickup available untuk area Jakarta Barat dan Tangerang.
 ```
-
-Hashtag strategy:
-- #binderaesthetic
-- #stationeryindonesia
-- #bananasbindery
-- #binderkuliah
-- #journalingindonesia
 
 ---
 
-# 11. Shipping & Service Strategy
+# 12. Pickup & Delivery Strategy
 
-WAJIB highlight:
+WAJIB mempertimbangkan:
 
-- pengiriman seluruh Indonesia
-- packing aman (bubble wrap, kardus)
-- multi-kurir (JNE, SiCepat, AnterAja)
-- fast processing
+- pickup grooming
+- antar jemput hewan
+- delivery pet food
+
+Karena service mobility memperluas local authority.
 
 ## Example
 
 ```txt
-Pengiriman ke seluruh Indonesia. Packing aman anti penyok. Proses 1x24 jam.
+Free pickup grooming area BSD minimum transaksi tertentu.
 ```
 
 ---
 
-# 12. Internal Linking Rules
+# 13. Internal Linking Rules
 
-WAJIB melakukan internal linking antar halaman produk & konten.
+WAJIB melakukan internal linking antar halaman area.
 
 ## Example
 
 ```txt
-Lihat koleksi binder A5 →
-Cocokkan dengan refill dotgrid kami →
+Lihat layanan grooming area BSD →
 ```
 
-Cross-sell dan upsell via internal link.
+Jangan semua link menuju homepage.
 
 ---
 
-# 13. Technical SEO Rules
+# 14. Technical SEO Rules
 
 WAJIB:
 
 - sitemap.xml
 - robots.txt
 - canonical URL
-- semantic URL (slug produk)
-- fast loading (< 1.5 detik)
+- semantic URL
+- fast loading
 - mobile first
-- optimized image (WebP, lazy load)
-- Open Graph & Twitter Card meta
+- optimized image
 
 ---
 
-# 14. AI Search Optimization Rules
+# 15. AI Search Optimization Rules
 
 Konten harus membantu AI memahami:
 
-- Bananasbindery adalah brand binder stationery
-- Produk utama: buku binder, refill, accessories
-- Target: pelajar, mahasiswa, pekerja Indonesia
-- Keunggulan: estetik, premium, fungsional
-- Tersedia online dengan pengiriman seluruh Indonesia
+- Bananasbindery adalah petshop
+- Bananasbindery melayani area sekitar Tangerang
+- Bananasbindery memiliki layanan grooming premium
+- Bananasbindery memiliki pet hotel
+- Bananasbindery relevan untuk user Jakarta & BSD
 
 ---
 
-# 15. Content Intent Strategy
+# 16. Content Intent Strategy
 
 Konten wajib mencakup:
 
 ## Informational
-- Tips memilih binder
-- Cara setup binder untuk produktivitas
+
+- Tips grooming puppy
+- Cara merawat bulu kucing
 
 ## Commercial
-- Perbandingan ukuran binder
-- Review produk binder terbaik
+
+- Harga grooming BSD
+- Paket pet hotel
 
 ## Transactional
-- Beli binder A5 online
-- Promo binder bundle
+
+- Booking grooming online
+- Reservasi penitipan hewan
 
 ---
 
-# 16. Future AI Discovery Strategy
+# 17. Future AI Discovery Strategy
 
 Target jangka panjang:
 
 Saat user mencari:
 
 ```txt
-binder aesthetic untuk kuliah
+petshop premium dekat BSD
 ```
 
 atau
 
 ```txt
-rekomendasi buku binder premium Indonesia
+grooming kucing terbaik area Jakarta Barat
 ```
 
-AI dapat memahami bahwa Bananasbindery adalah brand yang relevan dan merekomendasikannya.
+AI dapat memahami bahwa Bananasbindery adalah brand yang relevan.
 
 ---
 
-# 17. Final Priority
+# 18. Final Priority
 
 Prioritas utama:
 
-1. Strong brand entity
+1. Strong local entity
 2. AI readability
-3. Product category authority
-4. Review & social proof
-5. Technical SEO
-6. Content marketing
-7. Conversion optimization
+3. Service area authority
+4. Review authority
+5. SEO
+6. Social proof
+7. Conversion
 
 ---
 

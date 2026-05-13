@@ -1,0 +1,61 @@
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - generic [ref=e3]:
+            - generic [ref=e4]:
+                - link "Bananasbindery Jakarta Selatan" [ref=e5] [cursor=pointer]:
+                    - /url: /
+                    - generic [ref=e6]:
+                        - img [ref=e7]
+                        - generic [ref=e13]: Bananasbindery
+                    - generic [ref=e14]:
+                        - img [ref=e16]
+                        - generic [ref=e19]: Jakarta Selatan
+                - generic [ref=e20]:
+                    - button "Notifikasi" [ref=e21] [cursor=pointer]:
+                        - img [ref=e22]
+                    - link "Keranjang" [ref=e26] [cursor=pointer]:
+                        - /url: /cart
+                        - img [ref=e29]
+            - link "Cari produk untuk peliharaanmu..." [ref=e34] [cursor=pointer]:
+                - /url: /search
+                - img [ref=e36]
+                - generic [ref=e39]: Cari produk untuk peliharaanmu...
+        - main [ref=e40]:
+            - generic [ref=e43]:
+                - generic [ref=e44]:
+                    - generic [ref=e45]:
+                        - img [ref=e46]
+                        - textbox "Cari produk..." [ref=e49]
+                    - button "Keranjang" [ref=e50]:
+                        - img [ref=e51]
+                - generic [ref=e55]:
+                    - button "Semua" [ref=e56]
+                    - button "Makanan" [ref=e57] [cursor=pointer]
+                    - button "Aksesoris" [ref=e58] [cursor=pointer]
+                    - button "Obat & Vitamin" [ref=e59] [cursor=pointer]
+                    - button "Kandang" [ref=e60] [cursor=pointer]
+                    - button "Grooming" [ref=e61] [cursor=pointer]
+                    - button "Mainan" [ref=e62] [cursor=pointer]
+                - generic [ref=e63]:
+                    - button "Terlaris" [ref=e64]
+                    - button "Rating" [ref=e65]
+                    - button "Termurah" [ref=e66]
+                    - button "Termahal" [ref=e67]
+        - navigation "Navigasi utama" [ref=e112]:
+            - link "Home" [ref=e113] [cursor=pointer]:
+                - /url: /
+                - img [ref=e114]
+                - generic [ref=e117]: Home
+            - link "Produk" [ref=e118] [cursor=pointer]:
+                - /url: /products
+                - img [ref=e119]
+                - generic [ref=e122]: Produk
+            - link "Booking" [ref=e123] [cursor=pointer]:
+                - /url: /booking
+                - img [ref=e124]
+                - generic [ref=e130]: Booking
+            - link "Akun" [ref=e131] [cursor=pointer]:
+                - /url: /account
+                - img [ref=e132]
+                - generic [ref=e135]: Akun
+    - alert [ref=e136]

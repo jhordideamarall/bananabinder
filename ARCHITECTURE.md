@@ -1,180 +1,382 @@
-# Arsitektur Sistem & Skema Database - Bananasbindery
+# 🏗️ MONOREPO ARCHITECTURE — Bananasbindery Platform
 
-## 1. Tech Stack
+> Arsitektur monorepo dengan **shared core** agar business logic & API client bisa dipakai ulang di Web, Mobile (React Native), dan Desktop (Electron/Tauri).
 
-| Layer | Teknologi |
-|-------|-----------|
-| Monorepo | Turborepo |
-| Frontend | Next.js 14 (App Router), React, Tailwind CSS, Shadcn UI |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth + Custom WhatsApp OTP |
-| Storage | Supabase Storage (gambar produk) |
-| Payment | Xendit |
-| Logistik | RajaOngkir Pro (level kecamatan) |
-| WhatsApp Gateway | Fonnte |
-| Email | Resend |
-| Hosting | Vercel |
+---
 
-## 2. Monorepo Structure (Turborepo)
+## Tech Foundation
+
+| Layer | Tool |
+|-------|------|
+| Monorepo | **Turborepo** |
+| Package Manager | **pnpm** (workspaces) |
+| Language | **TypeScript** (strict, shared tsconfig) |
+| Backend | **NestJS** (standalone API server) |
+| Web | **Next.js** (App Router) |
+| Mobile | **React Native** (Expo) |
+| Desktop | **Electron** atau **Tauri** (future) |
+| Database | **Supabase** (PostgreSQL) |
+
+---
+
+## Folder Structure
 
 ```
-bananabinder/
-├── apps/
-│   └── web/                          # Next.js app
-│       ├── app/
-│       │   ├── (storefront)/         # Public: home, products, cart, checkout
-│       │   ├── (auth)/              # Login OTP
-│       │   └── admin/               # Dashboard, products, orders, coupons, flash-sales
-│       ├── components/
-│       ├── lib/
-│       └── next.config.ts
-├── packages/
-│   ├── ui/                           # Shared UI components (Shadcn-based)
-│   ├── db/                           # Supabase client, types, queries
-│   ├── config/                       # Shared Tailwind config, constants
-│   └── tsconfig/                     # Shared TypeScript configs
-├── supabase/
-│   └── migrations/                   # SQL migrations
-├── turbo.json
-├── package.json
-└── pnpm-workspace.yaml
+Bananasbindery/
+├── apps/                          # Platform-specific apps
+│   ├── web/                       # Next.js web app (customer-facing)
+│   │   ├── app/                   # App Router pages
+│   │   │   ├── (auth)/            # Login, Register
+│   │   │   ├── (shop)/            # Browse, Product, Cart
+│   │   │   ├── (account)/         # Profile, Orders, Pets, Loyalty
+│   │   │   ├── booking/           # Grooming & Hotel booking
+│   │   │   ├── checkout/          # Checkout flow
+│   │   │   └── layout.tsx
+│   │   ├── components/            # Web-specific UI components
+│   │   │   ├── layout/            # Header, Footer, Sidebar
+│   │   │   ├── product/           # ProductCard, ProductGrid
+│   │   │   ├── cart/              # CartDrawer, CartItem
+│   │   │   ├── booking/           # BookingCalendar, SlotPicker
+│   │   │   └── shared/            # Buttons, Modals, Inputs (web)
+│   │   ├── public/
+│   │   ├── styles/
+│   │   ├── next.config.ts
+│   │   ├── tailwind.config.ts
+│   │   └── package.json
+│   │
+│   ├── admin/                     # Next.js admin dashboard
+│   │   ├── app/
+│   │   │   ├── dashboard/         # Overview metrics
+│   │   │   ├── products/          # CRUD produk
+│   │   │   ├── orders/            # Manage orders
+│   │   │   ├── bookings/          # Manage bookings
+│   │   │   ├── inventory/         # Stock management
+│   │   │   ├── banners/           # CMS banner
+│   │   │   ├── customers/         # Customer list
+│   │   │   ├── financial/         # Owner-only financial
+│   │   │   └── settings/          # Store settings
+│   │   ├── components/
+│   │   └── package.json
+│   │
+│   ├── mobile/                    # React Native (Expo)
+│   │   ├── app/                   # Expo Router (file-based routing)
+│   │   │   ├── (tabs)/            # Bottom tab navigation
+│   │   │   │   ├── home.tsx       # Home / browse
+│   │   │   │   ├── categories.tsx
+│   │   │   │   ├── cart.tsx
+│   │   │   │   ├── booking.tsx
+│   │   │   │   └── profile.tsx
+│   │   │   ├── product/[slug].tsx
+│   │   │   ├── checkout/
+│   │   │   ├── order/[id].tsx
+│   │   │   └── auth/
+│   │   ├── components/            # Mobile-specific UI
+│   │   │   ├── ProductCard.tsx
+│   │   │   ├── CartSheet.tsx
+│   │   │   └── BookingPicker.tsx
+│   │   ├── assets/
+│   │   ├── app.json
+│   │   └── package.json
+│   │
+│   └── api/                       # NestJS standalone API server
+│       ├── src/
+│       │   ├── modules/
+│       │   │   ├── auth/          # Auth module (OTP, Google, JWT)
+│       │   │   │   ├── auth.controller.ts
+│       │   │   │   ├── auth.service.ts
+│       │   │   │   ├── auth.guard.ts
+│       │   │   │   └── auth.module.ts
+│       │   │   ├── products/      # Products CRUD + search
+│       │   │   │   ├── products.controller.ts
+│       │   │   │   ├── products.service.ts
+│       │   │   │   └── products.module.ts
+│       │   │   ├── orders/        # Order management
+│       │   │   ├── cart/          # Cart management
+│       │   │   ├── bookings/      # Booking + slot management
+│       │   │   ├── payments/      # Midtrans/Xendit integration
+│       │   │   ├── shipping/      # RajaOngkir/Biteship
+│       │   │   ├── notifications/ # WhatsApp + Push
+│       │   │   ├── loyalty/       # Points & vouchers
+│       │   │   ├── reviews/       # Review & rating
+│       │   │   ├── pets/          # Pet profiles
+│       │   │   ├── banners/       # CMS banners
+│       │   │   ├── inventory/     # Stock movements
+│       │   │   ├── upload/        # File upload (Supabase Storage)
+│       │   │   └── analytics/     # Dashboard & financial
+│       │   ├── common/
+│       │   │   ├── guards/        # RoleGuard, AuthGuard
+│       │   │   ├── decorators/    # @CurrentUser, @Roles
+│       │   │   ├── interceptors/  # Logging, Transform
+│       │   │   ├── filters/       # Exception filters
+│       │   │   └── pipes/         # Validation pipes
+│       │   ├── config/
+│       │   │   ├── supabase.ts
+│       │   │   ├── midtrans.ts
+│       │   │   └── app.config.ts
+│       │   ├── app.module.ts
+│       │   └── main.ts
+│       ├── test/
+│       └── package.json
+│
+├── packages/                      # Shared packages (REUSABLE)
+│   ├── core/                      # Business logic (platform-agnostic)
+│   │   ├── src/
+│   │   │   ├── services/          # Business logic services
+│   │   │   │   ├── cart.service.ts       # Cart calculations
+│   │   │   │   ├── pricing.service.ts    # Price, discount, tax logic
+│   │   │   │   ├── shipping.service.ts   # Shipping rules & validation
+│   │   │   │   ├── booking.service.ts    # Slot validation, overbooking check
+│   │   │   │   ├── loyalty.service.ts    # Points calculation
+│   │   │   │   ├── voucher.service.ts    # Voucher validation
+│   │   │   │   └── inventory.service.ts  # Stock validation
+│   │   │   ├── validators/        # Shared validation rules
+│   │   │   │   ├── order.validator.ts
+│   │   │   │   ├── booking.validator.ts
+│   │   │   │   └── product.validator.ts
+│   │   │   ├── constants/         # Shared constants
+│   │   │   │   ├── order-status.ts
+│   │   │   │   ├── payment-status.ts
+│   │   │   │   ├── booking-status.ts
+│   │   │   │   └── shipping-rules.ts
+│   │   │   └── index.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── types/                     # Shared TypeScript types
+│   │   ├── src/
+│   │   │   ├── user.ts
+│   │   │   ├── product.ts
+│   │   │   ├── order.ts
+│   │   │   ├── cart.ts
+│   │   │   ├── booking.ts
+│   │   │   ├── pet.ts
+│   │   │   ├── payment.ts
+│   │   │   ├── shipping.ts
+│   │   │   ├── loyalty.ts
+│   │   │   ├── review.ts
+│   │   │   ├── notification.ts
+│   │   │   ├── banner.ts
+│   │   │   ├── voucher.ts
+│   │   │   └── index.ts           # Re-export all
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── api-client/                # API client SDK (fetch wrapper)
+│   │   ├── src/
+│   │   │   ├── client.ts          # Base HTTP client (fetch/axios)
+│   │   │   ├── auth.api.ts        # Auth endpoints
+│   │   │   ├── products.api.ts    # Product endpoints
+│   │   │   ├── cart.api.ts        # Cart endpoints
+│   │   │   ├── orders.api.ts      # Order endpoints
+│   │   │   ├── bookings.api.ts    # Booking endpoints
+│   │   │   ├── shipping.api.ts    # Shipping endpoints
+│   │   │   ├── payments.api.ts    # Payment endpoints
+│   │   │   ├── pets.api.ts        # Pet endpoints
+│   │   │   ├── loyalty.api.ts     # Loyalty endpoints
+│   │   │   ├── reviews.api.ts     # Review endpoints
+│   │   │   └── index.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── hooks/                     # Shared React hooks (web + mobile)
+│   │   ├── src/
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useCart.ts
+│   │   │   ├── useProducts.ts
+│   │   │   ├── useOrders.ts
+│   │   │   ├── useBooking.ts
+│   │   │   ├── usePets.ts
+│   │   │   ├── useLoyalty.ts
+│   │   │   ├── useNotifications.ts
+│   │   │   └── index.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── store/                     # Shared Zustand stores
+│   │   ├── src/
+│   │   │   ├── auth.store.ts
+│   │   │   ├── cart.store.ts
+│   │   │   ├── ui.store.ts
+│   │   │   └── index.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── utils/                     # Shared utility functions
+│   │   ├── src/
+│   │   │   ├── format.ts          # formatCurrency, formatDate
+│   │   │   ├── validation.ts      # Email, phone, etc.
+│   │   │   ├── distance.ts        # Haversine distance calc
+│   │   │   ├── slug.ts            # Slug generator
+│   │   │   ├── order-number.ts    # Generate order/booking number
+│   │   │   └── index.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── config/                    # Shared config & env
+│   │   ├── src/
+│   │   │   ├── env.ts             # Environment variables schema
+│   │   │   ├── constants.ts       # App-wide constants
+│   │   │   └── index.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── ui/                        # Shared UI primitives (web only)
+│   │   ├── src/
+│   │   │   ├── button.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── modal.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── card.tsx
+│   │   │   └── index.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   └── tsconfig/                  # Shared TypeScript configs
+│       ├── base.json
+│       ├── nextjs.json
+│       ├── react-native.json
+│       ├── nestjs.json
+│       └── package.json
+│
+├── supabase/                      # Supabase local config
+│   ├── migrations/                # SQL migrations (versioned)
+│   │   ├── 001_users.sql
+│   │   ├── 002_categories_products.sql
+│   │   ├── 003_carts_orders.sql
+│   │   ├── 004_bookings_services.sql
+│   │   ├── 005_loyalty_vouchers.sql
+│   │   ├── 006_reviews_wishlists.sql
+│   │   ├── 007_notifications.sql
+│   │   ├── 008_banners_locations.sql
+│   │   ├── 009_indexes.sql
+│   │   └── 010_rls_policies.sql
+│   ├── seed/                      # Seed data
+│   │   ├── categories.sql
+│   │   ├── products.sql
+│   │   └── services.sql
+│   ├── functions/                 # Edge functions
+│   │   ├── payment-webhook/
+│   │   ├── send-whatsapp/
+│   │   ├── expire-orders/
+│   │   └── expire-points/
+│   └── config.toml
+│
+├── docs/                          # Documentation
+│   ├── prd.md                     # Product Requirements
+│   ├── api-spec.md                # API specification
+│   ├── database-erd.md            # Entity Relationship Diagram
+│   └── deployment.md              # Deployment guide
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                 # Lint + test
+│       ├── deploy-web.yml         # Deploy web to Vercel
+│       ├── deploy-api.yml         # Deploy API
+│       └── deploy-mobile.yml      # EAS build
+│
+├── turbo.json                     # Turborepo pipeline config
+├── pnpm-workspace.yaml            # pnpm workspaces
+├── package.json                   # Root package.json
+├── .env.example
+├── .gitignore
+└── README.md
 ```
 
-## 3. Design System
+---
 
-### 3.1 Color Palette
-| Token | Hex | Penggunaan |
-|-------|-----|------------|
-| `banan-blue` | `#7EC8E3` | Primary buttons, header, links |
-| `banan-pink` | `#F2A7C3` | Accent, badges, highlights |
-| `banan-yellow` | `#F9E79F` | CTA, sale tags, notifications |
-| `banan-blue-dark` | `#5BA4C4` | Hover/active states |
-| `banan-pink-dark` | `#D98AA8` | Hover states |
-| `banan-yellow-dark` | `#E5D07A` | Hover states |
-| `neutral-50` | `#FAFAFA` | Background |
-| `neutral-900` | `#171717` | Text |
+## Dependency Graph
 
-### 3.2 Typography
-- **Font:** Inter
-- **Heading:** Bold (600-700)
-- **Body:** Regular (400)
+```mermaid
+graph TD
+    subgraph "Shared Packages"
+        TYPES["@bananasbindery/types"]
+        UTILS["@bananasbindery/utils"]
+        CONFIG["@bananasbindery/config"]
+        CORE["@bananasbindery/core"]
+        API_CLIENT["@bananasbindery/api-client"]
+        HOOKS["@bananasbindery/hooks"]
+        STORE["@bananasbindery/store"]
+        UI["@bananasbindery/ui"]
+    end
 
-## 4. System Flow
+    subgraph "Apps"
+        WEB["apps/web (Next.js)"]
+        ADMIN["apps/admin (Next.js)"]
+        MOBILE["apps/mobile (Expo)"]
+        API["apps/api (NestJS)"]
+    end
 
-### 4.1 Autentikasi (WhatsApp OTP)
-1. User input nomor WA → API generate 6-digit OTP.
-2. OTP di-hash (SHA-256) dan disimpan di tabel `otp_codes` (expiry 5 menit).
-3. OTP dikirim via Fonnte ke WhatsApp user.
-4. User input OTP → API verifikasi hash → Buat/ambil user di Supabase Auth → Return session token.
+    CORE --> TYPES
+    CORE --> UTILS
+    API_CLIENT --> TYPES
+    API_CLIENT --> CONFIG
+    HOOKS --> API_CLIENT
+    HOOKS --> STORE
+    STORE --> TYPES
 
-### 4.2 Checkout Flow
-1. Client kirim `cart_items[]` + `coupon_code` + `address_id` + `courier_code`.
-2. API validasi: stok tersedia, kupon valid (kuota, min purchase, expiry).
-3. API hitung ongkir via RajaOngkir.
-4. Jika kupon `discount_type = free_shipping` → ongkir di-set 0 (ditanggung owner).
-5. API lock harga → simpan ke `orders` + `order_items` (snapshot harga).
-6. API buat invoice Xendit → return `payment_url`.
-7. User bayar → Xendit kirim webhook → API verifikasi signature → update status `paid` → kurangi stok (atomic RPC).
-
-### 4.3 Abandoned Cart Recovery
-- Cron job (setiap 6 jam) cek `carts` dengan `updated_at` > 24 jam yang belum checkout.
-- Kirim notifikasi WA/email pengingat.
-
-## 5. Skema Database (PostgreSQL)
-
-### 5.1 Auth & User
-```sql
--- otp_codes
-id (uuid, PK), phone (text), otp_hash (text), expires_at (timestamptz), used (boolean), created_at
-
--- profiles
-id (uuid, PK, FK → auth.users), full_name (text), phone (text, unique), role (enum: user/admin), created_at, updated_at
-
--- addresses
-id (uuid, PK), user_id (FK → profiles), label (text), recipient_name (text), phone (text), province_id (int), city_id (int), district_id (int), postal_code (text), full_address (text), is_default (boolean)
+    WEB --> HOOKS
+    WEB --> UI
+    WEB --> CORE
+    ADMIN --> HOOKS
+    ADMIN --> UI
+    ADMIN --> CORE
+    MOBILE --> HOOKS
+    MOBILE --> CORE
+    API --> CORE
+    API --> TYPES
+    API --> UTILS
 ```
 
-### 5.2 Katalog Produk
-```sql
--- products
-id (uuid, PK), name (text), slug (text, unique), description (text), base_price (int), weight_grams (int), is_active (boolean), created_at, updated_at
+---
 
--- product_variants
-id (uuid, PK), product_id (FK), ring_size (text), ring_count (int), cover_color (text), paper_type (text), page_count (int), stock (int), sku (text, unique), price_override (int, nullable)
+## Reusability Matrix
 
--- product_images
-id (uuid, PK), product_id (FK), url (text), alt (text), sort_order (int)
-```
+| Package | Web | Admin | Mobile | API |
+|---------|-----|-------|--------|-----|
+| `@bananasbindery/types` | ✅ | ✅ | ✅ | ✅ |
+| `@bananasbindery/utils` | ✅ | ✅ | ✅ | ✅ |
+| `@bananasbindery/config` | ✅ | ✅ | ✅ | ✅ |
+| `@bananasbindery/core` | ✅ | ✅ | ✅ | ✅ |
+| `@bananasbindery/api-client` | ✅ | ✅ | ✅ | ❌ |
+| `@bananasbindery/hooks` | ✅ | ✅ | ✅ | ❌ |
+| `@bananasbindery/store` | ✅ | ✅ | ✅ | ❌ |
+| `@bananasbindery/ui` | ✅ | ✅ | ❌ | ❌ |
 
-### 5.3 Marketing
-```sql
--- coupons
-id (uuid, PK), code (text, unique), discount_type (enum: percentage/fixed/free_shipping), discount_value (int), min_purchase_amount (int), max_discount_amount (int, nullable), usage_limit (int), used_count (int, default 0), valid_from (timestamptz), valid_until (timestamptz), is_active (boolean)
+> **Key insight**: `core`, `types`, `utils`, `config` bisa dipakai di **semua platform** termasuk backend. Hooks dan store bisa dipakai di semua React-based apps (web + mobile). UI components hanya untuk web karena React Native punya component sendiri.
 
--- flash_sales
-id (uuid, PK), name (text), start_time (timestamptz), end_time (timestamptz), is_active (boolean)
+---
 
--- flash_sale_items
-id (uuid, PK), flash_sale_id (FK), product_id (FK), promo_price (int), stock_allocated (int), stock_sold (int, default 0)
-```
+## Key Architecture Decisions
 
-### 5.4 Transaksi
-```sql
--- orders
-id (uuid, PK), user_id (FK), xendit_invoice_id (text), xendit_payment_url (text), status (enum: pending/paid/processing/shipped/delivered/cancelled), refund_status (enum: none/refund_pending/refunded, default 'none'), subtotal (int), shipping_cost (int), coupon_id (FK, nullable), discount_amount (int, default 0), total_amount (int), shipping_address (jsonb), courier_details (jsonb), tracking_number (text, nullable), paid_at (timestamptz), shipped_at (timestamptz), cancelled_at (timestamptz), cancel_reason (text), created_at, updated_at
+### 1. Standalone API (NestJS) bukan Next.js API Routes
+- Next.js API Routes **tightly coupled** ke Next.js → tidak bisa dipakai mobile
+- NestJS API server bisa diakses dari **mana saja** (web, mobile, desktop, 3rd party)
+- Tetap bisa deploy di Vercel via serverless, atau VPS/Railway/Fly.io
 
--- order_items
-id (uuid, PK), order_id (FK), variant_id (FK), product_name (text), variant_label (text), quantity (int), price_at_time (int)
+### 2. Shared `@bananasbindery/core` untuk Business Logic
+- Kalkulasi harga, diskon, ongkir → **sama di semua platform**
+- Validasi booking slot, stock check → **single source of truth**
+- Tidak perlu duplicate logic di backend dan frontend
 
--- refunds
-id (uuid, PK), order_id (FK → orders), amount (int), method (text), status (enum: pending/processed/failed), processed_by (FK → profiles, nullable), notes (text), created_at, processed_at (timestamptz)
-```
+### 3. `@bananasbindery/api-client` sebagai SDK
+- Semua API calls di-abstract jadi function calls
+- Web dan Mobile tinggal import → tidak perlu tulis fetch/axios manual
+- Kalau API endpoint berubah, cukup update di 1 tempat
 
-### 5.5 Keranjang
-```sql
--- carts
-id (uuid, PK), user_id (FK, unique), updated_at
+### 4. `@bananasbindery/hooks` shared di Web & Mobile
+- `useCart()`, `useAuth()`, `useProducts()` → sama persis
+- Pakai TanStack Query → caching, refetching otomatis
+- Web dan Mobile dapat behavior yang konsisten
 
--- cart_items
-id (uuid, PK), cart_id (FK), variant_id (FK), quantity (int)
--- UNIQUE constraint on (cart_id, variant_id)
-```
+---
 
-## 6. API Routes
+## Config Files
 
-| Method | Route | Deskripsi |
-|--------|-------|-----------|
-| POST | `/api/auth/otp/request` | Kirim OTP ke WhatsApp |
-| POST | `/api/auth/otp/verify` | Verifikasi OTP, return session |
-| GET | `/api/products` | List produk (public) |
-| GET | `/api/products/[slug]` | Detail produk + varian |
-| POST | `/api/cart` | Add/update cart item |
-| DELETE | `/api/cart/[itemId]` | Remove cart item |
-| POST | `/api/checkout` | Validasi + buat order + invoice Xendit |
-| POST | `/api/shipping/cost` | Hitung ongkir via RajaOngkir |
-| POST | `/api/webhooks/xendit` | Handle payment callback |
-| GET | `/api/orders` | List orders user |
-| PATCH | `/api/admin/orders/[id]` | Update status, input resi |
-
-## 7. Security & Best Practices
-- **RLS:** Semua tabel user-facing dilindungi. User hanya akses data sendiri. Admin akses semua.
-- **Atomic Stock Reduction:** Pakai database function (RPC) dengan `UPDATE ... SET stock = stock - $qty WHERE stock >= $qty RETURNING *` untuk prevent race condition.
-- **Data Snapshot:** Harga dan alamat di-copy ke `orders`/`order_items` saat checkout. Perubahan data master tidak mempengaruhi history.
-- **Webhook Verification:** Validasi `x-callback-token` dari Xendit sebelum proses.
-- **OTP Security:** Hash OTP, expiry 5 menit, max 3 attempts, rate limit per nomor.
-- **Input Validation:** Zod schema di semua API routes.
-- **DDoS & Rate Limiting:**
-  - Infrastructure: Vercel Edge Network (auto DDoS mitigation).
-  - Application: Upstash Redis rate limiter per endpoint.
-  - `/api/auth/otp/request` → max 3 req/nomor/15 menit.
-  - `/api/checkout` → max 5 req/user/jam.
-  - `/api/shipping/cost` → cached per kecamatan + max 10 req/user/menit.
-  - `/api/webhooks/xendit` → signature reject = instant 401, no processing.
-
-## 8. Turborepo Pipeline
-
+### turbo.json
 ```json
 {
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env"],
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
@@ -185,7 +387,46 @@ id (uuid, PK), cart_id (FK), variant_id (FK), quantity (int)
       "persistent": true
     },
     "lint": {},
-    "type-check": {}
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "type-check": {
+      "dependsOn": ["^build"]
+    }
   }
+}
+```
+
+### pnpm-workspace.yaml
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+### Root package.json
+```json
+{
+  "name": "Bananasbindery",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:admin": "turbo dev --filter=admin",
+    "dev:mobile": "turbo dev --filter=mobile",
+    "dev:api": "turbo dev --filter=api",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "type-check": "turbo type-check",
+    "db:migrate": "supabase db push",
+    "db:seed": "supabase db seed",
+    "db:reset": "supabase db reset"
+  },
+  "devDependencies": {
+    "turbo": "^2",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@9.0.0"
 }
 ```

@@ -1,0 +1,10 @@
+{
+  "extends": "@bananasbindery/tsconfig/react-library",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "@bananasbindery/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}

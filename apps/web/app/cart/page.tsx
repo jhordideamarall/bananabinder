@@ -1,173 +1,192 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useCart } from "@/store/useCart";
-import {
-  IconTrash,
-  IconMinus,
-  IconPlus,
-  IconArrowRight,
-  IconShoppingBag,
-} from "@tabler/icons-react";
-import { Button, Card, CardContent } from "@bananasbindery/ui";
+import Image from 'next/image';
+import Link from 'next/link';
+import { ChevronLeft, Minus, Plus, Tag, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useCartStore, type CartItem } from '@/stores/cart-store';
 
-export default function CartPage() {
-  const { items, removeItem, updateQuantity, totalPrice } = useCart();
-  const [mounted, setMounted] = useState(false);
+const fmt = (n: number) => n.toLocaleString('id-ID');
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  if (items.length === 0) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
-        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center text-4xl mb-6">
-          🛒
-        </div>
-        <h1 className="text-2xl font-bold">Keranjangmu masih kosong</h1>
-        <p className="text-gray-500 mt-2 mb-8 text-center max-w-xs">
-          Sepertinya kamu belum memilih binder impianmu. Yuk, intip koleksi
-          terbaru kami!
-        </p>
-        <Link href="/products">
-          <Button size="lg" className="rounded-full px-8">
-            Mulai Belanja
-          </Button>
-        </Link>
-      </div>
-    );
-  }
+function ProductThumb({ item }: { item: CartItem }) {
+  const label = item.name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold tracking-tight mb-10 flex items-center gap-3">
-        <IconShoppingBag className="w-8 h-8 text-primary" />
-        Keranjang Belanja
-      </h1>
+    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[13px] bg-stone font-heading text-[10px] font-extrabold text-ink-4">
+      {item.imageUrl ? (
+        <Image src={item.imageUrl} alt={item.name} fill sizes="64px" className="object-cover" />
+      ) : (
+        <span>{label || 'BB'}</span>
+      )}
+    </div>
+  );
+}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Items List */}
-        <div className="lg:col-span-2 space-y-6">
-          {items.map((item) => (
-            <Card
-              key={item.variantId}
-              className="overflow-hidden border-none shadow-sm bg-white hover:shadow-md transition-shadow"
-            >
-              <CardContent className="p-4 flex gap-6">
-                <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 relative">
-                  {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">
-                      📚
-                    </div>
-                  )}
-                </div>
+export default function CartPage() {
+  const router = useRouter();
+  const [hydrated, setHydrated] = useState(false);
+  const items = useCartStore((state) => state.items);
+  const setItemQuantity = useCartStore((state) => state.setItemQuantity);
+  const removeItem = useCartStore((state) => state.removeItem);
 
-                <div className="flex-grow flex flex-col justify-between">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">
-                        {item.name}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {item.variantLabel}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => removeItem(item.variantId)}
-                      className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <IconTrash className="w-5 h-5" />
-                    </button>
-                  </div>
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
-                  <div className="flex justify-between items-end mt-4">
-                    <div className="flex items-center gap-3 bg-gray-50 rounded-full p-1 border border-gray-100">
+  const subtotal = useMemo(
+    () => items.reduce((total, item) => total + item.price * item.quantity, 0),
+    [items],
+  );
+  const count = useMemo(() => items.reduce((total, item) => total + item.quantity, 0), [items]);
+  const hasItems = hydrated && items.length > 0;
+
+  return (
+    <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-stone">
+      <header className="sticky top-0 z-50 flex h-[72px] items-center justify-between border-b border-stone-2 bg-white px-[clamp(16px,5vw,20px)]">
+        <button
+          onClick={() => router.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-ink active:scale-95 transition-transform"
+          aria-label="Kembali"
+        >
+          <ChevronLeft size={24} strokeWidth={2.5} />
+        </button>
+        <h1 className="font-heading text-[18px] font-extrabold text-ink">Keranjang</h1>
+        <span className="min-w-10 text-right font-heading text-[14px] font-extrabold text-ink">
+          {count} item
+        </span>
+      </header>
+
+      <main className="flex-1 overflow-y-auto pb-36">
+        <section className="bg-white">
+          {hasItems ? (
+            items.map((item) => (
+              <div
+                key={`${item.id}-${item.variantId ?? 'base'}`}
+                className="grid grid-cols-[64px_minmax(0,1fr)_auto] gap-x-3 border-b border-stone-2 px-[clamp(16px,5vw,20px)] py-3.5"
+              >
+                <ProductThumb item={item} />
+                <div className="min-w-0">
+                  <h2 className="line-clamp-2 font-heading text-[14px] font-extrabold leading-[17px] text-ink">
+                    {item.name}
+                  </h2>
+                  <p className="mt-0.5 font-heading text-[16px] font-extrabold leading-5 text-primary">
+                    Rp {fmt(item.price)}
+                  </p>
+
+                  <div className="mt-1.5">
+                    <div className="qty-stepper w-fit bg-white" style={{ height: 34 }}>
                       <button
-                        onClick={() =>
-                          updateQuantity(item.variantId, item.quantity - 1)
-                        }
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm transition-all"
+                        className="qty-btn text-danger"
+                        style={{ width: 32, height: 32 }}
+                        aria-label={`Hapus ${item.name}`}
+                        onClick={() => {
+                          if (item.quantity === 1) {
+                            removeItem(item.id, item.variantId);
+                          } else {
+                            setItemQuantity(item.id, item.variantId, item.quantity - 1);
+                          }
+                        }}
                       >
-                        <IconMinus className="w-4 h-4" />
+                        {item.quantity === 1 ? <Trash2 size={14} /> : <Minus size={15} />}
                       </button>
-                      <span className="w-4 text-center font-bold text-sm">
+                      <span className="qty-val text-[14px]" style={{ width: 34 }}>
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() =>
-                          updateQuantity(item.variantId, item.quantity + 1)
-                        }
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm transition-all"
+                        className="qty-btn text-primary"
+                        style={{ width: 32, height: 32 }}
+                        aria-label={`Tambah ${item.name}`}
+                        onClick={() => setItemQuantity(item.id, item.variantId, item.quantity + 1)}
                       >
-                        <IconPlus className="w-4 h-4" />
+                        <Plus size={15} />
                       </button>
                     </div>
-                    <p className="font-bold text-primary text-lg">
-                      Rp {(item.price * item.quantity).toLocaleString("id-ID")}
-                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Summary */}
-        <div className="lg:col-span-1">
-          <Card className="glass sticky top-24 border-white/40 shadow-xl overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary" />
-            <CardContent className="p-8">
-              <h2 className="text-xl font-bold mb-6">Ringkasan Belanja</h2>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between text-gray-600">
-                  <span>Subtotal ({items.length} item)</span>
-                  <span>Rp {totalPrice().toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Pengiriman</span>
-                  <span className="text-xs italic">Dihitung di checkout</span>
-                </div>
-                <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                  <span className="font-bold text-lg">Total</span>
-                  <span className="font-black text-2xl text-primary">
-                    Rp {totalPrice().toLocaleString("id-ID")}
-                  </span>
-                </div>
+                <p className="self-center whitespace-nowrap font-heading text-[13px] font-extrabold text-ink">
+                  Rp {fmt(item.price * item.quantity)}
+                </p>
               </div>
-
-              <Link href="/checkout">
-                <Button className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20">
-                  Lanjut ke Checkout <IconArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+            ))
+          ) : (
+            <div className="flex min-h-[260px] flex-col items-center justify-center px-8 text-center">
+              <p className="font-heading text-[16px] font-extrabold text-ink">Keranjangmu kosong</p>
+              <p className="mt-2 text-sm text-ink-3">Produk yang kamu pilih akan muncul di sini.</p>
+              <Link
+                href="/products"
+                className="mt-5 rounded-[14px] bg-primary px-[clamp(16px,5vw,20px)] py-3 font-heading text-sm font-bold text-white"
+              >
+                Belanja Produk
               </Link>
+            </div>
+          )}
+        </section>
 
-              <div className="mt-6 flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                  Pembayaran aman via Xendit
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                  Dukung kurir seluruh Indonesia
-                </div>
+        {hasItems && (
+          <>
+            <section className="mt-2 bg-white px-[clamp(16px,5vw,20px)] py-5">
+              <div className="mb-3 flex items-center gap-2 font-heading text-[14px] font-extrabold text-ink">
+                <Tag size={18} />
+                <span>Voucher</span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Kode voucher"
+                  className="h-12 min-w-0 flex-1 rounded-[14px] border border-stone-3 bg-white px-4 text-[15px] font-medium text-ink outline-none focus:border-primary"
+                />
+                <button
+                  className="h-12 rounded-[14px] px-[clamp(16px,5vw,20px)] font-heading text-[14px] font-extrabold text-primary"
+                  style={{ background: 'var(--color-orange-light)' }}
+                >
+                  Pakai
+                </button>
+              </div>
+              <p className="mt-2 text-xs font-medium text-ink-4">Coba kode: BINDER10</p>
+            </section>
+
+            <section className="mt-2 bg-white px-[clamp(16px,5vw,20px)] py-5">
+              <h2 className="mb-4 font-heading text-[14px] font-extrabold text-ink">
+                Ringkasan Pesanan
+              </h2>
+              <div className="flex justify-between text-[15px] text-ink-3">
+                <span>Subtotal</span>
+                <span className="font-heading font-extrabold text-ink">Rp {fmt(subtotal)}</span>
+              </div>
+              <div className="mt-4 flex justify-between text-[15px] text-ink-3">
+                <span>Ongkir</span>
+                <span className="font-heading font-extrabold text-ink">Gratis</span>
+              </div>
+              <div className="my-5 h-px bg-stone-2" />
+              <div className="flex justify-between">
+                <span className="font-heading text-[14px] font-extrabold text-ink">Total</span>
+                <span className="font-heading text-[19px] font-extrabold text-primary">
+                  Rp {fmt(subtotal)}
+                </span>
+              </div>
+            </section>
+          </>
+        )}
+      </main>
+
+      {hasItems && (
+        <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-stone-2 bg-white px-[clamp(16px,5vw,20px)] py-4">
+          <Link
+            href="/checkout"
+            className="flex h-14 w-full items-center justify-center rounded-[18px] bg-primary font-heading text-[15px] font-extrabold text-white shadow-md active:scale-[0.98] transition-transform"
+          >
+            Lanjut ke Checkout
+          </Link>
+          <div className="safe-bottom" />
         </div>
-      </div>
+      )}
     </div>
   );
 }

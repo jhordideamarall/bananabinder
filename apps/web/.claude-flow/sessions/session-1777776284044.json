@@ -1,0 +1,14 @@
+{
+  "id": "session-1777776284044",
+  "startedAt": "2026-05-03T02:44:44.044Z",
+  "cwd": "/Users/jhordideamarall/Projects/Bananasbindery/apps/web",
+  "context": {},
+  "metrics": {
+    "edits": 5,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "endedAt": "2026-05-04T11:58:57.043Z",
+  "duration": 119653000
+}

@@ -1,117 +1,57 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
+import 'leaflet/dist/leaflet.css';
+import { Inter, Outfit } from 'next/font/google';
+import { cn } from '@bananasbindery/ui/utils';
+import { Providers } from '@/components/providers/providers';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-heading' });
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#FDFCFB',
+  interactiveWidget: 'resizes-visual',
+};
 
 export const metadata: Metadata = {
   title: {
-    default: "Bananasbindery | Binder Stationery Premium Indonesia",
-    template: "%s | Bananasbindery",
+    default: 'Bananasbindery',
+    template: '%s | Bananasbindery',
   },
-  description:
-    "Buku binder premium dengan desain estetik untuk pelajar, mahasiswa, dan pekerja Indonesia. Kualitas tinggi, banyak varian warna dan ukuran.",
-  keywords: [
-    "binder",
-    "stationery",
-    "buku binder",
-    "binder estetik",
-    "binder indonesia",
-    "bananasbindery",
-  ],
-  authors: [{ name: "Bananasbindery" }],
-  openGraph: {
-    type: "website",
-    locale: "id_ID",
-    url: "https://bananasbindery.com",
-    siteName: "Bananasbindery",
-    title: "Bananasbindery | Binder Stationery Premium Indonesia",
-    description:
-      "Buku binder premium dengan desain estetik untuk pelajar, mahasiswa, dan pekerja Indonesia.",
-    images: [
-      {
-        url: "https://bananasbindery.com/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Bananasbindery - Premium Binder Stationery",
-      },
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icon.png' },
+      { url: '/icon.png', sizes: '32x32', type: 'image/png' },
     ],
+    apple: { url: '/icon.png', sizes: '180x180', type: 'image/png' },
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Bananasbindery | Binder Stationery Premium Indonesia",
-    description:
-      "Buku binder premium dengan desain estetik untuk pelajar, mahasiswa, dan pekerja Indonesia.",
-    images: ["https://bananasbindery.com/og-image.jpg"],
+  description: 'Bananasbindery — Toko binder dan alat tulis terlengkap di Jakarta. Produk premium untuk produktivitasmu.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Bananasbindery',
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  alternates: {
-    canonical: "https://bananasbindery.com",
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    siteName: 'Bananasbindery',
+    url: 'https://bananasbindery.com',
+    title: 'Bananasbindery — Toko Binder & Stationery Jakarta',
+    description: 'Bananasbindery — Toko binder dan alat tulis terlengkap di Jakarta. Produk premium untuk produktivitasmu.',
   },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Store",
-  name: "Bananasbindery",
-  image: "https://bananasbindery.com/logo.png",
-  description:
-    "Buku binder premium dengan desain estetik untuk pelajar, mahasiswa, dan pekerja Indonesia.",
-  url: "https://bananasbindery.com",
-  telephone: "+628123456789",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "Jl. Binder No. 1",
-    addressLocality: "Jakarta",
-    addressRegion: "DKI Jakarta",
-    postalCode: "12345",
-    addressCountry: "ID",
-  },
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: -6.2,
-    longitude: 106.816666,
-  },
-  openingHoursSpecification: {
-    "@type": "OpeningHoursSpecification",
-    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-    opens: "09:00",
-    closes: "17:00",
-  },
-  sameAs: [
-    "https://instagram.com/bananasbindery",
-    "https://tiktok.com/@bananasbindery",
-  ],
-};
-
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import LenisProvider from "@/components/LenisProvider";
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id">
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      </head>
-      <body className={inter.className}>
-        <LenisProvider>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-          </div>
-        </LenisProvider>
+    <html lang="id" className={cn('font-sans antialiased', inter.variable, outfit.variable)}>
+      <body style={{ background: 'var(--color-app-bg)' }}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

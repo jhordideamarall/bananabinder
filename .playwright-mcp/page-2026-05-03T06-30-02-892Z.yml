@@ -1,0 +1,217 @@
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - generic [ref=e4]:
+            - generic [ref=e5]:
+                - link "Bananasbindery Jakarta Selatan" [ref=e6] [cursor=pointer]:
+                    - /url: /
+                    - generic [ref=e7]:
+                        - img [ref=e8]
+                        - generic [ref=e14]: Bananasbindery
+                    - generic [ref=e15]:
+                        - img [ref=e17]
+                        - generic [ref=e20]: Jakarta Selatan
+                - generic [ref=e21]:
+                    - button "Notifikasi" [ref=e22] [cursor=pointer]:
+                        - img [ref=e23]
+                    - link "Keranjang, 18 item" [ref=e27] [cursor=pointer]:
+                        - /url: /cart
+                        - generic [ref=e28]:
+                            - img [ref=e30]
+                            - generic [ref=e34]: '18'
+            - generic [ref=e35]:
+                - generic [ref=e37] [cursor=pointer]:
+                    - img [ref=e39]
+                    - generic [ref=e42]: Cari produk untuk peliharaanmu...
+                - button "Filter" [ref=e44]:
+                    - img [ref=e46]
+        - main [ref=e47]:
+            - generic [ref=e50]:
+                - link "Makanan Kucing Royal Canin -20% Makanan Makanan Kucing Royal Canin ★★★★☆ 4.8 · 1.200 terjual Rp 280.000 Rp 350.000" [ref=e51] [cursor=pointer]:
+                    - /url: /products/makanan-kucing-royal-canin
+                    - generic [ref=e52]:
+                        - img "Makanan Kucing Royal Canin" [ref=e53]
+                        - generic [ref=e55]: '-20%'
+                        - button [ref=e56]:
+                            - img [ref=e58]
+                    - generic [ref=e59]:
+                        - generic [ref=e60]: Makanan
+                        - generic [ref=e61]: Makanan Kucing Royal Canin
+                        - generic [ref=e62]:
+                            - generic [ref=e64]: ★★★★☆
+                            - generic [ref=e65]: 4.8 · 1.200 terjual
+                        - generic [ref=e67]:
+                            - generic [ref=e68]: Rp 280.000
+                            - generic [ref=e69]: Rp 350.000
+                - link "Obat Kutu Frontline Obat & Vitamin Obat Kutu Frontline ★★★★☆ 4.8 · 890 terjual Rp 220.000" [ref=e70] [cursor=pointer]:
+                    - /url: /products/obat-kutu-frontline
+                    - generic [ref=e71]:
+                        - img "Obat Kutu Frontline" [ref=e72]
+                        - button [ref=e73]:
+                            - img [ref=e75]
+                    - generic [ref=e76]:
+                        - generic [ref=e77]: Obat & Vitamin
+                        - generic [ref=e78]: Obat Kutu Frontline
+                        - generic [ref=e79]:
+                            - generic [ref=e81]: ★★★★☆
+                            - generic [ref=e82]: 4.8 · 890 terjual
+                        - generic [ref=e85]: Rp 220.000
+                - link "Makanan Anjing Pedigree Makanan Makanan Anjing Pedigree ★★★★☆ 4.6 · 850 terjual Rp 180.000" [ref=e86] [cursor=pointer]:
+                    - /url: /products/makanan-anjing-pedigree
+                    - generic [ref=e87]:
+                        - img "Makanan Anjing Pedigree" [ref=e88]
+                        - button [ref=e89]:
+                            - img [ref=e91]
+                    - generic [ref=e92]:
+                        - generic [ref=e93]: Makanan
+                        - generic [ref=e94]: Makanan Anjing Pedigree
+                        - generic [ref=e95]:
+                            - generic [ref=e97]: ★★★★☆
+                            - generic [ref=e98]: 4.6 · 850 terjual
+                        - generic [ref=e101]: Rp 180.000
+                - link "Mainan Kucing Bulu Interaktif -27% Mainan Mainan Kucing Bulu Interaktif ★★★★☆ 4.6 · 710 terjual Rp 55.000 Rp 75.000" [ref=e102] [cursor=pointer]:
+                    - /url: /products/mainan-kucing-bulu
+                    - generic [ref=e103]:
+                        - img "Mainan Kucing Bulu Interaktif" [ref=e104]
+                        - generic [ref=e106]: '-27%'
+                        - button [ref=e107]:
+                            - img [ref=e109]
+                    - generic [ref=e110]:
+                        - generic [ref=e111]: Mainan
+                        - generic [ref=e112]: Mainan Kucing Bulu Interaktif
+                        - generic [ref=e113]:
+                            - generic [ref=e115]: ★★★★☆
+                            - generic [ref=e116]: 4.6 · 710 terjual
+                        - generic [ref=e118]:
+                            - generic [ref=e119]: Rp 55.000
+                            - generic [ref=e120]: Rp 75.000
+                - link "Shampoo Organic Aloe Vera Grooming Shampoo Organic Aloe Vera ★★★★☆ 4.7 · 620 terjual Rp 85.000" [ref=e121] [cursor=pointer]:
+                    - /url: /products/shampoo-anjing-sensitif
+                    - generic [ref=e122]:
+                        - img "Shampoo Organic Aloe Vera" [ref=e123]
+                        - button [ref=e124]:
+                            - img [ref=e126]
+                    - generic [ref=e127]:
+                        - generic [ref=e128]: Grooming
+                        - generic [ref=e129]: Shampoo Organic Aloe Vera
+                        - generic [ref=e130]:
+                            - generic [ref=e132]: ★★★★☆
+                            - generic [ref=e133]: 4.7 · 620 terjual
+                        - generic [ref=e136]: Rp 85.000
+                - link "Tali Leash Retractable 5m Aksesoris Tali Leash Retractable 5m ★★★★☆ 4.4 · 540 terjual Rp 95.000" [ref=e137] [cursor=pointer]:
+                    - /url: /products/tali-leash-retractable
+                    - generic [ref=e138]:
+                        - img "Tali Leash Retractable 5m" [ref=e139]
+                        - button [ref=e140]:
+                            - img [ref=e142]
+                    - generic [ref=e143]:
+                        - generic [ref=e144]: Aksesoris
+                        - generic [ref=e145]: Tali Leash Retractable 5m
+                        - generic [ref=e146]:
+                            - generic [ref=e148]: ★★★★☆
+                            - generic [ref=e149]: 4.4 · 540 terjual
+                        - generic [ref=e152]: Rp 95.000
+                - link "Vitamin Kucing Premium -20% Obat & Vitamin Vitamin Kucing Premium ★★★★☆ 4.7 · 410 terjual Rp 120.000 Rp 150.000" [ref=e153] [cursor=pointer]:
+                    - /url: /products/vitamin-kucing-premium
+                    - generic [ref=e154]:
+                        - img "Vitamin Kucing Premium" [ref=e155]
+                        - generic [ref=e157]: '-20%'
+                        - button [ref=e158]:
+                            - img [ref=e160]
+                    - generic [ref=e161]:
+                        - generic [ref=e162]: Obat & Vitamin
+                        - generic [ref=e163]: Vitamin Kucing Premium
+                        - generic [ref=e164]:
+                            - generic [ref=e166]: ★★★★☆
+                            - generic [ref=e167]: 4.7 · 410 terjual
+                        - generic [ref=e169]:
+                            - generic [ref=e170]: Rp 120.000
+                            - generic [ref=e171]: Rp 150.000
+                - link "Sisir Slicker Premium Wood Grooming Sisir Slicker Premium Wood ★★★★☆ 4.4 · 380 terjual Rp 65.000" [ref=e172] [cursor=pointer]:
+                    - /url: /products/sisir-slicker
+                    - generic [ref=e173]:
+                        - img "Sisir Slicker Premium Wood" [ref=e174]
+                        - button [ref=e175]:
+                            - img [ref=e177]
+                    - generic [ref=e178]:
+                        - generic [ref=e179]: Grooming
+                        - generic [ref=e180]: Sisir Slicker Premium Wood
+                        - generic [ref=e181]:
+                            - generic [ref=e183]: ★★★★☆
+                            - generic [ref=e184]: 4.4 · 380 terjual
+                        - generic [ref=e187]: Rp 65.000
+                - link "Frozen Daging Sapi Premium -16% Makanan Frozen Daging Sapi Premium ★★★★☆ 4.9 · 320 terjual Rp 380.000 Rp 450.000" [ref=e188] [cursor=pointer]:
+                    - /url: /products/frozen-daging-sapi
+                    - generic [ref=e189]:
+                        - img "Frozen Daging Sapi Premium" [ref=e190]
+                        - generic [ref=e192]: '-16%'
+                        - button [ref=e193]:
+                            - img [ref=e195]
+                    - generic [ref=e196]:
+                        - generic [ref=e197]: Makanan
+                        - generic [ref=e198]: Frozen Daging Sapi Premium
+                        - generic [ref=e199]:
+                            - generic [ref=e201]: ★★★★☆
+                            - generic [ref=e202]: 4.9 · 320 terjual
+                        - generic [ref=e204]:
+                            - generic [ref=e205]: Rp 380.000
+                            - generic [ref=e206]: Rp 450.000
+                - link "Kalung Anjing Kulit Asli Aksesoris Kalung Anjing Kulit Asli ★★★★☆ 4.5 · 320 terjual Rp 120.000" [ref=e207] [cursor=pointer]:
+                    - /url: /products/kalung-anjing-kulit
+                    - generic [ref=e208]:
+                        - img "Kalung Anjing Kulit Asli" [ref=e209]
+                        - button [ref=e210]:
+                            - img [ref=e212]
+                    - generic [ref=e213]:
+                        - generic [ref=e214]: Aksesoris
+                        - generic [ref=e215]: Kalung Anjing Kulit Asli
+                        - generic [ref=e216]:
+                            - generic [ref=e218]: ★★★★☆
+                            - generic [ref=e219]: 4.5 · 320 terjual
+                        - generic [ref=e222]: Rp 120.000
+                - link "Pet Carrier Travel Box Kandang Pet Carrier Travel Box ★★★★☆ 4.5 · 240 terjual Rp 350.000" [ref=e223] [cursor=pointer]:
+                    - /url: /products/kandang-plastik-travel
+                    - generic [ref=e224]:
+                        - img "Pet Carrier Travel Box" [ref=e225]
+                        - button [ref=e226]:
+                            - img [ref=e228]
+                    - generic [ref=e229]:
+                        - generic [ref=e230]: Kandang
+                        - generic [ref=e231]: Pet Carrier Travel Box
+                        - generic [ref=e232]:
+                            - generic [ref=e234]: ★★★★☆
+                            - generic [ref=e235]: 4.5 · 240 terjual
+                        - generic [ref=e238]: Rp 350.000
+                - link "Kandang Besi Lipat Premium -21% Kandang Kandang Besi Lipat Premium ★★★★☆ 4.6 · 120 terjual Rp 950.000 Rp 1.200.000" [ref=e239] [cursor=pointer]:
+                    - /url: /products/kandang-besi-besar
+                    - generic [ref=e240]:
+                        - img "Kandang Besi Lipat Premium" [ref=e241]
+                        - generic [ref=e243]: '-21%'
+                        - button [ref=e244]:
+                            - img [ref=e246]
+                    - generic [ref=e247]:
+                        - generic [ref=e248]: Kandang
+                        - generic [ref=e249]: Kandang Besi Lipat Premium
+                        - generic [ref=e250]:
+                            - generic [ref=e252]: ★★★★☆
+                            - generic [ref=e253]: 4.6 · 120 terjual
+                        - generic [ref=e255]:
+                            - generic [ref=e256]: Rp 950.000
+                            - generic [ref=e257]: Rp 1.200.000
+        - navigation "Navigasi utama" [ref=e258]:
+            - link "Home" [ref=e259] [cursor=pointer]:
+                - /url: /
+                - img [ref=e260]
+                - generic [ref=e263]: Home
+            - link "Produk" [ref=e264] [cursor=pointer]:
+                - /url: /products
+                - img [ref=e265]
+                - generic [ref=e268]: Produk
+            - link "Booking" [ref=e269] [cursor=pointer]:
+                - /url: /booking
+                - img [ref=e270]
+                - generic [ref=e276]: Booking
+            - link "Akun" [ref=e277] [cursor=pointer]:
+                - /url: /account
+                - img [ref=e278]
+                - generic [ref=e281]: Akun
+    - alert [ref=e282]

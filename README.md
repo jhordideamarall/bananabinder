@@ -1,172 +1,97 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/🍌-Bananasbindery-F9E79F?style=for-the-badge&labelColor=7EC8E3" alt="Bananasbindery" />
-</p>
+# 🐾 Bananasbindery: The Professional Bananasbindery Platform
 
-<h1 align="center">Bananasbindery</h1>
-<p align="center"><strong>Production-Grade Binder Stationery E-Commerce Platform</strong></p>
+[![Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![Turborepo](https://img.shields.io/badge/Monorepo-Turborepo-ef4444.svg)](https://turbo.build/)
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js_15-000000.svg)](https://nextjs.org/)
+[![Supabase](https://img.shields.io/badge/Database-Supabase-3ecf8e.svg)](https://supabase.com/)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js" />
-  <img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript" />
-  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase" />
-  <img src="https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat-square&logo=turborepo" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-Utility--First-06B6D4?style=flat-square&logo=tailwindcss" />
-  <img src="https://img.shields.io/badge/Xendit-Payment_Gateway-003CFF?style=flat-square" />
-</p>
-
-<p align="center">
-  <em>End-to-end e-commerce platform built with serverless architecture, automated payments,<br/>intelligent marketing engine, and AI-optimized content strategy.</em>
-</p>
+> **Bananasbindery** is a high-performance, enterprise-grade E-Commerce, Booking, and Delivery ecosystem specifically engineered for the Jakarta market. This is a private, professional project developed by **Jhordi Deamarall**.
 
 ---
 
-## About
+## 📖 The Story & Vision
 
-**Bananasbindery** is a full-stack e-commerce platform designed for selling premium binder notebooks and stationery products in Indonesia. Built from scratch with production-level architecture — covering everything from atomic database transactions to webhook-driven payment automation.
+Pet shops in a mega-city like Jakarta face unique challenges: overbooking for grooming services, inaccurate shipping costs for frozen products, and fragmented customer data handled manually via WhatsApp.
 
-This project demonstrates real-world engineering decisions: monorepo code sharing, Row Level Security, race-condition-safe stock management, and a complete order lifecycle including cancellation and refund flows.
+**Bananasbindery was born to solve this.**
 
-> Engineered by **[Jhordi Deamarall](https://github.com/jhordideamarall)**
-
----
-
-## Architecture
-
-```
-Turborepo Monorepo
-├── apps/web              → Next.js 14 (App Router, SSR/SSG)
-├── packages/ui           → Design system (Shadcn UI + CVA)
-├── packages/db           → Supabase client, typed queries, RPC wrappers
-├── packages/config       → Shared Tailwind config, brand tokens
-├── packages/tsconfig     → Shared TypeScript strict configs
-└── supabase/migrations   → Versioned database schema (11 tables, 3 RPCs)
-```
-
-### Key Technical Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| Turborepo monorepo | Shared logic between web & future mobile app. Cached builds. |
-| Supabase (PostgreSQL) | RLS for multi-tenant security. Realtime subscriptions. Edge functions. |
-| Atomic stock reduction via RPC | Prevents overselling under concurrent checkout load. |
-| Price locking at checkout | Server-side snapshot eliminates client-side price manipulation. |
-| WhatsApp OTP (no password) | Frictionless auth for Indonesian market. Higher conversion. |
-| Webhook-driven payment | Xendit callback → verify signature → update order → reduce stock. Zero polling. |
+Instead of building a simple website, I architected a **comprehensive platform** that treats e-commerce as the core revenue engine while automating the complexities of service bookings and logistics. The vision is to provide store owners with full visibility into their financial health while giving customers a friction-less, mobile-first experience.
 
 ---
 
-## Tech Stack
+## 🏗️ Technical Excellence: Monorepo Architecture
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Runtime | Next.js 14 (App Router) | SSR, API routes, ISR |
-| Language | TypeScript (strict, zero-any) | Type safety across monorepo |
-| Styling | Tailwind CSS + Shadcn UI | Utility-first, accessible components |
-| Database | Supabase PostgreSQL | RLS, RPC functions, realtime |
-| Auth | Supabase Auth + WhatsApp OTP | Passwordless via Fonnte |
-| Payment | Xendit | VA, QRIS, E-Wallet, Credit Card |
-| Shipping | RajaOngkir Pro | Kecamatan-level rate calculation |
-| Email | Resend | Transactional & marketing emails |
-| Storage | Supabase Storage | Product images (CDN-backed) |
-| Monorepo | Turborepo + pnpm | Parallel builds, dependency caching |
-| Hosting | Vercel | Edge network, serverless functions |
+To ensure this platform can scale across **Web, Mobile, and Desktop**, I implemented a sophisticated Monorepo architecture using **Turborepo** and **pnpm workspaces**.
 
----
+### The "Zero-Leakage" Philosophy
 
-## Features
+Business logic is never duplicated. Calculations for shipping, discounts, and point rewards reside in `@bananasbindery/core`. This means whether a customer buys from the web or a future mobile app, the logic remains identical and bug-free.
 
-### Customer-Facing
-- **Passwordless Auth** — WhatsApp OTP login (SHA-256 hashed, 5min expiry, rate limited)
-- **Persistent Cart** — Database-backed, survives browser close, multi-device sync
-- **Smart Checkout** — Coupon validation, real-time shipping calculation, price locking
-- **Multi-Payment** — Virtual Account, QRIS, E-Wallet, Credit Card (auto-confirmed via webhook)
-- **Order Lifecycle** — Real-time tracking with cancellation & refund support (24h window)
-- **Flash Sales** — Countdown timer, allocated stock, promo pricing
+### Structural Breakdown
 
-### Admin Panel
-- **Analytics Dashboard** — Revenue, conversion rate, top products, low-stock alerts
-- **Product Management** — Multi-variant (ring size, cover color, paper type), multi-image
-- **Flexible Coupons** — Percentage, fixed amount, or free shipping (owner-subsidized)
-- **Order Fulfillment** — Process → ship → track. Bulk label printing, resi input
-- **Abandoned Cart Recovery** — Auto-detect idle carts, trigger WA/email reminders
-- **Customer CRM** — Purchase history, lifetime value
+- 🌐 **apps/web**: A high-speed **Next.js 15** storefront with App Router and Server Components.
+- ⚙️ **apps/api**: A robust **NestJS** backend server providing high-concurrency for all platforms.
+- 📱 **apps/mobile**: A native **React Native (Expo)** experience for mobile-first users.
+- 📦 **packages/api-client**: A unified SDK that abstracts all platform interactions.
+- 🎨 **packages/ui**: A private design system built on **Tailwind CSS v4** and **shadcn/ui**.
+- 🛠️ **packages/store**: Shared global state management using **Zustand**.
 
 ---
 
-## Security
+## ✨ Core Innovation Modules
 
-| Measure | Implementation |
-|---------|---------------|
-| Row Level Security | All user-facing tables. Users access own data only. |
-| Atomic Transactions | Stock reduction via PostgreSQL RPC — no race conditions |
-| Price Integrity | Server-side validation & snapshot at checkout |
-| Webhook Verification | Xendit `x-callback-token` validation |
-| OTP Security | SHA-256 hash, 5min TTL, max 3 attempts, rate limiting |
-| Input Validation | Zod schemas on every API route |
-| Zero `any` Policy | Strict TypeScript — no implicit or explicit `any` |
-| DDoS Protection | Vercel Edge Network auto-mitigation + Upstash Redis rate limiter |
-| Rate Limiting | Per-endpoint throttling (OTP: 3/15min, Checkout: 5/hr, Shipping: 10/min) |
+### 1. Smart Logistics Engine
 
----
+Built to handle Jakarta's traffic and product types. It automatically filters courier options based on product type (e.g., Frozen foods are locked to Same-Day delivery within 15km) and integrates directly with **Biteship/RajaOngkir**.
 
-## AI Visibility & Discovery Strategy
+### 2. Slot-Locked Booking System
 
-This project implements a comprehensive **AI Search Optimization** strategy designed to make the brand discoverable by modern AI systems:
+A real-time grooming and pet hotel booking engine that prevents overbooking at the database level. Integrated with **Midtrans/Xendit** for mandatory DP (Down Payment) collection.
 
-| Platform | Strategy |
-|----------|----------|
-| ChatGPT, Claude, Gemini, Perplexity | Structured content, clear brand entity, product-use pairing |
-| Google AI Overview | JSON-LD structured data (Product, Store, FAQ, BreadcrumbList) |
-| Google Search | Semantic URLs, unique metadata per page, sitemap, canonical URLs |
-| TikTok & Instagram Search | Hashtag strategy, use-case content, social proof |
+### 3. Loyalty & Pet Profile
 
-The content architecture ensures AI systems can understand:
-- **What** Bananasbindery is (binder stationery brand)
-- **Who** it serves (students, professionals, journaling enthusiasts)
-- **Why** it's relevant (premium quality, aesthetic design, nationwide shipping)
+A personalized engine that tracks pet health/sizes to recommend products and manage loyalty points that expire dynamically after 12 months.
 
-Full strategy documented in [`AI-visibilites.md`](./AI-visibilites.md).
+### 4. Owner Intelligence
+
+A dedicated management dashboard that provides deep visibility into **Net Profit, HPP (COGS), and Average Order Value (AOV)**.
 
 ---
 
-## Getting Started
+## 🛠️ Tech Stack & Engineering Standards
 
-```bash
-git clone https://github.com/jhordideamarall/bananabinder.git
-cd bananabinder
-
-pnpm install
-cp .env.example .env.local
-
-# Development
-pnpm dev
-
-# Production build
-pnpm build
-```
+- **Language**: TypeScript (Strict Mode)
+- **Styling**: Tailwind CSS v4 + Framer Motion (Micro-animations)
+- **Database**: PostgreSQL via **Supabase** (with RLS, Triggers, and Fuzzy Search)
+- **Auth**: Phone OTP (WhatsApp-first) + Google OAuth
+- **CI/CD**: GitHub Actions, Husky, Commitlint, and automated Vercel deployments.
 
 ---
 
-## Documentation
+## 💻 Developer Guide
 
-| Document | Description |
-|----------|-------------|
-| [`PRD.md`](./PRD.md) | Product Requirements — features, user flows, business rules |
-| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | System design — schema, API routes, security model |
-| [`AI-visibilites.md`](./AI-visibilites.md) | AI discovery & SEO strategy for modern search |
-| [`plan/`](./plan/) | Implementation roadmap (9 phases) |
-| [`artifacts/`](./artifacts/) | Development changelog & decision log |
+### Prerequisites
 
----
+- Node.js v20+
+- pnpm v10+
 
-## License
+### Setup
 
-MIT License © 2026 [Jhordi Deamarall](https://github.com/jhordideamarall)
-
-See [`LICENSE`](./LICENSE) for full text.
+1. `pnpm install`
+2. `cp .env.example .env` (Configure your Supabase & API keys)
+3. `pnpm dev` to start the ecosystem.
 
 ---
 
-<p align="center">
-  <sub>Engineered with precision by <strong><a href="https://github.com/jhordideamarall">Jhordi Deamarall</a></strong></sub>
-</p>
+## 📄 Intellectual Property & License
+
+**Proprietary Software License**
+
+Copyright (c) 2026 **Jhordi Deamarall**. All rights reserved.
+
+This software is the exclusive and confidential property of Jhordi Deamarall. Unauthorized copying, modification, or distribution of this code via any medium is strictly prohibited. For inquiries or permission requests, please contact the author directly.
+
+---
+
+**Crafted with precision and passion by Jhordi Deamarall.**

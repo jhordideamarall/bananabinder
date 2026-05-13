@@ -1,0 +1,188 @@
+- generic [ref=e3]:
+    - generic [ref=e5]:
+        - generic [ref=e6]:
+            - generic [ref=e7]:
+                - generic [ref=e9]:
+                    - img [ref=e10]
+                    - generic [ref=e13]: Jakarta Selatan
+                - generic [ref=e14]:
+                    - button [ref=e15] [cursor=pointer]:
+                        - img [ref=e16]
+                    - button [ref=e20] [cursor=pointer]:
+                        - img [ref=e21]
+            - generic [ref=e25]:
+                - img [ref=e27]
+                - textbox "Cari produk untuk peliharaanmu..." [ref=e30] [cursor=pointer]
+        - generic [ref=e34]:
+            - generic [ref=e35]: Flash Sale · Hari Ini
+            - generic [ref=e36]:
+                - text: Diskon
+                - text: hingga 50%
+            - generic [ref=e37]: Makanan & aksesoris premium
+            - button "Belanja sekarang" [ref=e38] [cursor=pointer]
+        - generic [ref=e39]:
+            - generic [ref=e40]:
+                - generic [ref=e41]: Pengiriman sama hari
+                - generic [ref=e42]: Order sebelum 14:00
+            - generic [ref=e43]:
+                - generic [ref=e44]: Produk original
+                - generic [ref=e45]: Bergaransi resmi
+            - generic [ref=e46]:
+                - generic [ref=e47]: Poin loyalty
+                - generic [ref=e48]: Setiap pembelian
+        - generic [ref=e49]:
+            - generic [ref=e50]:
+                - generic [ref=e51]: Kategori
+                - button "Lihat semua" [ref=e52] [cursor=pointer]
+            - generic [ref=e53]:
+                - button "Makanan" [ref=e54] [cursor=pointer]
+                - button "Aksesoris" [ref=e55] [cursor=pointer]
+                - button "Obat & Vitamin" [ref=e56] [cursor=pointer]
+                - button "Kandang" [ref=e57] [cursor=pointer]
+                - button "Grooming" [ref=e58] [cursor=pointer]
+                - button "Frozen" [ref=e59] [cursor=pointer]
+        - generic [ref=e61]:
+            - img [ref=e63]
+            - generic [ref=e69]:
+                - generic [ref=e70]: Grooming & Pet Hotel
+                - generic [ref=e71]: Booking jadwal sekarang, slot terbatas
+            - button "Booking" [ref=e72] [cursor=pointer]:
+                - text: Booking
+                - img [ref=e73]
+        - generic [ref=e76]:
+            - generic [ref=e77]:
+                - generic [ref=e78]:
+                    - text: Penawaran Terbaik
+                    - generic [ref=e79]:
+                        - generic [ref=e80]: Berakhir dalam
+                        - generic [ref=e81]: 02:14:38
+                - button "Semua" [ref=e82] [cursor=pointer]
+            - generic [ref=e83]:
+                - generic [ref=e84] [cursor=pointer]:
+                    - generic [ref=e85]:
+                        - generic [ref=e87]: Dog Food
+                        - generic [ref=e89]: −14%
+                        - button [ref=e90]:
+                            - img [ref=e91]
+                    - generic [ref=e92]:
+                        - generic [ref=e93]:
+                            - generic [ref=e94]: ★★★★☆
+                            - generic [ref=e95]: 4.8 · 892 terjual
+                        - generic [ref=e96]: Royal Canin Adult Dog 10kg
+                        - generic [ref=e97]:
+                            - generic [ref=e98]: Rp 385.000
+                            - generic [ref=e99]: Rp 450.000
+                - generic [ref=e100] [cursor=pointer]:
+                    - generic [ref=e101]:
+                        - generic [ref=e103]: Cat Food
+                        - generic [ref=e105]: −19%
+                        - button [ref=e106]:
+                            - img [ref=e107]
+                    - generic [ref=e108]:
+                        - generic [ref=e109]:
+                            - generic [ref=e110]: ★★★★☆
+                            - generic [ref=e111]: 4.6 · 543 terjual
+                        - generic [ref=e112]: Whiskas Tuna Kucing 1.5kg
+                        - generic [ref=e113]:
+                            - generic [ref=e114]: Rp 72.000
+                            - generic [ref=e115]: Rp 89.000
+                - generic [ref=e116] [cursor=pointer]:
+                    - generic [ref=e117]:
+                        - generic [ref=e119]: Collar
+                        - generic [ref=e121]: −22%
+                        - button [ref=e122]:
+                            - img [ref=e123]
+                    - generic [ref=e124]:
+                        - generic [ref=e125]:
+                            - generic [ref=e126]: ★★★★☆
+                            - generic [ref=e127]: 4.4 · 187 terjual
+                        - generic [ref=e128]: Kalung Anjing Kulit Premium
+                        - generic [ref=e129]:
+                            - generic [ref=e130]: Rp 98.000
+                            - generic [ref=e131]: Rp 125.000
+                - generic [ref=e132] [cursor=pointer]:
+                    - generic [ref=e133]:
+                        - generic [ref=e135]: Cage
+                        - generic [ref=e137]: −13%
+                        - button [ref=e138]:
+                            - img [ref=e139]
+                    - generic [ref=e140]:
+                        - generic [ref=e141]:
+                            - generic [ref=e142]: ★★★★☆
+                            - generic [ref=e143]: 4.5 · 95 terjual
+                        - generic [ref=e144]: Kandang Kucing Foldable 60cm
+                        - generic [ref=e145]:
+                            - generic [ref=e146]: Rp 280.000
+                            - generic [ref=e147]: Rp 320.000
+        - generic [ref=e149]:
+            - generic [ref=e150]:
+                - generic [ref=e151]: Produk Pilihan
+                - button "Semua" [ref=e152] [cursor=pointer]
+            - generic [ref=e153]:
+                - generic [ref=e154] [cursor=pointer]:
+                    - generic [ref=e155]:
+                        - generic [ref=e157]: Dog Food
+                        - generic [ref=e159]: −14%
+                        - button [ref=e160]:
+                            - img [ref=e161]
+                    - generic [ref=e162]:
+                        - generic [ref=e163]:
+                            - generic [ref=e164]: ★★★★☆
+                            - generic [ref=e165]: 4.8 · 892 terjual
+                        - generic [ref=e166]: Royal Canin Adult Dog 10kg
+                        - generic [ref=e167]:
+                            - generic [ref=e168]: Rp 385.000
+                            - generic [ref=e169]: Rp 450.000
+                - generic [ref=e170] [cursor=pointer]:
+                    - generic [ref=e171]:
+                        - generic [ref=e173]: Cat Food
+                        - generic [ref=e175]: −19%
+                        - button [ref=e176]:
+                            - img [ref=e177]
+                    - generic [ref=e178]:
+                        - generic [ref=e179]:
+                            - generic [ref=e180]: ★★★★☆
+                            - generic [ref=e181]: 4.6 · 543 terjual
+                        - generic [ref=e182]: Whiskas Tuna Kucing 1.5kg
+                        - generic [ref=e183]:
+                            - generic [ref=e184]: Rp 72.000
+                            - generic [ref=e185]: Rp 89.000
+                - generic [ref=e186] [cursor=pointer]:
+                    - generic [ref=e187]:
+                        - generic [ref=e189]: Frozen Meat
+                        - generic [ref=e191]: Frozen
+                        - button [ref=e192]:
+                            - img [ref=e193]
+                    - generic [ref=e194]:
+                        - generic [ref=e195]:
+                            - generic [ref=e196]: ★★★★☆
+                            - generic [ref=e197]: 4.9 · 234 terjual
+                        - generic [ref=e198]: BARF Daging Sapi Segar 500g
+                        - generic [ref=e200]: Rp 65.000
+                - generic [ref=e201] [cursor=pointer]:
+                    - generic [ref=e202]:
+                        - generic [ref=e204]: Collar
+                        - generic [ref=e206]: −22%
+                        - button [ref=e207]:
+                            - img [ref=e208]
+                    - generic [ref=e209]:
+                        - generic [ref=e210]:
+                            - generic [ref=e211]: ★★★★☆
+                            - generic [ref=e212]: 4.4 · 187 terjual
+                        - generic [ref=e213]: Kalung Anjing Kulit Premium
+                        - generic [ref=e214]:
+                            - generic [ref=e215]: Rp 98.000
+                            - generic [ref=e216]: Rp 125.000
+    - navigation [ref=e218]:
+        - button "Home" [ref=e219] [cursor=pointer]:
+            - img [ref=e220]
+            - generic [ref=e223]: Home
+        - button "Produk" [ref=e224] [cursor=pointer]:
+            - img [ref=e225]
+            - generic [ref=e228]: Produk
+        - button "Booking" [ref=e229] [cursor=pointer]:
+            - img [ref=e230]
+            - generic [ref=e236]: Booking
+        - button "Akun" [ref=e237] [cursor=pointer]:
+            - img [ref=e238]
+            - generic [ref=e241]: Akun

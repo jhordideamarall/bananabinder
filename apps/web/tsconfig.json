@@ -1,11 +1,26 @@
 {
-  "extends": "@bananasbindery/tsconfig/nextjs.json",
+  "extends": "../../packages/tsconfig/nextjs.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "noEmit": true,
+    "resolveJsonModule": true,
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+      "@bananasbindery/ui/*": ["../../packages/ui/src/*"],
+      "@bananasbindery/utils/*": ["../../packages/utils/src/*"],
+      "@bananasbindery/api-client/*": ["../../packages/api-client/src/*"],
+      "@bananasbindery/core/*": ["../../packages/core/src/*"],
+      "@bananasbindery/store/*": ["../../packages/store/src/*"]
+    },
+    "isolatedModules": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "types/**/*.d.ts"],
   "exclude": ["node_modules"]
 }

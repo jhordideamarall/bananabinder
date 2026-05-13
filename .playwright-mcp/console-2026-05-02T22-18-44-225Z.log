@@ -1,0 +1,67 @@
+[    2823ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:14537
+[    2877ms] [WARNING] %c%s%c  ⚠ Unsupported metadata viewport is configured in metadata export in /products. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_ed284df6._.js:4874
+[    2877ms] [WARNING] %c%s%c  ⚠ Unsupported metadata themeColor is configured in metadata export in /products. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_ed284df6._.js:4874
+[    3095ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/afa34_next_dist_client_9206905b._.js:5949
+[    3110ms] [LOG] [Fast Refresh] done in 116ms @ http://localhost:3000/_next/static/chunks/afa34_next_dist_client_9206905b._.js:5809
+[    4400ms] [ERROR] %o
+
+%s Error: Invalid src prop (https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=500&h=500&fit=crop) on `next/image`, hostname "images.unsplash.com" is not configured under images in your `next.config.js`
+See more info: https://nextjs.org/docs/messages/next-image-unconfigured-host
+    at defaultLoader (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:3148:49)
+    at http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:574:36
+    at Array.map (<anonymous>)
+    at generateImgAttrs (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:574:24)
+    at getImgProps (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:968:27)
+    at http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:3482:82
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:13072:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:4091:24)
+    at updateForwardRef (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:5342:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:6186:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:886:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8298:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8190:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8173:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:7932:56)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8882:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_ed284df6._.js:2601:64) The above error occurred in the <Unknown> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3000/_next/static/chunks/afa34_next_dist_client_9206905b._.js:1247
+[    4404ms] [ERROR] Error: Invalid src prop (https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=500&h=500&fit=crop) on `next/image`, hostname "images.unsplash.com" is not configured under images in your `next.config.js`
+See more info: https://nextjs.org/docs/messages/next-image-unconfigured-host
+    at defaultLoader (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:3148:49)
+    at http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:574:36
+    at Array.map (<anonymous>)
+    at generateImgAttrs (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:574:24)
+    at getImgProps (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:968:27)
+    at http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:3482:82
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:13072:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:4091:24)
+    at updateForwardRef (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:5342:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:6186:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:886:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8298:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8190:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8173:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:7932:56)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8882:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_ed284df6._.js:2601:64) @ http://localhost:3000/_next/static/chunks/afa34_next_dist_ac59402a._.js:2359
+[    4404ms] [ERROR] Error: Invalid src prop (https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=500&h=500&fit=crop) on `next/image`, hostname "images.unsplash.com" is not configured under images in your `next.config.js`
+See more info: https://nextjs.org/docs/messages/next-image-unconfigured-host
+    at defaultLoader (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:3148:49)
+    at http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:574:36
+    at Array.map (<anonymous>)
+    at generateImgAttrs (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:574:24)
+    at getImgProps (http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:968:27)
+    at http://localhost:3000/_next/static/chunks/node_modules__pnpm_f66d019e._.js:3482:82
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:13072:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:4091:24)
+    at updateForwardRef (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:5342:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:6186:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:886:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8298:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8190:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8173:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:7932:56)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_react-dom_df9b25ef._.js:8882:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/afa34_next_dist_compiled_ed284df6._.js:2601:64) @ http://localhost:3000/_next/static/chunks/afa34_next_dist_ac59402a._.js:2359
+[   33680ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/afa34_next_dist_client_9206905b._.js:5949

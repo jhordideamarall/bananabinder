@@ -1,0 +1,9 @@
+{
+  "extends": "@bananasbindery/tsconfig/base",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

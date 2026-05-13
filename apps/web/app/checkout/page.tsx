@@ -1,354 +1,673 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useCart } from "@/store/useCart";
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
-  IconTruck,
-  IconCreditCard,
-  IconChevronRight,
-  IconTicket,
-  IconMapPin,
-  IconLoader2,
-  IconCircleCheck,
-} from "@tabler/icons-react";
-import { Button, Card, CardContent, Badge } from "@bananasbindery/ui";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+  Check,
+  ChevronLeft,
+  MapPin,
+  Package,
+  Loader2,
+  Plus,
+  Truck,
+  ChevronDown,
+  ShieldCheck,
+} from 'lucide-react';
+import { m, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
+import { useCartStore, type CartItem } from '@/stores/cart-store';
+import { useAuth } from '@/components/providers/auth-provider';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { getUserAddresses, type Address } from '@/lib/services/address-client';
+import { createOrder } from '@/lib/services/order-client';
+import { getShippingRates, type ShippingOption } from '@/lib/services/shipping-client';
+import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
 
-interface Address {
-  id: string;
-  receiver_name: string;
-  phone: string;
-  full_address: string;
-  postal_code: string;
-  biteship_area_id: string;
-  is_default: boolean;
+const AddressSheet = dynamic(
+  () => import('@/components/checkout/address-sheet').then((mod) => mod.AddressSheet),
+  { ssr: false },
+);
+
+const fmt = (n: number) => n.toLocaleString('id-ID');
+
+const steps = ['Alamat', 'Pengiriman', 'Bayar'];
+
+function Thumb({ item, size = 52 }: { item: CartItem; size?: number }) {
+  const label = item.name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div
+      className="relative shrink-0 overflow-hidden rounded-[12px] bg-stone font-heading text-[10px] font-extrabold text-ink-4"
+      style={{ width: size, height: size }}
+    >
+      {item.imageUrl ? (
+        <Image
+          src={item.imageUrl}
+          alt={item.name}
+          fill
+          sizes={`${size}px`}
+          className="object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">{label || 'PV'}</div>
+      )}
+    </div>
+  );
 }
 
-interface ShippingRate {
-  company: string;
-  type: string;
-  service: string;
-  price: number;
-  duration: string;
+function RadioMark({ selected }: { selected: boolean }) {
+  return (
+    <span
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2"
+      style={{
+        borderColor: selected ? 'var(--color-primary)' : 'var(--color-stone-3)',
+      }}
+    >
+      {selected && <span className="h-3 w-3 rounded-full bg-primary" />}
+    </span>
+  );
 }
 
 export default function CheckoutPage() {
-  const { items, totalPrice, clearCart, syncWithServer } = useCart();
   const router = useRouter();
+  const [hydrated, setHydrated] = useState(false);
+  const [step, setStep] = useState(1);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [shippingId, setShippingId] = useState<string | null>(null);
+  const [expandedCourier, setExpandedCourier] = useState<string | null>(null);
+  const items = useCartStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clearCart);
 
-  const [loading, setLoading] = useState(false);
-  const [fetchingAddresses, setFetchingAddresses] = useState(true);
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-  const [couponCode, setCouponCode] = useState("");
-  const [availableRates, setAvailableRates] = useState<ShippingRate[]>([]);
-  const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
-  const [calculatingShipping, setCalculatingShipping] = useState(false);
+  const { user } = useAuth();
 
-  // Load addresses and sync cart
+  const {
+    data: addresses = [],
+    isLoading: isLoadingAddresses,
+    refetch: refetchAddresses,
+  } = useQuery({
+    queryKey: ['addresses', user?.id],
+    queryFn: getUserAddresses,
+    enabled: !!user,
+  });
+
+  const count = useMemo(() => items.reduce((total, item) => total + item.quantity, 0), [items]);
+
+  const { data: shippingOptions = [], isLoading: isLoadingShipping } = useQuery({
+    queryKey: ['shipping-rates', selectedAddressId, count],
+    queryFn: () => (selectedAddressId ? getShippingRates(selectedAddressId, items) : []),
+    enabled: !!selectedAddressId && items.length > 0 && step >= 2,
+    staleTime: 1000 * 60 * 5, // 5 menit
+  });
+
+  const groupedOptions = useMemo(() => {
+    const groups: Record<string, ShippingOption[]> = {};
+    shippingOptions.forEach((opt) => {
+      if (!groups[opt.courier_code]) groups[opt.courier_code] = [];
+      groups[opt.courier_code].push(opt);
+    });
+    return groups;
+  }, [shippingOptions]);
+
   useEffect(() => {
-    const init = async () => {
-      await syncWithServer();
-      try {
-        const res = await fetch("/api/user/addresses");
-        const { data } = await res.json();
-        if (data) {
-          setAddresses(data);
-          const defaultAddr =
-            data.find((a: Address) => a.is_default) || data[0];
-          setSelectedAddress(defaultAddr);
-        }
-      } catch (e) {
-        console.error("Failed to load addresses", e);
-      } finally {
-        setFetchingAddresses(false);
-      }
-    };
-    init();
-  }, [syncWithServer]);
-
-  // Calculate shipping when address changes
-  useEffect(() => {
-    if (selectedAddress && items.length > 0) {
-      const calculateShipping = async () => {
-        setCalculatingShipping(true);
-        try {
-          const res = await fetch("/api/shipping/cost", {
-            method: "POST",
-            body: JSON.stringify({
-              addressId: selectedAddress.id,
-              items: items.map((i) => ({
-                variantId: i.variantId,
-                quantity: i.quantity,
-              })),
-            }),
-            headers: { "Content-Type": "application/json" },
-          });
-          const { rates } = await res.json();
-          if (rates) {
-            setAvailableRates(rates);
-            // Auto select cheapest or first
-            setSelectedRate(rates[0]);
-          }
-        } catch (e) {
-          console.error("Shipping calculation failed", e);
-        } finally {
-          setCalculatingShipping(false);
-        }
-      };
-      calculateShipping();
+    if (shippingOptions.length > 0 && !shippingId) {
+      setShippingId(shippingOptions[0].id);
+      // Auto expand the first one if selected
+      setExpandedCourier(shippingOptions[0].courier_code);
     }
-  }, [selectedAddress, items]);
+  }, [shippingOptions, shippingId]);
 
-  const handleCheckout = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedAddress || !selectedRate) {
-      alert("Silakan pilih alamat dan kurir pengiriman");
+  const [guestAddress, setGuestAddress] = useState<Partial<Address> | null>(null);
+  const [isAddressSheetOpen, setIsAddressSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddressId) {
+      const def = addresses.find((a: Address) => a.is_default) || addresses[0];
+      setSelectedAddressId(def.id);
+    }
+  }, [addresses, selectedAddressId]);
+
+  const activeAddress = guestAddress || addresses.find((a: Address) => a.id === selectedAddressId);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const subtotal = useMemo(
+    () => items.reduce((total, item) => total + item.price * item.quantity, 0),
+    [items],
+  );
+
+  const selectedShipping = shippingOptions.find((option) => option.id === shippingId);
+  const shippingPrice = selectedShipping ? selectedShipping.price : 0;
+  
+  // Tax 11% (Internal only, not added to total to keep it inclusive/absorbed)
+  const taxAmount = Math.round(subtotal * 0.11);
+  const serviceFee = 0; // Hapus sesuai request
+  const discount = 0;
+
+  // Total tetep Subtotal + Ongkir biar user ga bingung
+  const total = subtotal + shippingPrice;
+
+  const { mutate: handleCheckout, isPending: submitting } = useMutation({
+    mutationFn: async () => {
+      const validateUUID = (id: string) => {
+        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return regex.test(id);
+      };
+
+      if (!activeAddress || !selectedAddressId || !selectedShipping) {
+        throw new Error('Pilih alamat dan pengiriman');
+      }
+
+      if (!validateUUID(selectedAddressId)) {
+        throw new Error('ID Alamat tidak valid (bukan UUID). Silakan pilih/tambah ulang alamat.');
+      }
+
+      const totalWeight = items.reduce(
+        (sum, item) => sum + (item.weight || 500) * item.quantity,
+        0,
+      );
+
+      const payloadItems = items.map((item) => ({
+        product_id: String(item.id),
+        variant_id: item.variantId || null,
+        quantity: item.quantity,
+        price: item.price,
+        product_name: item.name,
+        variant_name: item.variantName || null,
+      }));
+
+      // Validate all product IDs
+      for (const item of payloadItems) {
+        if (!validateUUID(item.product_id)) {
+          throw new Error(
+            `Produk "${item.product_name}" memiliki ID tidak valid (${item.product_id}). Mohon gunakan produk asli dari database.`,
+          );
+        }
+        if (item.variant_id && !validateUUID(item.variant_id)) {
+          throw new Error(`Varian produk "${item.product_name}" memiliki ID tidak valid.`);
+        }
+      }
+
+      console.log('CREATE_ORDER_PAYLOAD:', {
+        addressId: selectedAddressId,
+        items: payloadItems,
+        total,
+        subtotal,
+        shippingCost: selectedShipping.price,
+        shippingCourier: selectedShipping.name,
+        totalWeight,
+      });
+
+      const orderId = await createOrder({
+        addressId: selectedAddressId,
+        items: payloadItems,
+        total,
+        subtotal,
+        shippingCost: selectedShipping.price,
+        shippingCourier: selectedShipping.name,
+        shippingCourierCode: selectedShipping.courier_code,
+        shippingServiceCode: selectedShipping.service_code,
+        totalWeight,
+        tax: taxAmount,
+        serviceFee,
+        discount,
+      });
+
+      // Panggil API untuk membuat transaksi Midtrans
+      const payRes = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+
+      const payData = await payRes.json();
+      if (!payRes.ok) {
+        console.error('PAYMENT_INIT_ERROR:', payData);
+        throw new Error(payData.error || 'Gagal menyiapkan pembayaran');
+      }
+
+      return { orderId, ...payData };
+    },
+    onSuccess: (data: { orderId: string; invoice_url?: string }) => {
+      toast.success('Pesanan berhasil dibuat!');
+      clearCart();
+
+      if (data.invoice_url) {
+        window.location.href = data.invoice_url;
+      } else {
+        router.push('/checkout/success');
+      }
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Gagal membuat pesanan');
+    },
+  });
+
+  const hasItems = hydrated && (items.length > 0 || submitting);
+
+  const goBack = () => {
+    if (step > 1) {
+      setStep((current) => current - 1);
+      return;
+    }
+    router.back();
+  };
+
+  const continueFlow = () => {
+    if (!activeAddress && step === 1) {
+      setIsAddressSheetOpen(true);
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        body: JSON.stringify({
-          items: items.map((i) => ({
-            variantId: i.variantId,
-            quantity: i.quantity,
-          })),
-          couponCode: couponCode || null,
-          addressId: selectedAddress.id,
-          courier: `${selectedRate.company} - ${selectedRate.service}`,
-          courierDetails: {
-            company: selectedRate.company,
-            type: selectedRate.type,
-            service: selectedRate.service,
-          },
-          shippingCost: selectedRate.price,
-        }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        clearCart();
-        window.location.href = data.invoiceUrl;
-      } else {
-        alert(data.error || "Gagal membuat pesanan.");
-      }
-    } catch (err) {
-      alert("Terjadi kesalahan saat checkout.");
-    } finally {
-      setLoading(false);
+    if (step < 3) {
+      setStep((current) => current + 1);
+      return;
     }
+
+    handleCheckout();
   };
 
-  if (items.length === 0 && !loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center">
-        <IconLoader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-        <p className="text-gray-500">Menyiapkan checkout...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="flex items-center gap-2 text-sm text-gray-400 mb-8">
-        <Link href="/cart" className="hover:text-primary transition-colors">
-          Keranjang
-        </Link>
-        <IconChevronRight className="w-4 h-4" />
-        <span className="text-gray-900 font-bold">Checkout</span>
-      </div>
+    <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-stone">
+      <AddressSheet
+        isOpen={isAddressSheetOpen}
+        onClose={() => setIsAddressSheetOpen(false)}
+        onSuccess={(addr) => {
+          setGuestAddress(addr);
+          if (user) {
+            refetchAddresses().then((res) => {
+              const realAddr = res.data?.find((a: Address) => a.full_address === addr.full_address);
+              if (realAddr) setSelectedAddressId(realAddr.id);
+            });
+          }
+          setIsAddressSheetOpen(false);
+        }}
+      />
+      <header className="sticky top-0 z-50 border-b border-stone-2 bg-white">
+        <div className="flex h-16 items-center px-[clamp(16px,5vw,20px)]">
+          <button
+            onClick={goBack}
+            className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-stone text-ink active:scale-95 transition-transform"
+            aria-label="Kembali"
+          >
+            <ChevronLeft size={22} strokeWidth={2.5} />
+          </button>
+          <h1 className="ml-3 font-heading text-[19px] font-extrabold text-ink">Checkout</h1>
+        </div>
 
-      <form
-        onSubmit={handleCheckout}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-12"
-      >
-        {/* Left Column: Shipping & Details */}
-        <div className="lg:col-span-2 space-y-10">
-          <section>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <IconMapPin className="w-6 h-6 text-primary" /> Alamat Pengiriman
-            </h2>
+        {hasItems && (
+          <div className="px-[clamp(18px,6vw,24px)] py-5">
+            <div className="grid grid-cols-[32px_1fr_32px_1fr_32px] items-start gap-2">
+              {steps.map((label, index) => {
+                const number = index + 1;
+                const complete = step > number;
+                const active = step === number;
 
-            {fetchingAddresses ? (
-              <div className="flex items-center gap-2 text-gray-400 py-8">
-                <IconLoader2 className="w-5 h-5 animate-spin" /> Mencari alamat
-                Anda...
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {addresses.map((addr) => (
-                  <Card
-                    key={addr.id}
-                    className={`cursor-pointer transition-all border-2 ${selectedAddress?.id === addr.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200"}`}
-                    onClick={() => setSelectedAddress(addr)}
-                  >
-                    <CardContent className="p-5 flex justify-between items-start">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-gray-900">
-                            {addr.receiver_name}
-                          </span>
-                          {addr.is_default && (
-                            <Badge className="bg-primary/20 text-primary border-none text-[10px]">
-                              Utama
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500">{addr.phone}</p>
-                        <p className="text-sm text-gray-600 line-clamp-2 max-w-md">
-                          {addr.full_address}
-                        </p>
+                return (
+                  <div key={label} className="contents">
+                    <div className="flex flex-col items-center gap-2">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-full font-heading text-[13px] font-extrabold"
+                        style={{
+                          background: complete
+                            ? 'var(--color-success)'
+                            : active
+                              ? 'var(--color-primary)'
+                              : 'var(--color-stone-2)',
+                          color: complete || active ? '#FFFFFF' : 'var(--color-ink-3)',
+                        }}
+                      >
+                        {complete ? <Check size={16} strokeWidth={3} /> : number}
                       </div>
-                      {selectedAddress?.id === addr.id && (
-                        <IconCircleCheck className="w-6 h-6 text-primary" />
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-
-                <Button
-                  variant="outline"
-                  className="w-full border-dashed border-2 py-8 rounded-2xl text-gray-400 hover:text-primary hover:border-primary hover:bg-primary/5"
-                  onClick={() => router.push("/profile/addresses/new")}
-                  type="button"
-                >
-                  + Tambah Alamat Baru
-                </Button>
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <IconTruck className="w-6 h-6 text-primary" /> Pilihan Pengiriman
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {calculatingShipping ? (
-                <div className="col-span-full py-8 text-center text-gray-400">
-                  <IconLoader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                  Mencari kurir tercepat...
-                </div>
-              ) : availableRates.length > 0 ? (
-                availableRates.map((r, idx) => (
-                  <Card
-                    key={`${r.company}-${r.service}-${idx}`}
-                    className={`cursor-pointer transition-all border-2 ${selectedRate?.service === r.service && selectedRate?.company === r.company ? "border-secondary bg-secondary/5" : "border-gray-100 hover:border-gray-200"}`}
-                    onClick={() => setSelectedRate(r)}
-                  >
-                    <CardContent className="p-4 flex justify-between items-center">
-                      <div className="text-left">
-                        <p className="font-black uppercase text-xs tracking-widest text-primary">
-                          {r.company}
-                        </p>
-                        <p className="font-bold text-sm text-gray-900">
-                          {r.service}
-                        </p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase">
-                          {r.duration}
-                        </p>
-                      </div>
-                      <span className="font-black text-sm text-gray-900">
-                        Rp {r.price.toLocaleString("id-ID")}
+                      <span
+                        className="font-heading text-[11px] font-extrabold"
+                        style={{
+                          color: active
+                            ? 'var(--color-primary)'
+                            : complete
+                              ? 'var(--color-success)'
+                              : 'var(--color-ink-3)',
+                        }}
+                      >
+                        {label}
                       </span>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <div className="col-span-full p-6 bg-gray-50 rounded-2xl text-center text-gray-400 font-bold text-sm">
-                  Silakan pilih alamat terlebih dahulu.
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-
-        {/* Right Column: Order Summary */}
-        <div className="lg:col-span-1">
-          <Card className="glass sticky top-24 border-white/40 shadow-2xl overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-secondary to-accent" />
-            <CardContent className="p-8">
-              <h2 className="text-xl font-bold mb-6">Ringkasan Belanja</h2>
-
-              {/* Coupon */}
-              <div className="mb-8">
-                <div className="relative">
-                  <IconTicket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="KODE PROMO"
-                    value={couponCode}
-                    onChange={(e) =>
-                      setCouponCode(e.target.value.toUpperCase())
-                    }
-                    className="w-full pl-10 pr-20 py-3 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-xs font-bold tracking-widest"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-2 bottom-2 px-3 bg-primary text-white rounded-lg text-[10px] font-black hover:bg-primary/90 transition-all shadow-md shadow-primary/20"
-                  >
-                    PAKAI
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between text-gray-500 text-sm font-medium">
-                  <span>Subtotal</span>
-                  <span>Rp {totalPrice().toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between text-gray-500 text-sm font-medium">
-                  <span>Ongkos Kirim</span>
-                  {calculatingShipping ? (
-                    <IconLoader2 className="w-4 h-4 animate-spin text-gray-400" />
-                  ) : (
-                    <span>
-                      Rp {(selectedRate?.price || 0).toLocaleString("id-ID")}
-                    </span>
-                  )}
-                </div>
-                <div className="pt-6 border-t border-gray-100 flex justify-between items-center">
-                  <span className="font-bold text-gray-900">Total Tagihan</span>
-                  <span className="font-black text-2xl text-primary">
-                    Rp{" "}
-                    {(totalPrice() + (selectedRate?.price || 0)).toLocaleString(
-                      "id-ID"
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        className="mt-4 h-[2px]"
+                        style={{
+                          background:
+                            step > number ? 'var(--color-success)' : 'var(--color-stone-2)',
+                        }}
+                      />
                     )}
-                  </span>
-                </div>
-              </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </header>
 
-              <Button
-                type="submit"
-                disabled={loading || !selectedAddress || calculatingShipping}
-                className="w-full h-16 rounded-2xl text-lg font-black shadow-xl shadow-secondary/30 bg-secondary hover:bg-secondary/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
+      <main className="flex-1 overflow-y-auto px-[clamp(16px,5vw,20px)] py-5 pb-32">
+        {!hasItems ? (
+          <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
+            <p className="font-heading text-[17px] font-extrabold text-ink">
+              Belum ada item checkout
+            </p>
+            <button
+              onClick={() => router.push('/products')}
+              className="mt-5 rounded-[14px] bg-primary px-[clamp(16px,5vw,20px)] py-3 font-heading text-sm font-bold text-white"
+            >
+              Pilih Produk
+            </button>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <m.div
+                key="address"
+                initial={{ opacity: 0, x: 18 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -18 }}
+                transition={{ duration: 0.18 }}
+                className="flex flex-col gap-3"
               >
-                {loading ? (
-                  <IconLoader2 className="w-6 h-6 animate-spin" />
-                ) : (
-                  <>
-                    <IconCreditCard className="w-6 h-6 mr-2" />
-                    BAYAR SEKARANG
-                  </>
-                )}
-              </Button>
+                <section className="rounded-[18px] bg-white p-4">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-heading text-[14px] font-extrabold text-ink">
+                      <MapPin size={18} className="text-primary" />
+                      <span>Alamat Pengiriman</span>
+                    </div>
+                    {addresses.length > 0 && (
+                      <button
+                        onClick={() => setIsAddressSheetOpen(true)}
+                        className="font-heading text-[13px] font-extrabold text-primary"
+                      >
+                        Ubah
+                      </button>
+                    )}
+                  </div>
 
-              <div className="mt-8 pt-8 border-t border-gray-50 flex justify-center gap-4 grayscale opacity-50">
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/e/eb/Logo_Xendit.png"
-                  alt="Xendit"
-                  className="h-4 object-contain"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  {isLoadingAddresses ? (
+                    <div className="flex h-24 items-center justify-center rounded-[14px] bg-stone">
+                      <Loader2 className="animate-spin text-primary" size={24} />
+                    </div>
+                  ) : activeAddress ? (
+                    <div className="rounded-[14px] bg-stone p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="font-heading text-[14px] font-extrabold text-ink">
+                          {activeAddress.recipient_name}
+                        </p>
+                        {activeAddress.is_default && (
+                          <span
+                            className="rounded-full px-3 py-1 font-heading text-[10px] font-extrabold text-primary"
+                            style={{ background: 'var(--color-primary-light)' }}
+                          >
+                            Utama
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-ink-3">{activeAddress.phone}</p>
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-ink-3">
+                        {activeAddress.full_address}
+                        <br />
+                        {activeAddress.city}, {activeAddress.postal_code}
+                      </p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setIsAddressSheetOpen(true)}
+                      className="flex w-full flex-col items-center justify-center gap-2 rounded-[18px] border-2 border-dashed border-stone-3 p-8 transition-colors active:bg-stone"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone text-primary">
+                        <Plus size={20} />
+                      </div>
+                      <span className="font-heading text-[14px] font-extrabold text-ink-3">
+                        Tambah Alamat Baru
+                      </span>
+                    </button>
+                  )}
+                </section>
+
+                <section className="rounded-[18px] bg-white p-4">
+                  <div className="mb-4 flex items-center gap-2 font-heading text-[14px] font-extrabold text-ink">
+                    <Package size={18} />
+                    <span>Pesanan ({count} item)</span>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {items.map((item) => (
+                      <div
+                        key={`${item.id}-${item.variantId ?? 'base'}`}
+                        className="flex items-center gap-3"
+                      >
+                        <Thumb item={item} />
+                        <div className="min-w-0">
+                          <p className="line-clamp-1 font-heading text-[13px] font-extrabold text-ink">
+                            {item.name}
+                          </p>
+                          <p className="mt-1 text-sm font-medium text-ink-3">
+                            x{item.quantity} · Rp {fmt(item.price)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </m.div>
+            )}
+
+            {step === 2 && (
+              <m.div
+                key="shipping"
+                initial={{ opacity: 0, x: 18 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -18 }}
+                transition={{ duration: 0.18 }}
+              >
+                <h2 className="mb-4 font-heading text-[15px] font-extrabold text-ink">
+                  Pilih Metode Pengiriman
+                </h2>
+
+                {isLoadingShipping ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-3 text-stone-500">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm">Mencari pilihan pengiriman...</p>
+                  </div>
+                ) : shippingOptions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-3 text-stone-500 text-center px-6">
+                    <Truck className="h-8 w-8" />
+                    <p className="text-sm">
+                      Pilihan pengiriman tidak tersedia. Pastikan Kota & Kecamatan benar.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {Object.entries(groupedOptions).map(([code, options]) => {
+                      const isExpanded = expandedCourier === code;
+                      const hasSelected = options.some((o) => o.id === shippingId);
+                      const selectedOption = options.find((o) => o.id === shippingId);
+
+                      return (
+                        <div
+                          key={code}
+                          className="overflow-hidden rounded-[20px] border-2 bg-white transition-all"
+                          style={{
+                            borderColor: hasSelected
+                              ? 'var(--color-primary)'
+                              : 'var(--color-stone-2)',
+                            boxShadow: hasSelected
+                              ? '0 12px 24px -12px rgba(126, 200, 227, 0.2)'
+                              : 'none',
+                          }}
+                        >
+                          {/* Courier Header (Dropdown Trigger) */}
+                          <button
+                            onClick={() => setExpandedCourier(isExpanded ? null : code)}
+                            className="flex w-full items-center gap-3 p-5 text-left"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="font-heading text-[16px] font-extrabold text-ink leading-tight">
+                                {options[0].courier_name}
+                              </p>
+                              {hasSelected && !isExpanded && selectedOption && (
+                                <p className="mt-1 text-[13px] font-bold text-primary">
+                                  {selectedOption.service_name} · Rp {fmt(selectedOption.price)}
+                                </p>
+                              )}
+                              {(!hasSelected || isExpanded) && (
+                                <p className="mt-1 text-[13px] font-bold text-ink-4">
+                                  {options.length} Pilihan Layanan
+                                </p>
+                              )}
+                            </div>
+
+                            <div
+                              className="flex h-9 w-9 items-center justify-center rounded-full bg-stone transition-transform"
+                              style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                            >
+                              <ChevronDown size={20} className="text-ink-4" />
+                            </div>
+                          </button>
+
+                          {/* Expanded Services List */}
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <m.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="border-t border-stone-2 bg-stone/30"
+                              >
+                                <div className="flex flex-col p-2">
+                                  {options.map((option) => {
+                                    const selected = option.id === shippingId;
+                                    return (
+                                      <button
+                                        key={option.id}
+                                        onClick={() => setShippingId(option.id)}
+                                        className="flex items-center gap-3 rounded-[14px] p-3 text-left transition-colors active:bg-stone-2"
+                                        style={{
+                                          background: selected ? '#FFFFFF' : 'transparent',
+                                          boxShadow: selected
+                                            ? '0 4px 12px rgba(0,0,0,0.05)'
+                                            : 'none',
+                                        }}
+                                      >
+                                        <div className="min-w-0 flex-1">
+                                          <p className="font-heading text-[13px] font-extrabold text-ink">
+                                            {option.service_name}
+                                          </p>
+                                          <p className="mt-0.5 text-[11px] font-bold text-ink-4">
+                                            Estimasi {option.etd}
+                                          </p>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className="font-heading text-[14px] font-extrabold text-primary">
+                                            Rp {fmt(option.price)}
+                                          </p>
+                                        </div>
+                                        <RadioMark selected={selected} />
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </m.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </m.div>
+            )}
+
+            {step === 3 && (
+              <m.div
+                key="payment"
+                initial={{ opacity: 0, x: 18 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -18 }}
+                transition={{ duration: 0.18 }}
+              >
+                <h2 className="mb-4 font-heading text-[15px] font-extrabold text-ink">
+                  Metode Pembayaran
+                </h2>
+                <div className="rounded-[22px] bg-white p-6 border-2 border-primary/10 shadow-sm">
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <ShieldCheck size={32} />
+                    </div>
+                    <div>
+                      <h3 className="font-heading text-[17px] font-extrabold text-ink">
+                        Pembayaran Aman
+                      </h3>
+                      <p className="mt-2 text-sm font-medium text-ink-3 leading-relaxed">
+                        Anda akan diarahkan ke gerbang pembayaran aman Xendit untuk memilih metode
+                        pembayaran (QRIS, VA, atau E-Wallet).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <section className="mt-4 rounded-[18px] bg-white p-4">
+                  <h3 className="mb-4 font-heading text-[14px] font-extrabold text-ink">
+                    Ringkasan
+                  </h3>
+                  <div className="flex justify-between text-sm text-ink-3">
+                    <span>Subtotal</span>
+                    <span className="font-heading font-extrabold text-ink">Rp {fmt(subtotal)}</span>
+                  </div>
+                  {selectedShipping && (
+                    <div className="mt-4 flex justify-between text-sm text-ink-3">
+                      <span>Ongkir</span>
+                      <span className="font-heading font-extrabold text-ink">
+                        Rp {fmt(selectedShipping.price)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="my-4 h-px bg-stone-2" />
+                  <div className="flex justify-between">
+                    <span className="font-heading text-[14px] font-extrabold text-ink">Total</span>
+                    <span className="font-heading text-[18px] font-extrabold text-primary">
+                      Rp {fmt(total)}
+                    </span>
+                  </div>
+                </section>
+              </m.div>
+            )}
+          </AnimatePresence>
+        )}
+      </main>
+
+      {hasItems && (
+        <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-stone-2 bg-white px-[clamp(16px,5vw,20px)] py-4">
+          <button
+            onClick={continueFlow}
+            disabled={submitting || (step === 1 && !activeAddress)}
+            className="flex h-14 w-full items-center justify-center rounded-[18px] bg-primary font-heading text-[15px] font-extrabold text-white shadow-md active:scale-[0.98] transition-transform disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 className="animate-spin" size={20} />
+            ) : step < 3 ? (
+              'Lanjutkan'
+            ) : (
+              `Bayar Rp ${fmt(total)}`
+            )}
+          </button>
+          <div className="safe-bottom" />
         </div>
-      </form>
+      )}
     </div>
   );
 }

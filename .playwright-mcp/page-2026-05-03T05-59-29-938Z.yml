@@ -1,0 +1,79 @@
+- generic [active] [ref=e1]:
+    - main [ref=e3]:
+        - generic [ref=e4]:
+            - generic [ref=e5]:
+                - button [ref=e6] [cursor=pointer]:
+                    - img [ref=e7]
+                - generic [ref=e9]: Detail Produk
+                - generic [ref=e10]:
+                    - link "2" [ref=e11] [cursor=pointer]:
+                        - /url: /cart
+                        - button "2" [ref=e12]:
+                            - img [ref=e13]
+                            - generic [ref=e17]: '2'
+                    - button [ref=e18] [cursor=pointer]:
+                        - img [ref=e19]
+            - generic [ref=e21]:
+                - generic [ref=e22]:
+                    - img "Makanan Anjing Pedigree - foto 1" [ref=e25]
+                    - generic [ref=e26]:
+                        - button "Thumbnail 1" [ref=e27] [cursor=pointer]:
+                            - img "Thumbnail 1" [ref=e29]
+                        - button "Thumbnail 2" [ref=e30] [cursor=pointer]:
+                            - img "Thumbnail 2" [ref=e32]
+                - generic [ref=e33]:
+                    - heading "Makanan Anjing Pedigree" [level=1] [ref=e35]
+                    - generic [ref=e38]: Rp 55.000
+                    - generic [ref=e39]:
+                        - generic [ref=e40]:
+                            - generic [ref=e42]: ★★★★☆
+                            - generic [ref=e43]: 4,6
+                            - generic [ref=e44]: (156)
+                        - generic [ref=e46]: 850 terjual
+                        - generic [ref=e48]: Stok 60
+                    - generic [ref=e49]:
+                        - paragraph [ref=e50]: Pilih Varian
+                        - generic [ref=e51]:
+                            - button "400g" [ref=e53] [cursor=pointer]:
+                                - generic [ref=e54]: 400g
+                            - button "3kg" [ref=e56] [cursor=pointer]:
+                                - generic [ref=e57]: 3kg
+                            - button "8kg" [ref=e59] [cursor=pointer]:
+                                - generic [ref=e60]: 8kg
+                    - generic [ref=e62]:
+                        - paragraph [ref=e63]: Jumlah
+                        - generic [ref=e64]:
+                            - button [disabled] [ref=e65] [cursor=pointer]:
+                                - img [ref=e66]
+                            - generic [ref=e67]: '1'
+                            - button [ref=e68] [cursor=pointer]:
+                                - img [ref=e69]
+                    - generic [ref=e70]:
+                        - button "Deskripsi" [ref=e71] [cursor=pointer]
+                        - button "Ulasan (156)" [ref=e72] [cursor=pointer]
+                        - button "Pengiriman" [ref=e73] [cursor=pointer]
+                    - generic [ref=e76]:
+                        - paragraph [ref=e77]:
+                            - strong [ref=e78]: Makanan Anjing Pedigree
+                            - text: mengandung nutrisi seimbang dengan daging ayam pilihan sebagai bahan utama.
+                        - generic [ref=e80]:
+                            - generic [ref=e81]: ·
+                            - generic [ref=e82]: Mengandung omega-6 untuk kesehatan bulu
+                        - generic [ref=e83]:
+                            - generic [ref=e84]: ·
+                            - generic [ref=e85]: Tekstur kibble yang menjaga kebersihan gigi
+                        - generic [ref=e86]:
+                            - generic [ref=e87]: ·
+                            - generic [ref=e88]: Kaya akan kalsium untuk tulang kuat
+            - generic [ref=e89]:
+                - generic [ref=e90]:
+                    - paragraph [ref=e91]: Total · 1 item
+                    - generic [ref=e92]: Rp 55.000
+                - generic [ref=e93]:
+                    - button "Keranjang" [ref=e94] [cursor=pointer]:
+                        - img [ref=e95]
+                        - generic [ref=e99]: Keranjang
+                    - button "Beli Sekarang" [ref=e100] [cursor=pointer]:
+                        - generic [ref=e101]: Beli Sekarang
+                        - img [ref=e102]
+    - alert [ref=e104]

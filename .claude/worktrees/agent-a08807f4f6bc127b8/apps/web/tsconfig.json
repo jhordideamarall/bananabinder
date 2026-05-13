@@ -1,0 +1,22 @@
+{
+  "extends": "@bananasbindery/tsconfig/nextjs",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@bananasbindery/ui/*": ["../../packages/ui/src/*"]
+    },
+    "isolatedModules": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["node_modules"]
+}
