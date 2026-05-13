@@ -37,7 +37,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
 
         <main
           key="main-content-area"
-          className="relative z-10 flex min-h-[100dvh] flex-col bg-transparent lg:pb-12"
+          className="relative z-10 flex min-h-[100dvh] flex-col bg-transparent lg:pb-12 transition-[padding-top] duration-150 ease-out"
           style={{
             paddingTop: isProductDetail
               ? 'env(safe-area-inset-top)'
