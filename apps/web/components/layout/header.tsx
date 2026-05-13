@@ -227,8 +227,8 @@ export function Header() {
         }}
         style={{
           paddingTop: 'env(safe-area-inset-top)',
-          backgroundColor: 'rgba(242, 167, 195, 0.8)',
-          backdropFilter: 'blur(12px) saturate(180%)',
+          background: 'linear-gradient(to bottom, rgba(255, 245, 248, 0.95), rgba(255, 255, 255, 0.9))',
+          backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderBottomLeftRadius: 24,
           borderBottomRightRadius: 24,
