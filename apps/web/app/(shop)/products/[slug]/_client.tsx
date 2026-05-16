@@ -416,7 +416,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   color: 'var(--color-ink-4)',
                 }}
               >
-                ({fmt(product.reviewCount || 124)})
+                ({fmt(product.reviewCount || 0)})
               </span>
             </div>
             <div style={{ width: 1, height: 14, background: 'var(--color-stone-3)' }} />
@@ -428,7 +428,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 fontWeight: 500,
               }}
             >
-              {fmt(product.soldCount || 892)} terjual
+              {fmt(product.soldCount || 0)} terjual
             </span>
             <div style={{ width: 1, height: 14, background: 'var(--color-stone-3)' }} />
             <span

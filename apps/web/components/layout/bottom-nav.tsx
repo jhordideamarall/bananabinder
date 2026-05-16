@@ -1,16 +1,17 @@
 'use client';
-import { m, LayoutGroup, AnimatePresence } from 'framer-motion';
+import { m, LayoutGroup, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
 import type { ComponentType } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const HomeIcon = ({ active }: { active: boolean }) => (
+const HomeIcon = () => (
   <svg
     width="20"
     height="20"
     viewBox="0 0 24 24"
-    fill={active ? 'currentColor' : 'none'}
+    fill="none"
     stroke="currentColor"
     strokeWidth="2.2"
     strokeLinecap="round"
@@ -20,12 +21,12 @@ const HomeIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const ShopIcon = ({ active }: { active: boolean }) => (
+const ShopIcon = () => (
   <svg
     width="20"
     height="20"
     viewBox="0 0 24 24"
-    fill={active ? 'currentColor' : 'none'}
+    fill="none"
     stroke="currentColor"
     strokeWidth="2.2"
     strokeLinecap="round"
@@ -36,12 +37,12 @@ const ShopIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const CustomIcon = ({ active }: { active: boolean }) => (
+const CustomIcon = () => (
   <svg
     width="20"
     height="20"
     viewBox="0 0 24 24"
-    fill={active ? 'currentColor' : 'none'}
+    fill="none"
     stroke="currentColor"
     strokeWidth="2.2"
     strokeLinecap="round"
@@ -52,12 +53,12 @@ const CustomIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const UserIcon = ({ active }: { active: boolean }) => (
+const UserIcon = () => (
   <svg
     width="20"
     height="20"
     viewBox="0 0 24 24"
-    fill={active ? 'currentColor' : 'none'}
+    fill="none"
     stroke="currentColor"
     strokeWidth="2.2"
     strokeLinecap="round"
@@ -71,7 +72,7 @@ const UserIcon = ({ active }: { active: boolean }) => (
 interface Tab {
   href: Route;
   label: string;
-  icon: ComponentType<{ active: boolean }>;
+  icon: ComponentType<Record<string, never>>;
   match: (pathname: string) => boolean;
 }
 
@@ -105,16 +106,57 @@ const tabs: Tab[] = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { scrollY } = useScroll();
+  const [isVisible, setIsVisible] = useState(true);
+  const lastYRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const delta = latest - lastYRef.current;
+    lastYRef.current = latest;
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    if (latest < 50) {
+      setIsVisible(true);
+    } else if (delta > 5) {
+      setIsVisible(false); // Sembunyikan saat scroll ke bawah
+    } else if (delta < -5) {
+      setIsVisible(true); // Munculkan saat scroll ke atas
+    }
+
+    // Munculkan kembali jika scroll berhenti selama 800ms
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(true);
+    }, 800);
+  });
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   return (
     <div className="fixed bottom-[24px] left-1/2 z-[100] w-full max-w-[430px] -translate-x-1/2 px-6 pointer-events-none">
       <LayoutGroup id="bottom-nav">
         <m.nav
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="pointer-events-auto relative flex h-[68px] w-full items-center justify-around overflow-hidden rounded-[32px] border border-white/40 bg-white/30 px-2 shadow-[0_8px_32px_rgba(0,0,0,0.08)] backdrop-blur-2xl"
+          initial={{ y: 40, scale: 0.8, opacity: 0 }}
+          animate={{
+            y: isVisible ? 0 : 40,
+            scale: isVisible ? 1 : 0.8,
+            opacity: isVisible ? 1 : 0,
+          }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.8 }}
+          className="pointer-events-auto relative flex h-[68px] w-full items-center justify-around overflow-hidden rounded-[32px] px-2"
           style={{
-            WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+            background: 'rgba(255, 213, 76, 0.78)',
+            backdropFilter: 'blur(24px) saturate(250%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(250%)',
+            border: '1px solid rgba(255, 255, 255, 0.45)',
+            boxShadow:
+              'inset 0 1px 1px rgba(255, 255, 255, 0.6), 0 12px 30px rgba(255, 213, 76, 0.25)',
+            pointerEvents: isVisible ? 'auto' : 'none',
           }}
         >
           {tabs.map(({ href, label, icon: IconComp, match }) => {
@@ -128,9 +170,9 @@ export function BottomNav() {
                 <m.div
                   whileTap={{ scale: 0.9 }}
                   className="relative flex flex-col items-center gap-1 transition-colors duration-300"
-                  style={{ color: active ? '#FFD54C' : '#A09890' }}
+                  style={{ color: active ? '#1A1714' : 'rgba(26, 23, 20, 0.45)' }}
                 >
-                  <IconComp active={active} />
+                  <IconComp />
                   <span className="font-heading text-[10px] font-bold tracking-tight">{label}</span>
 
                   {/* Liquid Indicator */}
@@ -138,7 +180,7 @@ export function BottomNav() {
                     {active && (
                       <m.div
                         layoutId="active-pill"
-                        className="absolute -inset-x-5 -inset-y-3 z-[-1] rounded-[24px] border border-white/60 bg-[#FFD54C]/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_12px_rgba(0,0,0,0.03)] backdrop-blur-lg"
+                        className="absolute -inset-x-5 -inset-y-3 z-[-1] rounded-[24px] border border-white/60 bg-white/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.05)] backdrop-blur-lg"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
