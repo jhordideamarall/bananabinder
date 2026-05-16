@@ -1,78 +1,98 @@
 import type { ReactNode } from 'react';
-import {
-  IconDashboard,
-  IconPackage,
-  IconShoppingCart,
-  IconTicket,
-  IconUsers,
-  IconArrowLeft,
-  IconLogout,
-} from '@tabler/icons-react';
+import { ArrowLeft as IconArrowLeft, LogOut as IconLogout } from 'lucide-react';
 import Link from 'next/link';
-import { Badge } from '@bananasbindery/ui';
+import { redirect } from 'next/navigation';
+import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
+import { createClient } from '@/lib/supabase/server';
+import { AdminSidebarNav } from '@/components/admin/AdminSidebarNav';
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
-  const menuItems = [
-    { label: 'Dashboard', icon: IconDashboard, href: '/admin' },
-    { label: 'Orders', icon: IconShoppingCart, href: '/admin/orders' },
-    { label: 'Products', icon: IconPackage, href: '/admin/products' },
-    { label: 'Coupons', icon: IconTicket, href: '/admin/coupons' },
-    { label: 'Customers', icon: IconUsers, href: '/admin/customers' },
-  ];
+const ADMIN_ROLES = ['admin', 'owner', 'staff'];
+
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  const supabase = (await createClient()) as TypedSupabaseClient;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/admin-login');
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, name')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || !ADMIN_ROLES.includes(profile.role)) {
+    redirect('/');
+  }
+
+  async function logoutAdmin() {
+    'use server';
+
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    redirect('/admin-login');
+  }
+
+  const displayName = profile.name || user.email?.split('@')[0] || 'Admin';
+  const initials = displayName
+    .split(' ')
+    .map((part: string) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
-    <div className="flex min-h-screen bg-gray-50/50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col sticky top-0 h-screen">
-        <div className="p-6 border-b border-gray-100">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-black group-hover:rotate-12 transition-transform">
-              B
-            </div>
-            <span className="font-black text-xl tracking-tight">
-              Admin<span className="text-primary">Panel</span>
-            </span>
+    <div className="flex min-h-screen bg-[#FAFAFA] text-[#1D1D1F] antialiased">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-black/[0.06] bg-white md:flex">
+        <div className="px-6 py-7">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-primary" aria-hidden />
+            <span className="text-[15px] font-semibold tracking-tight">bananasbindery</span>
+            <span className="text-[11px] font-medium text-[#86868B]">/ admin</span>
           </Link>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-primary rounded-xl transition-all"
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <AdminSidebarNav />
 
-        <div className="p-4 border-t border-gray-100 space-y-1">
+        <div className="border-t border-black/[0.06] px-3 py-4">
           <Link
             href="/"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-500 hover:text-primary transition-colors"
+            className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium text-[#86868B] transition-colors hover:bg-black/[0.04] hover:text-[#1D1D1F]"
           >
-            <IconArrowLeft className="w-5 h-5" /> Back to Store
+            <IconArrowLeft className="h-[18px] w-[18px]" strokeWidth={1.75} />
+            Kembali ke toko
           </Link>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:rounded-xl transition-all">
-            <IconLogout className="w-5 h-5" /> Logout
-          </button>
+          <form action={logoutAdmin}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium text-[#86868B] transition-colors hover:bg-black/[0.04] hover:text-[#1D1D1F]"
+            >
+              <IconLogout className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              Keluar
+            </button>
+          </form>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
-          <h1 className="text-lg font-black text-gray-900">Bananasbindery Control</h1>
-          <div className="flex items-center gap-4">
-            <Badge className="bg-primary/10 text-primary border-none font-bold">
-              Admin Account
-            </Badge>
-            <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+      <main className="flex-1 min-w-0">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-black/[0.06] bg-white/80 px-8 py-3.5 backdrop-blur-xl">
+          <div className="flex items-center gap-2 text-[13px] font-medium text-[#86868B]">
+            <span>Control Center</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-[13px] font-semibold leading-tight">{displayName}</p>
+              <p className="text-[11px] capitalize leading-tight text-[#86868B]">{profile.role}</p>
+            </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-[12px] font-semibold text-[#1D1D1F]">
+              {initials}
+            </div>
           </div>
         </header>
-        <div className="p-8">{children}</div>
+        <div className="px-8 py-10">{children}</div>
       </main>
     </div>
   );

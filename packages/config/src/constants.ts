@@ -26,5 +26,5 @@ export const LOW_STOCK_THRESHOLD = 5;
 /** Max photos per review */
 export const MAX_REVIEW_PHOTOS = 3;
 
-/** Booking cancellation window (hours before appointment) */
-export const BOOKING_FREE_CANCEL_HOURS = 24;
+/** Maximum hours before unpaid order auto-review reminder */
+export const ORDER_REVIEW_REMINDER_HOURS = 24;

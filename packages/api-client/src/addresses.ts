@@ -11,7 +11,7 @@ export async function getUserAddresses(supabase: TypedSupabaseClient) {
   const { data, error } = await supabase
     .from('addresses')
     .select('*')
-    .eq('is_active', true)
+    .eq('user_id', user.id)
     .order('is_default', { ascending: false });
 
   if (error) {
@@ -77,9 +77,6 @@ export async function updateAddress(
 }
 
 export async function deleteAddress(supabase: TypedSupabaseClient, addressId: string) {
-  const { error } = await supabase
-    .from('addresses')
-    .update({ is_active: false })
-    .eq('id', addressId);
+  const { error } = await supabase.from('addresses').delete().eq('id', addressId);
   if (error) throw error;
 }

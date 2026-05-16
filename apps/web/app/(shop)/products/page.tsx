@@ -54,6 +54,7 @@ function ProductsContent() {
       name: p.name,
       price: p.promoPrice ?? p.price,
       imageUrl: p.imageUrl ?? '',
+      weight: p.weight_grams ?? 500,
     });
   };
 

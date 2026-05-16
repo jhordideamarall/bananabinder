@@ -10,7 +10,6 @@ export enum UserRole {
 
 export enum ProductType {
   Normal = 'normal',
-  Frozen = 'frozen',
   Parcel = 'parcel',
 }
 
@@ -30,8 +29,7 @@ export enum OrderStatus {
   Refunded = 'refunded',
 }
 
-// PRD §15: Merged payment_status enum (used by both orders AND bookings)
-// DB: CREATE TYPE payment_status AS ENUM ('unpaid', 'paid', 'refunded', 'partial_refund', 'dp_paid')
+// DB uses a merged payment_status enum for order payment lifecycle.
 export enum PaymentStatus {
   Unpaid = 'unpaid',
   Paid = 'paid',
@@ -40,40 +38,12 @@ export enum PaymentStatus {
   DpPaid = 'dp_paid',
 }
 
-/** @deprecated Use PaymentStatus instead — DB uses a single merged enum */
-export const BookingPaymentStatus = PaymentStatus;
-
 export enum PaymentMethod {
   BankTransfer = 'bank_transfer',
   CreditCard = 'credit_card',
   Qris = 'qris',
   Ewallet = 'ewallet',
   Cod = 'cod',
-}
-
-// PRD §15: bookings.status CHECK
-export enum BookingStatus {
-  Pending = 'pending',
-  Confirmed = 'confirmed',
-  InProgress = 'in_progress',
-  Completed = 'completed',
-  Cancelled = 'cancelled',
-}
-
-export enum ServiceType {
-  Grooming = 'grooming',
-  Hotel = 'hotel',
-}
-
-// PRD §15: pets.type CHECK
-export enum PetType {
-  Dog = 'dog',
-  Cat = 'cat',
-  Bird = 'bird',
-  Hamster = 'hamster',
-  Rabbit = 'rabbit',
-  Fish = 'fish',
-  Other = 'other',
 }
 
 export enum VoucherType {
@@ -115,7 +85,6 @@ export enum BannerType {
 // PRD §15: notifications.type CHECK
 export enum NotificationType {
   Order = 'order',
-  Booking = 'booking',
   Promo = 'promo',
   Loyalty = 'loyalty',
   System = 'system',

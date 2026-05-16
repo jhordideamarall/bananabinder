@@ -1,432 +1,176 @@
-# 🏗️ MONOREPO ARCHITECTURE — Bananasbindery Platform
+# MONOREPO ARCHITECTURE — Bananasbindery Binder Commerce
 
-> Arsitektur monorepo dengan **shared core** agar business logic & API client bisa dipakai ulang di Web, Mobile (React Native), dan Desktop (Electron/Tauri).
+Arsitektur monorepo dengan shared core agar business logic dan API client bisa dipakai ulang di Web, future Mobile, dan future Desktop.
 
 ---
 
 ## Tech Foundation
 
-| Layer | Tool |
-|-------|------|
-| Monorepo | **Turborepo** |
-| Package Manager | **pnpm** (workspaces) |
-| Language | **TypeScript** (strict, shared tsconfig) |
-| Backend | **NestJS** (standalone API server) |
-| Web | **Next.js** (App Router) |
-| Mobile | **React Native** (Expo) |
-| Desktop | **Electron** atau **Tauri** (future) |
-| Database | **Supabase** (PostgreSQL) |
+| Layer                 | Tool                             |
+| --------------------- | -------------------------------- |
+| Monorepo              | Turborepo                        |
+| Package Manager       | pnpm workspaces                  |
+| Language              | TypeScript strict                |
+| Web                   | Next.js App Router               |
+| Database/Auth/Storage | Supabase                         |
+| Payment               | Xendit                           |
+| Shipping              | Biteship                         |
+| State                 | Zustand                          |
+| UI                    | Tailwind CSS + shared UI package |
+
+---
+
+## Active Product Scope
+
+- Binder/photo-product storefront
+- Product catalog, variants, stock, cart, checkout
+- Xendit payment lifecycle
+- Biteship shipping lifecycle
+- Admin products/orders/promos
+- Owner metrics and stock visibility
+
+Deprecated service modules from the copied source project are not part of active architecture.
 
 ---
 
 ## Folder Structure
 
-```
-Bananasbindery/
-├── apps/                          # Platform-specific apps
-│   ├── web/                       # Next.js web app (customer-facing)
-│   │   ├── app/                   # App Router pages
-│   │   │   ├── (auth)/            # Login, Register
-│   │   │   ├── (shop)/            # Browse, Product, Cart
-│   │   │   ├── (account)/         # Profile, Orders, Pets, Loyalty
-│   │   │   ├── booking/           # Grooming & Hotel booking
-│   │   │   ├── checkout/          # Checkout flow
-│   │   │   └── layout.tsx
-│   │   ├── components/            # Web-specific UI components
-│   │   │   ├── layout/            # Header, Footer, Sidebar
-│   │   │   ├── product/           # ProductCard, ProductGrid
-│   │   │   ├── cart/              # CartDrawer, CartItem
-│   │   │   ├── booking/           # BookingCalendar, SlotPicker
-│   │   │   └── shared/            # Buttons, Modals, Inputs (web)
-│   │   ├── public/
-│   │   ├── styles/
-│   │   ├── next.config.ts
-│   │   ├── tailwind.config.ts
-│   │   └── package.json
-│   │
-│   ├── admin/                     # Next.js admin dashboard
-│   │   ├── app/
-│   │   │   ├── dashboard/         # Overview metrics
-│   │   │   ├── products/          # CRUD produk
-│   │   │   ├── orders/            # Manage orders
-│   │   │   ├── bookings/          # Manage bookings
-│   │   │   ├── inventory/         # Stock management
-│   │   │   ├── banners/           # CMS banner
-│   │   │   ├── customers/         # Customer list
-│   │   │   ├── financial/         # Owner-only financial
-│   │   │   └── settings/          # Store settings
-│   │   ├── components/
-│   │   └── package.json
-│   │
-│   ├── mobile/                    # React Native (Expo)
-│   │   ├── app/                   # Expo Router (file-based routing)
-│   │   │   ├── (tabs)/            # Bottom tab navigation
-│   │   │   │   ├── home.tsx       # Home / browse
-│   │   │   │   ├── categories.tsx
-│   │   │   │   ├── cart.tsx
-│   │   │   │   ├── booking.tsx
-│   │   │   │   └── profile.tsx
-│   │   │   ├── product/[slug].tsx
-│   │   │   ├── checkout/
-│   │   │   ├── order/[id].tsx
-│   │   │   └── auth/
-│   │   ├── components/            # Mobile-specific UI
-│   │   │   ├── ProductCard.tsx
-│   │   │   ├── CartSheet.tsx
-│   │   │   └── BookingPicker.tsx
-│   │   ├── assets/
-│   │   ├── app.json
-│   │   └── package.json
-│   │
-│   └── api/                       # NestJS standalone API server
-│       ├── src/
-│       │   ├── modules/
-│       │   │   ├── auth/          # Auth module (OTP, Google, JWT)
-│       │   │   │   ├── auth.controller.ts
-│       │   │   │   ├── auth.service.ts
-│       │   │   │   ├── auth.guard.ts
-│       │   │   │   └── auth.module.ts
-│       │   │   ├── products/      # Products CRUD + search
-│       │   │   │   ├── products.controller.ts
-│       │   │   │   ├── products.service.ts
-│       │   │   │   └── products.module.ts
-│       │   │   ├── orders/        # Order management
-│       │   │   ├── cart/          # Cart management
-│       │   │   ├── bookings/      # Booking + slot management
-│       │   │   ├── payments/      # Midtrans/Xendit integration
-│       │   │   ├── shipping/      # RajaOngkir/Biteship
-│       │   │   ├── notifications/ # WhatsApp + Push
-│       │   │   ├── loyalty/       # Points & vouchers
-│       │   │   ├── reviews/       # Review & rating
-│       │   │   ├── pets/          # Pet profiles
-│       │   │   ├── banners/       # CMS banners
-│       │   │   ├── inventory/     # Stock movements
-│       │   │   ├── upload/        # File upload (Supabase Storage)
-│       │   │   └── analytics/     # Dashboard & financial
-│       │   ├── common/
-│       │   │   ├── guards/        # RoleGuard, AuthGuard
-│       │   │   ├── decorators/    # @CurrentUser, @Roles
-│       │   │   ├── interceptors/  # Logging, Transform
-│       │   │   ├── filters/       # Exception filters
-│       │   │   └── pipes/         # Validation pipes
-│       │   ├── config/
-│       │   │   ├── supabase.ts
-│       │   │   ├── midtrans.ts
-│       │   │   └── app.config.ts
-│       │   ├── app.module.ts
-│       │   └── main.ts
-│       ├── test/
-│       └── package.json
+```txt
+bananabinder/
+├── apps/
+│   └── web/                         # Next.js customer + admin routes
+│       ├── app/
+│       │   ├── (shop)/              # storefront, products, categories, cart
+│       │   ├── (auth)/              # login/register/callback
+│       │   ├── (account)/           # account, orders, addresses, loyalty, wishlist
+│       │   ├── checkout/            # checkout flow
+│       │   ├── admin/               # dashboard, products, orders, promos
+│       │   └── api/                 # route handlers/webhooks
+│       ├── components/              # web-specific composition components
+│       ├── lib/                     # app-local helpers/adapters
+│       └── public/
 │
-├── packages/                      # Shared packages (REUSABLE)
-│   ├── core/                      # Business logic (platform-agnostic)
-│   │   ├── src/
-│   │   │   ├── services/          # Business logic services
-│   │   │   │   ├── cart.service.ts       # Cart calculations
-│   │   │   │   ├── pricing.service.ts    # Price, discount, tax logic
-│   │   │   │   ├── shipping.service.ts   # Shipping rules & validation
-│   │   │   │   ├── booking.service.ts    # Slot validation, overbooking check
-│   │   │   │   ├── loyalty.service.ts    # Points calculation
-│   │   │   │   ├── voucher.service.ts    # Voucher validation
-│   │   │   │   └── inventory.service.ts  # Stock validation
-│   │   │   ├── validators/        # Shared validation rules
-│   │   │   │   ├── order.validator.ts
-│   │   │   │   ├── booking.validator.ts
-│   │   │   │   └── product.validator.ts
-│   │   │   ├── constants/         # Shared constants
-│   │   │   │   ├── order-status.ts
-│   │   │   │   ├── payment-status.ts
-│   │   │   │   ├── booking-status.ts
-│   │   │   │   └── shipping-rules.ts
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── types/                     # Shared TypeScript types
-│   │   ├── src/
-│   │   │   ├── user.ts
-│   │   │   ├── product.ts
-│   │   │   ├── order.ts
-│   │   │   ├── cart.ts
-│   │   │   ├── booking.ts
-│   │   │   ├── pet.ts
-│   │   │   ├── payment.ts
-│   │   │   ├── shipping.ts
-│   │   │   ├── loyalty.ts
-│   │   │   ├── review.ts
-│   │   │   ├── notification.ts
-│   │   │   ├── banner.ts
-│   │   │   ├── voucher.ts
-│   │   │   └── index.ts           # Re-export all
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── api-client/                # API client SDK (fetch wrapper)
-│   │   ├── src/
-│   │   │   ├── client.ts          # Base HTTP client (fetch/axios)
-│   │   │   ├── auth.api.ts        # Auth endpoints
-│   │   │   ├── products.api.ts    # Product endpoints
-│   │   │   ├── cart.api.ts        # Cart endpoints
-│   │   │   ├── orders.api.ts      # Order endpoints
-│   │   │   ├── bookings.api.ts    # Booking endpoints
-│   │   │   ├── shipping.api.ts    # Shipping endpoints
-│   │   │   ├── payments.api.ts    # Payment endpoints
-│   │   │   ├── pets.api.ts        # Pet endpoints
-│   │   │   ├── loyalty.api.ts     # Loyalty endpoints
-│   │   │   ├── reviews.api.ts     # Review endpoints
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── hooks/                     # Shared React hooks (web + mobile)
-│   │   ├── src/
-│   │   │   ├── useAuth.ts
-│   │   │   ├── useCart.ts
-│   │   │   ├── useProducts.ts
-│   │   │   ├── useOrders.ts
-│   │   │   ├── useBooking.ts
-│   │   │   ├── usePets.ts
-│   │   │   ├── useLoyalty.ts
-│   │   │   ├── useNotifications.ts
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── store/                     # Shared Zustand stores
-│   │   ├── src/
-│   │   │   ├── auth.store.ts
-│   │   │   ├── cart.store.ts
-│   │   │   ├── ui.store.ts
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── utils/                     # Shared utility functions
-│   │   ├── src/
-│   │   │   ├── format.ts          # formatCurrency, formatDate
-│   │   │   ├── validation.ts      # Email, phone, etc.
-│   │   │   ├── distance.ts        # Haversine distance calc
-│   │   │   ├── slug.ts            # Slug generator
-│   │   │   ├── order-number.ts    # Generate order/booking number
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── config/                    # Shared config & env
-│   │   ├── src/
-│   │   │   ├── env.ts             # Environment variables schema
-│   │   │   ├── constants.ts       # App-wide constants
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── ui/                        # Shared UI primitives (web only)
-│   │   ├── src/
-│   │   │   ├── button.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── modal.tsx
-│   │   │   ├── badge.tsx
-│   │   │   ├── card.tsx
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   └── tsconfig/                  # Shared TypeScript configs
-│       ├── base.json
-│       ├── nextjs.json
-│       ├── react-native.json
-│       ├── nestjs.json
-│       └── package.json
+├── packages/
+│   ├── api-client/                  # API/Supabase/3rd-party wrappers
+│   ├── core/                        # pricing, cart, shipping, stock, promo logic
+│   ├── store/                       # shared Zustand state
+│   ├── types/                       # domain + generated Supabase types
+│   ├── ui/                          # shared UI primitives
+│   ├── utils/                       # format, slug, order number, validation
+│   └── config/                      # env/constants
 │
-├── supabase/                      # Supabase local config
-│   ├── migrations/                # SQL migrations (versioned)
-│   │   ├── 001_users.sql
-│   │   ├── 002_categories_products.sql
-│   │   ├── 003_carts_orders.sql
-│   │   ├── 004_bookings_services.sql
-│   │   ├── 005_loyalty_vouchers.sql
-│   │   ├── 006_reviews_wishlists.sql
-│   │   ├── 007_notifications.sql
-│   │   ├── 008_banners_locations.sql
-│   │   ├── 009_indexes.sql
-│   │   └── 010_rls_policies.sql
-│   ├── seed/                      # Seed data
-│   │   ├── categories.sql
-│   │   ├── products.sql
-│   │   └── services.sql
-│   ├── functions/                 # Edge functions
-│   │   ├── payment-webhook/
-│   │   ├── send-whatsapp/
-│   │   ├── expire-orders/
-│   │   └── expire-points/
-│   └── config.toml
+├── supabase/
+│   ├── migrations/
+│   ├── seed/
+│   └── functions/
 │
-├── docs/                          # Documentation
-│   ├── prd.md                     # Product Requirements
-│   ├── api-spec.md                # API specification
-│   ├── database-erd.md            # Entity Relationship Diagram
-│   └── deployment.md              # Deployment guide
-│
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                 # Lint + test
-│       ├── deploy-web.yml         # Deploy web to Vercel
-│       ├── deploy-api.yml         # Deploy API
-│       └── deploy-mobile.yml      # EAS build
-│
-├── turbo.json                     # Turborepo pipeline config
-├── pnpm-workspace.yaml            # pnpm workspaces
-├── package.json                   # Root package.json
-├── .env.example
-├── .gitignore
+├── assets/                          # source product assets
+├── artifacts/                       # audit trail for Binder-era work
+├── claudeplan/                      # roadmap docs
+├── PRD.md
+├── CLAUDE.md
 └── README.md
 ```
 
 ---
 
-## Dependency Graph
+## Monorepo Integrity Rules
 
-```mermaid
-graph TD
-    subgraph "Shared Packages"
-        TYPES["@bananasbindery/types"]
-        UTILS["@bananasbindery/utils"]
-        CONFIG["@bananasbindery/config"]
-        CORE["@bananasbindery/core"]
-        API_CLIENT["@bananasbindery/api-client"]
-        HOOKS["@bananasbindery/hooks"]
-        STORE["@bananasbindery/store"]
-        UI["@bananasbindery/ui"]
-    end
+1. Core calculations and business rules live in `packages/core`.
+2. Supabase RPC and 3rd-party calls are wrapped in `@bananasbindery/api-client` or app-local server helpers.
+3. Shared cart/user/settings state belongs in `packages/store`.
+4. UI primitives live in `packages/ui`; `apps/web` composes product/page-specific blocks.
+5. Avoid direct reusable imports from `@/lib/supabase/server`; reusable logic receives a client parameter or uses an adapter.
+6. Zero `any`: use specific interfaces or `unknown` with type guards.
 
-    subgraph "Apps"
-        WEB["apps/web (Next.js)"]
-        ADMIN["apps/admin (Next.js)"]
-        MOBILE["apps/mobile (Expo)"]
-        API["apps/api (NestJS)"]
-    end
+---
 
-    CORE --> TYPES
-    CORE --> UTILS
-    API_CLIENT --> TYPES
-    API_CLIENT --> CONFIG
-    HOOKS --> API_CLIENT
-    HOOKS --> STORE
-    STORE --> TYPES
+## Shared Package Responsibilities
 
-    WEB --> HOOKS
-    WEB --> UI
-    WEB --> CORE
-    ADMIN --> HOOKS
-    ADMIN --> UI
-    ADMIN --> CORE
-    MOBILE --> HOOKS
-    MOBILE --> CORE
-    API --> CORE
-    API --> TYPES
-    API --> UTILS
+| Package                      | Responsibility                                                   |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `@bananasbindery/types`      | Domain types and generated Supabase DB types                     |
+| `@bananasbindery/core`       | Pricing, discount, tax, cart, shipping, inventory, voucher logic |
+| `@bananasbindery/api-client` | Xendit, Biteship, Supabase RPC and app API wrappers              |
+| `@bananasbindery/store`      | Cart/UI/auth state usable by web/future mobile                   |
+| `@bananasbindery/utils`      | Formatting, slug, validation, order number helpers               |
+| `@bananasbindery/ui`         | Button, Card, Badge, PriceTag, inputs, primitives                |
+| `@bananasbindery/config`     | Shared constants and env schema                                  |
+
+---
+
+## Dependency Direction
+
+```txt
+apps/web -> packages/ui
+apps/web -> packages/store
+apps/web -> packages/core
+apps/web -> packages/api-client
+packages/api-client -> packages/types
+packages/core -> packages/types + packages/utils
+packages/store -> packages/types
+```
+
+Rules:
+
+- Shared packages must not import from `apps/web`.
+- UI package must not contain business logic.
+- Core package must stay platform-agnostic.
+- API client can wrap network/service calls but should not render UI.
+
+---
+
+## Critical Runtime Flows
+
+### Checkout
+
+```txt
+cart -> address -> shipping quote -> voucher/pricing -> create order RPC -> Xendit invoice -> payment redirect
+```
+
+### Payment Webhook
+
+```txt
+Xendit webhook -> verify token -> record webhook_events -> idempotent status transition -> transaction record -> inventory/payment/order update -> optional shipment creation
+```
+
+### Shipping
+
+```txt
+destination area -> Biteship rates -> customer selects courier -> paid order -> Biteship order/fulfillment -> tracking update
+```
+
+### Admin Product/Order
+
+```txt
+role guard -> admin server helper -> product/order CRUD -> audit-friendly artifact log for code changes
 ```
 
 ---
 
-## Reusability Matrix
+## Database Domains
 
-| Package | Web | Admin | Mobile | API |
-|---------|-----|-------|--------|-----|
-| `@bananasbindery/types` | ✅ | ✅ | ✅ | ✅ |
-| `@bananasbindery/utils` | ✅ | ✅ | ✅ | ✅ |
-| `@bananasbindery/config` | ✅ | ✅ | ✅ | ✅ |
-| `@bananasbindery/core` | ✅ | ✅ | ✅ | ✅ |
-| `@bananasbindery/api-client` | ✅ | ✅ | ✅ | ❌ |
-| `@bananasbindery/hooks` | ✅ | ✅ | ✅ | ❌ |
-| `@bananasbindery/store` | ✅ | ✅ | ✅ | ❌ |
-| `@bananasbindery/ui` | ✅ | ✅ | ❌ | ❌ |
+Active DB domains:
 
-> **Key insight**: `core`, `types`, `utils`, `config` bisa dipakai di **semua platform** termasuk backend. Hooks dan store bisa dipakai di semua React-based apps (web + mobile). UI components hanya untuk web karena React Native punya component sendiri.
+- users/profiles
+- addresses
+- categories/products/product_variants/product_images
+- carts/cart_items
+- orders/order_items/transactions
+- shipping/shipments
+- vouchers/promos/loyalty
+- reviews/wishlists
+- banners/CMS
+- stock_movements
+- webhook_events
 
----
-
-## Key Architecture Decisions
-
-### 1. Standalone API (NestJS) bukan Next.js API Routes
-- Next.js API Routes **tightly coupled** ke Next.js → tidak bisa dipakai mobile
-- NestJS API server bisa diakses dari **mana saja** (web, mobile, desktop, 3rd party)
-- Tetap bisa deploy di Vercel via serverless, atau VPS/Railway/Fly.io
-
-### 2. Shared `@bananasbindery/core` untuk Business Logic
-- Kalkulasi harga, diskon, ongkir → **sama di semua platform**
-- Validasi booking slot, stock check → **single source of truth**
-- Tidak perlu duplicate logic di backend dan frontend
-
-### 3. `@bananasbindery/api-client` sebagai SDK
-- Semua API calls di-abstract jadi function calls
-- Web dan Mobile tinggal import → tidak perlu tulis fetch/axios manual
-- Kalau API endpoint berubah, cukup update di 1 tempat
-
-### 4. `@bananasbindery/hooks` shared di Web & Mobile
-- `useCart()`, `useAuth()`, `useProducts()` → sama persis
-- Pakai TanStack Query → caching, refetching otomatis
-- Web dan Mobile dapat behavior yang konsisten
+Historical tables from the copied project must not be used by active app code. Drop/cleanup only via explicit migration after owner approval and regenerate `packages/types/src/supabase.ts` afterward.
 
 ---
 
-## Config Files
+## Build Safety
 
-### turbo.json
-```json
-{
-  "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".env"],
-  "pipeline": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "lint": {},
-    "test": {
-      "dependsOn": ["build"]
-    },
-    "type-check": {
-      "dependsOn": ["^build"]
-    }
-  }
-}
-```
-
-### pnpm-workspace.yaml
-```yaml
-packages:
-  - "apps/*"
-  - "packages/*"
-```
-
-### Root package.json
-```json
-{
-  "name": "Bananasbindery",
-  "private": true,
-  "scripts": {
-    "dev": "turbo dev",
-    "dev:web": "turbo dev --filter=web",
-    "dev:admin": "turbo dev --filter=admin",
-    "dev:mobile": "turbo dev --filter=mobile",
-    "dev:api": "turbo dev --filter=api",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "test": "turbo test",
-    "type-check": "turbo type-check",
-    "db:migrate": "supabase db push",
-    "db:seed": "supabase db seed",
-    "db:reset": "supabase db reset"
-  },
-  "devDependencies": {
-    "turbo": "^2",
-    "typescript": "^5"
-  },
-  "packageManager": "pnpm@9.0.0"
-}
-```
+- Env-dependent services must fail gracefully during build/static optimization.
+- Do not use non-null env assertions for clients initialized at import time.
+- Route handlers must return typed errors and should not expose secrets.
+- Validation before done: `pnpm type-check`; lint/build when practical.

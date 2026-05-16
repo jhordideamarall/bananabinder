@@ -1,23 +1,18 @@
-import { db } from "@/lib/db";
-import { getAdminProductDetail } from "@bananasbindery/db";
-import ProductForm from "@/components/admin/ProductForm";
-import { notFound } from "next/navigation";
+import { db } from '@/lib/db';
+import { getAdminCategories, getAdminProductDetail } from '@/lib/admin-data';
+import ProductForm from '@/components/admin/ProductForm';
+import { notFound } from 'next/navigation';
 
-export default async function EditProductPage({ params }: { params: { id: string } }) {
-  const product = await getAdminProductDetail(db, params.id);
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [product, categories] = await Promise.all([
+    getAdminProductDetail(db, id),
+    getAdminCategories(db),
+  ]);
 
   if (!product) {
     notFound();
   }
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-black text-gray-900">Edit Product</h2>
-        <p className="text-gray-500 font-medium">Update informasi dan varian untuk {product.name}.</p>
-      </div>
-      
-      <ProductForm initialData={product} isEdit />
-    </div>
-  );
+  return <ProductForm initialData={product} categories={categories} isEdit />;
 }

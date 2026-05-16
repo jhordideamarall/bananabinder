@@ -84,7 +84,7 @@ export function createCartStore(storage?: PersistStorage<{ items: CartItem[] }>)
         getTotalCount: () => get().items.reduce((total, item) => total + item.quantity, 0),
       }),
       {
-        name: 'petshop-cart-storage',
+        name: 'bananasbindery-cart-storage',
         ...(storage ? { storage } : {}),
       },
     ),

@@ -15,6 +15,9 @@ const isSameItem = (item: CartItem, other: Omit<CartItem, 'quantity'>): boolean 
 
 export const useCartStore = create<{
   items: CartItem[];
+  /** Voucher yang sedang dipasang (preview). Final dihitung server di create_order_v1. */
+  voucherCode: string | null;
+  voucherDiscount: number;
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
   setItemQuantity: (
     id: string | number,
@@ -22,12 +25,16 @@ export const useCartStore = create<{
     quantity: number,
   ) => void;
   removeItem: (id: string | number, variantId?: string | null) => void;
+  setVoucher: (code: string, discount: number) => void;
+  clearVoucher: () => void;
   clearCart: () => void;
   getTotalCount: () => number;
 }>()(
   persist(
     (set, get) => ({
       items: [],
+      voucherCode: null,
+      voucherDiscount: 0,
       addItem: (newItem) => {
         const quantity = Math.max(1, newItem.quantity ?? 1);
         set((state) => {
@@ -68,7 +75,10 @@ export const useCartStore = create<{
           ),
         }));
       },
-      clearCart: () => set({ items: [] }),
+      setVoucher: (code, discount) =>
+        set({ voucherCode: code, voucherDiscount: Math.max(0, discount) }),
+      clearVoucher: () => set({ voucherCode: null, voucherDiscount: 0 }),
+      clearCart: () => set({ items: [], voucherCode: null, voucherDiscount: 0 }),
       getTotalCount: () => get().items.reduce((total, item) => total + item.quantity, 0),
     }),
     { name: 'bananasbindery-cart-storage' },

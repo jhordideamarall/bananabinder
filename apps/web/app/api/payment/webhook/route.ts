@@ -20,7 +20,8 @@ const getSupabaseAdmin = () => {
 
 const XENDIT_CALLBACK_TOKEN = process.env.XENDIT_CALLBACK_TOKEN || '';
 const BITESHIP_API_KEY = process.env.BITESHIP_API_KEY || '';
-const BITESHIP_ORIGIN_AREA_ID = process.env.BITESHIP_ORIGIN_AREA_ID || 'IDNP3IDNC445IDND5601';
+// Disamakan dengan default DB store_settings agar origin pengiriman konsisten.
+const BITESHIP_ORIGIN_AREA_ID = process.env.BITESHIP_ORIGIN_AREA_ID || 'IDNP6M3K2W1';
 
 export async function POST(req: Request) {
   try {
@@ -36,11 +37,28 @@ export async function POST(req: Request) {
 
     console.log('Xendit Webhook Received:', JSON.stringify(body, null, 2));
 
-    if (XENDIT_CALLBACK_TOKEN && callbackToken !== XENDIT_CALLBACK_TOKEN) {
+    // Fail-closed: tolak kalau token belum di-set di env ATAU tidak cocok.
+    // Sebelumnya validasi dilewati saat env kosong → webhook terbuka.
+    if (!XENDIT_CALLBACK_TOKEN || callbackToken !== XENDIT_CALLBACK_TOKEN) {
+      console.error('Xendit webhook rejected: callback token missing or mismatch');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { external_id, status } = body;
+
+    // Idempotency guard — hindari proses ganda kalau Xendit retry webhook.
+    const eventId: string = body.id || `${external_id}-${status}`;
+    const { data: existingEvent } = await supabaseAdmin
+      .from('webhook_events')
+      .select('id')
+      .eq('provider', 'xendit')
+      .eq('event_id', eventId)
+      .maybeSingle();
+
+    if (existingEvent) {
+      console.log('Xendit webhook already processed, skipping:', eventId);
+      return NextResponse.json({ success: true, message: 'Already processed' });
+    }
 
     if (status === 'PAID' || status === 'SETTLED') {
       // 1. Ambil data order dasar
@@ -73,15 +91,28 @@ export async function POST(req: Request) {
         .single();
 
       // 2. Update status di database kita
+      const paidAt = new Date().toISOString();
       await supabaseAdmin
         .from('orders')
         .update({
           status: 'paid',
           payment_status: 'paid',
-          paid_at: new Date().toISOString(),
+          paid_at: paidAt,
           payment_metadata: body,
         })
         .eq('order_number', external_id);
+
+      // 2b. Sinkronkan tabel transactions (sebelumnya tidak diupdate →
+      //     laporan finansial/audit jadi tidak akurat).
+      await supabaseAdmin
+        .from('transactions')
+        .update({
+          status: 'paid',
+          paid_at: paidAt,
+          raw_response: body,
+          updated_at: paidAt,
+        })
+        .eq('external_id', external_id);
 
       // 3. KIRIM KE BITESHIP (Hanya jika belum pernah dikirim)
       if (!order.shipping_metadata?.biteship_order_id) {
@@ -96,13 +127,15 @@ export async function POST(req: Request) {
           const address = order.addresses;
           if (!address) throw new Error('Order address not found');
 
-          // Koordinat Pengirim (Origin) - Fallback ke Toko Kelapa Dua
+          // Koordinat Pengirim (Origin) - Fallback ke Toko Bananas Bindery
+          // (Taman Yasmin, Cilendek Timur, Bogor Barat 16112). Sumber kebenaran
+          // tetap store_settings yang diatur via /admin/promos.
           const originLat = storeSettings?.origin_latitude
             ? Number(storeSettings.origin_latitude)
-            : -6.2604822;
+            : -6.570345;
           const originLng = storeSettings?.origin_longitude
             ? Number(storeSettings.origin_longitude)
-            : 106.6296424;
+            : 106.7767107;
 
           // Koordinat Penerima (Destination)
           const destLat = address.latitude ? Number(address.latitude) : undefined;
@@ -130,15 +163,17 @@ export async function POST(req: Request) {
             order.shipping_service_code || mapServiceType(serviceName || 'reg');
 
           const biteshipPayload = {
-            shipper_contact_name: 'Mei',
-            shipper_contact_phone: '08118621313',
-            shipper_contact_email: 'hello@bananasbindery.com',
-            shipper_organization: 'Bananasbindery',
-            origin_contact_name: 'Mei',
-            origin_contact_phone: '08118621313',
-            origin_address: storeSettings?.origin_address || 'Tangerang',
+            shipper_contact_name: 'Bananas Bindery',
+            shipper_contact_phone: '089519541180',
+            shipper_contact_email: 'banastuff@gmail.com',
+            shipper_organization: 'Bananas Bindery',
+            origin_contact_name: 'Bananas Bindery',
+            origin_contact_phone: '089519541180',
+            origin_address:
+              storeSettings?.origin_address ||
+              'Taman Yasmin Sektor V Tahap II, Jl. Cijahe 1 No.60, Kel. Cilendek Timur, Kec. Bogor Barat, Kota Bogor 16112',
             origin_note: '',
-            origin_postal_code: storeSettings?.origin_postal_code || 15811,
+            origin_postal_code: 16112,
             origin_area_id: storeSettings?.origin_area_id || BITESHIP_ORIGIN_AREA_ID,
             origin_latitude: originLat,
             origin_longitude: originLng,
@@ -264,18 +299,53 @@ export async function POST(req: Request) {
         }
       }
     } else if (status === 'EXPIRED') {
-      // Mark order as expired/cancelled
-      await supabaseAdmin
+      // Ambil order dulu untuk dapat id (dipakai RPC release inventory).
+      const { data: expiredOrder } = await supabaseAdmin
         .from('orders')
-        .update({
-          status: 'expired',
-          payment_status: 'unpaid',
-          payment_metadata: body,
-        })
-        .eq('order_number', external_id);
-      
+        .select('id, status, inventory_released_at')
+        .eq('order_number', external_id)
+        .single();
+
+      if (expiredOrder) {
+        const expiredAt = new Date().toISOString();
+
+        await supabaseAdmin
+          .from('orders')
+          .update({
+            status: 'expired',
+            payment_status: 'unpaid',
+            payment_metadata: body,
+          })
+          .eq('id', expiredOrder.id);
+
+        // Kembalikan stok yang sudah di-reserve create_order_v1.
+        // RPC idempotent — cek inventory_released_at di dalam fungsi.
+        const { error: releaseError } = await supabaseAdmin.rpc('release_order_inventory_v1', {
+          p_order_id: expiredOrder.id,
+          p_reason: 'payment_expired',
+        });
+        if (releaseError) {
+          console.error('release_order_inventory_v1 error for', external_id, ':', releaseError);
+        }
+
+        // Sinkronkan transactions.
+        await supabaseAdmin
+          .from('transactions')
+          .update({ status: 'expired', raw_response: body, updated_at: expiredAt })
+          .eq('external_id', external_id);
+      }
+
       console.log('Order Expired:', external_id);
     }
+
+    // Catat event yang sudah diproses (idempotency).
+    await supabaseAdmin.from('webhook_events').insert({
+      provider: 'xendit',
+      event_id: eventId,
+      event_type: status,
+      reference_id: external_id,
+      payload: body,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

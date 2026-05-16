@@ -10,8 +10,10 @@
     "./shipping": "./src/shipping.ts",
     "./loyalty": "./src/loyalty.ts",
     "./wishlist": "./src/wishlist.ts",
-    "./types": "./src/types.ts",
-    "./bookings": "./src/bookings.ts"
+    "./banners": "./src/banners.ts",
+    "./store-settings": "./src/store-settings.ts",
+    "./fonnte": "./src/fonnte.ts",
+    "./types": "./src/types.ts"
   },
   "typesVersions": {
     "*": {
@@ -33,11 +35,17 @@
       "wishlist": [
         "./src/wishlist.ts"
       ],
+      "banners": [
+        "./src/banners.ts"
+      ],
+      "store-settings": [
+        "./src/store-settings.ts"
+      ],
+      "fonnte": [
+        "./src/fonnte.ts"
+      ],
       "types": [
         "./src/types.ts"
-      ],
-      "bookings": [
-        "./src/bookings.ts"
       ]
     }
   },

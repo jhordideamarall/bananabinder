@@ -1,21 +1,55 @@
-import { db } from "@/lib/db";
-import { getAdminOrders } from "@bananasbindery/db";
-import { Card, CardContent } from "@bananasbindery/ui";
+import { db } from '@/lib/db';
+import { getAdminOrders } from '@/lib/admin-data';
 import {
-  IconSearch,
-  IconChevronLeft,
-  IconChevronRight,
-  IconEye,
-} from "@tabler/icons-react";
-import Link from "next/link";
+  Search as IconSearch,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+  Eye as IconEye,
+} from 'lucide-react';
+import Link from 'next/link';
+import type { Route } from 'next';
+
+const STATUS_FILTERS = [
+  { value: 'all', label: 'Semua' },
+  { value: 'pending', label: 'Menunggu' },
+  { value: 'paid', label: 'Dibayar' },
+  { value: 'shipped', label: 'Dikirim' },
+  { value: 'completed', label: 'Selesai' },
+  { value: 'cancelled', label: 'Dibatalkan' },
+] as const;
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Menunggu',
+  paid: 'Dibayar',
+  shipped: 'Dikirim',
+  completed: 'Selesai',
+  cancelled: 'Dibatalkan',
+};
+
+function statusToneClass(status: string): string {
+  switch (status) {
+    case 'paid':
+    case 'completed':
+      return 'bg-primary/20 text-[#1D1D1F]';
+    case 'pending':
+      return 'bg-black/[0.06] text-[#1D1D1F]';
+    case 'shipped':
+      return 'bg-black/[0.05] text-[#1D1D1F]';
+    case 'cancelled':
+      return 'bg-black/[0.04] text-[#86868B]';
+    default:
+      return 'bg-black/[0.04] text-[#86868B]';
+  }
+}
 
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: { status?: string; page?: string };
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
-  const page = Number(searchParams.page) || 1;
-  const status = searchParams.status || null;
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams.page) || 1;
+  const status = resolvedSearchParams.status || null;
   const limit = 10;
 
   const { data: orders, total } = await getAdminOrders(db, {
@@ -24,156 +58,172 @@ export default async function AdminOrdersPage({
     limit,
   });
 
+  const showingFrom = orders.length === 0 ? 0 : (page - 1) * limit + 1;
+  const showingTo = (page - 1) * limit + orders.length;
+
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-end">
+    <div className="mx-auto max-w-[1240px] space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-gray-900">
-            Orders Management
-          </h2>
-          <p className="text-gray-500 font-medium">
-            Kelola dan pantau semua pesanan masuk di sini.
-          </p>
+          <p className="text-[13px] font-medium text-[#86868B]">Pesanan</p>
+          <h1 className="mt-1 text-[32px] font-semibold leading-tight tracking-tight text-[#1D1D1F]">
+            Kelola pesanan
+          </h1>
         </div>
-      </div>
+        <div className="relative w-full sm:w-72">
+          <IconSearch
+            className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#86868B]"
+            strokeWidth={1.75}
+          />
+          <input
+            type="search"
+            placeholder="Cari Order ID atau nama..."
+            className="h-10 w-full rounded-full border border-black/[0.08] bg-white pl-10 pr-4 text-[14px] text-[#1D1D1F] outline-none transition-colors placeholder:text-[#86868B] focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+      </header>
 
-      {/* Filters & Search */}
-      <Card className="border-none shadow-xl shadow-gray-100/50">
-        <CardContent className="p-4 flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex gap-2">
-            {[
-              "all",
-              "pending",
-              "paid",
-              "shipped",
-              "completed",
-              "cancelled",
-            ].map((s) => (
-              <Link
-                key={s}
-                href={`/admin/orders${s === "all" ? "" : `?status=${s}`}`}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                  status === s || (s === "all" && !status)
-                    ? "bg-primary text-white shadow-lg shadow-primary/30"
-                    : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-                }`}
-              >
-                {s}
-              </Link>
-            ))}
-          </div>
+      <nav
+        aria-label="Filter status"
+        className="flex flex-wrap gap-1.5 rounded-full border border-black/[0.06] bg-white p-1 sm:inline-flex sm:w-auto"
+      >
+        {STATUS_FILTERS.map((filter) => {
+          const isActive = status === filter.value || (filter.value === 'all' && !status);
+          return (
+            <Link
+              key={filter.value}
+              href={
+                filter.value === 'all'
+                  ? ('/admin/orders' as Route)
+                  : {
+                      pathname: '/admin/orders' as const,
+                      query: { status: filter.value },
+                    }
+              }
+              aria-current={isActive ? 'page' : undefined}
+              className={`rounded-full px-4 py-1.5 text-[13px] transition-colors ${
+                isActive
+                  ? 'bg-[#1D1D1F] font-semibold text-white'
+                  : 'font-medium text-[#86868B] hover:text-[#1D1D1F]'
+              }`}
+            >
+              {filter.label}
+            </Link>
+          );
+        })}
+      </nav>
 
-          <div className="relative w-full sm:w-64">
-            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Cari Order ID / Nama..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Orders Table */}
-      <Card className="border-none shadow-xl shadow-gray-100/50 overflow-hidden">
+      <section className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-400 tracking-widest">
-                  Order ID
+            <thead>
+              <tr className="border-b border-black/[0.06]">
+                <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
+                  Order
                 </th>
-                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-400 tracking-widest">
-                  Customer
+                <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
+                  Pelanggan
                 </th>
-                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-400 tracking-widest">
+                <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
                   Total
                 </th>
-                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-400 tracking-widest">
+                <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
                   Status
                 </th>
-                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-400 tracking-widest">
-                  Date
+                <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
+                  Tanggal
                 </th>
-                <th className="px-6 py-4"></th>
+                <th className="px-6 py-3.5" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {orders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="hover:bg-gray-50/50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <span className="font-mono text-xs font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded">
-                      #{order.id.slice(0, 8)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-900">
-                        {order.user?.full_name || "Guest"}
-                      </span>
-                      <span className="text-xs text-gray-400 font-medium">
-                        {order.user?.phone}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-black text-primary">
-                      Rp {order.total_amount.toLocaleString("id-ID")}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${
-                        order.status === "paid"
-                          ? "bg-green-100 text-green-600"
-                          : order.status === "pending"
-                            ? "bg-amber-100 text-amber-600"
-                            : order.status === "shipped"
-                              ? "bg-blue-100 text-blue-600"
-                              : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 font-medium">
-                    {new Date(order.created_at).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="p-2 hover:bg-gray-100 rounded-lg inline-flex text-gray-400 hover:text-primary transition-all"
-                    >
-                      <IconEye className="w-5 h-5" />
-                    </Link>
+            <tbody className="divide-y divide-black/[0.05]">
+              {orders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                    <p className="text-[15px] font-medium text-[#1D1D1F]">Belum ada pesanan</p>
+                    <p className="mt-1 text-[13px] text-[#86868B]">
+                      Pesanan akan muncul di sini saat pelanggan checkout.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                orders.map((order) => (
+                  <tr key={order.id} className="transition-colors hover:bg-black/[0.02]">
+                    <td className="px-6 py-4">
+                      <span className="rounded-md bg-black/[0.04] px-2 py-1 font-mono text-[12px] font-medium text-[#1D1D1F]">
+                        #{order.id.slice(0, 8)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-[14px] font-medium text-[#1D1D1F]">
+                          {order.user?.full_name || 'Tamu'}
+                        </span>
+                        {order.user?.phone ? (
+                          <span className="text-[12px] text-[#86868B]">{order.user.phone}</span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-[14px] font-semibold tracking-tight text-[#1D1D1F]">
+                        Rp {order.total_amount.toLocaleString('id-ID')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${statusToneClass(order.status)}`}
+                      >
+                        {STATUS_LABEL[order.status] ?? order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-[#86868B]">
+                      {new Date(order.created_at).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        href={{
+                          pathname: '/admin/orders/[id]',
+                          query: { id: order.id },
+                        }}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#86868B] transition-colors hover:bg-black/[0.05] hover:text-[#1D1D1F]"
+                        aria-label="Detail pesanan"
+                      >
+                        <IconEye className="h-4 w-4" strokeWidth={1.75} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="p-6 border-t border-gray-50 flex items-center justify-between">
-          <p className="text-xs font-bold text-gray-400">
-            Showing {orders.length} of {total} orders
+        <div className="flex items-center justify-between border-t border-black/[0.06] px-6 py-4">
+          <p className="text-[12px] text-[#86868B]">
+            Menampilkan {showingFrom}–{showingTo} dari {total} pesanan
           </p>
-          <div className="flex gap-2">
-            <button className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:text-primary disabled:opacity-50 transition-all">
-              <IconChevronLeft className="w-5 h-5" />
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/[0.08] text-[#86868B] transition-colors hover:border-black/[0.16] hover:text-[#1D1D1F] disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Halaman sebelumnya"
+            >
+              <IconChevronLeft className="h-4 w-4" strokeWidth={1.75} />
             </button>
-            <button className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:text-primary disabled:opacity-50 transition-all">
-              <IconChevronRight className="w-5 h-5" />
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/[0.08] text-[#86868B] transition-colors hover:border-black/[0.16] hover:text-[#1D1D1F] disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Halaman berikutnya"
+            >
+              <IconChevronRight className="h-4 w-4" strokeWidth={1.75} />
             </button>
           </div>
         </div>
-      </Card>
+      </section>
     </div>
   );
 }

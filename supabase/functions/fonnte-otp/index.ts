@@ -1,10 +1,12 @@
-// @ts-nocheck
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
 /**
  * IDE Fix: Declare Deno namespace for environments without Deno extension
  */
-declare const Deno: any;
+declare const Deno: {
+  env: { get(key: string): string | undefined };
+  serve(handler: (req: Request) => Promise<Response>): void;
+};
 
 const FONNTE_TOKEN = Deno.env.get('FONNTE_TOKEN');
 
@@ -29,7 +31,7 @@ Deno.serve(async (req: Request) => {
     const target = phone.replace('+', '');
 
     // Custom branded message
-    const message = `Halo Kak ${name}! 👋\n\nTerima kasih telah bergabung menjadi bagian dari Bananasbindery. Ini adalah kode verifikasi (OTP) Anda:\n\n*${otp}*\n\nJangan berikan kode ini kepada siapa pun ya. Selamat berbelanja kebutuhan anabul kesayangan! 🐾\n\n— Tim Bananasbindery`;
+    const message = `Halo Kak ${name}! 👋\n\nTerima kasih telah bergabung menjadi bagian dari Bananasbindery. Ini adalah kode verifikasi (OTP) Anda:\n\n*${otp}*\n\nJangan berikan kode ini kepada siapa pun ya. Selamat berbelanja binder dan photocard essentials favoritmu! 🍌\n\n— Tim Bananasbindery`;
 
     if (!FONNTE_TOKEN) {
       console.error('FONNTE_TOKEN is missing!');
@@ -64,13 +66,16 @@ Deno.serve(async (req: Request) => {
       });
     } else {
       console.error('Fonnte API Error:', result.reason || 'Unknown error');
-      return new Response(JSON.stringify({ 
-        error: result.reason || 'Fonnte API Failure',
-        details: result
-      }), {
-        headers: { 'Content-Type': 'application/json' },
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({
+          error: result.reason || 'Fonnte API Failure',
+          details: result,
+        }),
+        {
+          headers: { 'Content-Type': 'application/json' },
+          status: 500,
+        },
+      );
     }
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';

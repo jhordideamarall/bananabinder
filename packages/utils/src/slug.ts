@@ -1,6 +1,6 @@
 /**
  * Convert a string to URL-safe slug.
- * slugify("Makanan Kucing Premium!") → "makanan-kucing-premium"
+ * slugify("Binder Custom Nama!") → "binder-custom-nama"
  */
 export function slugify(text: string): string {
   return text

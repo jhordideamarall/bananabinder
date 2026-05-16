@@ -1,3 +1,4 @@
+/* eslint-disable */
 // Versi Node 24 sudah ada fetch bawaan
 const fs = require('fs');
 const path = require('path');
@@ -6,7 +7,7 @@ const path = require('path');
 const envPath = path.join(__dirname, '../../.env');
 const envContent = fs.readFileSync(envPath, 'utf8');
 const env = {};
-envContent.split('\n').forEach(line => {
+envContent.split('\n').forEach((line) => {
   const parts = line.split('=');
   if (parts.length === 2) env[parts[0].trim()] = parts[1].trim();
 });
@@ -21,10 +22,10 @@ async function testBiteship() {
   // 1. Resolve Area ID (Palembang 30135)
   console.log('🔍 Mencari Area ID untuk Palembang 30135...');
   const areaRes = await fetch(`https://api.biteship.com/v1/maps/areas?countries=ID&input=30135`, {
-    headers: { 'Authorization': `Bearer ${API_KEY}` }
+    headers: { Authorization: `Bearer ${API_KEY}` },
   });
   const areaData = await areaRes.json();
-  
+
   if (!areaData.success) {
     console.error('❌ Gagal mencari Area ID:', areaData.message);
     return;
@@ -39,21 +40,23 @@ async function testBiteship() {
     origin_area_id: ORIGIN_AREA_ID,
     destination_area_id: destinationAreaId,
     couriers: 'jne,jnt,sicepat',
-    items: [{
-      name: 'Royal Canin Indoor 27 - 2kg',
-      quantity: 1,
-      value: 245000,
-      weight: 2000
-    }]
+    items: [
+      {
+        name: 'A5 Photocard Binder Rose',
+        quantity: 1,
+        value: 129000,
+        weight: 650,
+      },
+    ],
   };
 
   const ratesRes = await fetch('https://api.biteship.com/v1/rates/couriers', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 
   const ratesData = await ratesRes.json();
@@ -64,10 +67,12 @@ async function testBiteship() {
   }
 
   console.log('\n✨ HASIL CEK ONGKIR:');
-  ratesData.pricing.forEach(p => {
-    console.log(`- ${p.courier_name} (${p.courier_service_name}): Rp ${p.price.toLocaleString()} - Estimasi: ${p.duration}`);
+  ratesData.pricing.forEach((p) => {
+    console.log(
+      `- ${p.courier_name} (${p.courier_service_name}): Rp ${p.price.toLocaleString()} - Estimasi: ${p.duration}`,
+    );
   });
-  
+
   console.log('\n✅ TEST BERHASIL! Saldo Biteship Anda berfungsi dengan baik.');
 }
 

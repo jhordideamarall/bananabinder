@@ -6,13 +6,13 @@ export default function NotFound() {
       className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center"
       style={{ background: 'var(--color-stone)' }}
     >
-      <div style={{ fontSize: 64 }}>🐾</div>
+      <div style={{ fontSize: 64 }}>📒</div>
       <div>
         <p className="t-heading" style={{ marginBottom: 8 }}>
           Halaman tidak ditemukan
         </p>
         <p className="t-body" style={{ color: 'var(--color-ink-3)' }}>
-          Sepertinya hewan piaraanmu kabur dari halaman ini.
+          Sepertinya halaman binder yang kamu cari belum tersedia atau sudah dipindahkan.
         </p>
       </div>
       <Link

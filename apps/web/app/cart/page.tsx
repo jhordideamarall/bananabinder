@@ -2,9 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, Minus, Plus, Tag, Trash2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Minus, Plus, Tag, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { useCartStore, type CartItem } from '@/stores/cart-store';
 
 const fmt = (n: number) => n.toLocaleString('id-ID');
@@ -35,6 +36,13 @@ export default function CartPage() {
   const items = useCartStore((state) => state.items);
   const setItemQuantity = useCartStore((state) => state.setItemQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
+  const voucherCode = useCartStore((state) => state.voucherCode);
+  const voucherDiscount = useCartStore((state) => state.voucherDiscount);
+  const setVoucher = useCartStore((state) => state.setVoucher);
+  const clearVoucher = useCartStore((state) => state.clearVoucher);
+
+  const [voucherInput, setVoucherInput] = useState('');
+  const [applyingVoucher, setApplyingVoucher] = useState(false);
 
   useEffect(() => {
     setHydrated(true);
@@ -46,6 +54,61 @@ export default function CartPage() {
   );
   const count = useMemo(() => items.reduce((total, item) => total + item.quantity, 0), [items]);
   const hasItems = hydrated && items.length > 0;
+
+  // Diskon dipakai max sebesar subtotal.
+  const discount = Math.min(voucherDiscount, subtotal);
+  const total = Math.max(subtotal - discount, 0);
+
+  const applyVoucher = async () => {
+    const code = voucherInput.trim();
+    if (!code) return;
+    setApplyingVoucher(true);
+    try {
+      const res = await fetch('/api/voucher/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal }),
+      });
+      const data: { valid: boolean; discount: number; code?: string; message: string } =
+        await res.json();
+      if (data.valid) {
+        setVoucher(data.code ?? code.toUpperCase(), data.discount);
+        setVoucherInput('');
+        toast.success(`Voucher dipasang — hemat Rp ${fmt(data.discount)}`);
+      } else {
+        toast.error(data.message || 'Voucher tidak valid');
+      }
+    } catch {
+      toast.error('Gagal memeriksa voucher');
+    } finally {
+      setApplyingVoucher(false);
+    }
+  };
+
+  // Re-validasi voucher saat isi cart berubah (mis. min order tak lagi terpenuhi).
+  useEffect(() => {
+    if (!voucherCode || subtotal <= 0) return;
+    let cancelled = false;
+    fetch('/api/voucher/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: voucherCode, subtotal }),
+    })
+      .then((res) => res.json())
+      .then((data: { valid: boolean; discount: number; message: string }) => {
+        if (cancelled) return;
+        if (data.valid) {
+          setVoucher(voucherCode, data.discount);
+        } else {
+          clearVoucher();
+          toast.error(`Voucher dilepas: ${data.message}`);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [subtotal, voucherCode, setVoucher, clearVoucher]);
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-stone">
@@ -136,20 +199,47 @@ export default function CartPage() {
                 <Tag size={18} />
                 <span>Voucher</span>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Kode voucher"
-                  className="h-12 min-w-0 flex-1 rounded-[14px] border border-stone-3 bg-white px-4 text-[15px] font-medium text-ink outline-none focus:border-primary"
-                />
-                <button
-                  className="h-12 rounded-[14px] px-[clamp(16px,5vw,20px)] font-heading text-[14px] font-extrabold text-primary"
+              {voucherCode ? (
+                <div
+                  className="flex items-center justify-between gap-2 rounded-[14px] border border-primary/30 px-4 py-3"
                   style={{ background: 'var(--color-orange-light)' }}
                 >
-                  Pakai
-                </button>
-              </div>
-              <p className="mt-2 text-xs font-medium text-ink-4">Coba kode: BINDER10</p>
+                  <div className="min-w-0">
+                    <p className="font-heading text-[14px] font-extrabold text-ink">
+                      {voucherCode}
+                    </p>
+                    <p className="text-xs font-medium text-ink-3">
+                      Hemat Rp {fmt(voucherDiscount)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={clearVoucher}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-ink-3 active:scale-95 transition-transform"
+                    aria-label="Lepas voucher"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={voucherInput}
+                    onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && applyVoucher()}
+                    placeholder="Kode voucher"
+                    className="h-12 min-w-0 flex-1 rounded-[14px] border border-stone-3 bg-white px-4 text-[15px] font-medium text-ink outline-none focus:border-primary"
+                  />
+                  <button
+                    onClick={applyVoucher}
+                    disabled={applyingVoucher || !voucherInput.trim()}
+                    className="flex h-12 items-center justify-center rounded-[14px] px-[clamp(16px,5vw,20px)] font-heading text-[14px] font-extrabold text-primary disabled:opacity-50"
+                    style={{ background: 'var(--color-orange-light)' }}
+                  >
+                    {applyingVoucher ? <Loader2 className="animate-spin" size={18} /> : 'Pakai'}
+                  </button>
+                </div>
+              )}
             </section>
 
             <section className="mt-2 bg-white px-[clamp(16px,5vw,20px)] py-5">
@@ -160,15 +250,25 @@ export default function CartPage() {
                 <span>Subtotal</span>
                 <span className="font-heading font-extrabold text-ink">Rp {fmt(subtotal)}</span>
               </div>
+              {discount > 0 && (
+                <div className="mt-4 flex justify-between text-[15px] text-ink-3">
+                  <span>Diskon voucher</span>
+                  <span className="font-heading font-extrabold text-success">
+                    - Rp {fmt(discount)}
+                  </span>
+                </div>
+              )}
               <div className="mt-4 flex justify-between text-[15px] text-ink-3">
                 <span>Ongkir</span>
-                <span className="font-heading font-extrabold text-ink">Gratis</span>
+                <span className="font-heading font-extrabold text-ink-4">
+                  Dihitung saat checkout
+                </span>
               </div>
               <div className="my-5 h-px bg-stone-2" />
               <div className="flex justify-between">
-                <span className="font-heading text-[14px] font-extrabold text-ink">Total</span>
+                <span className="font-heading text-[14px] font-extrabold text-ink">Subtotal</span>
                 <span className="font-heading text-[19px] font-extrabold text-primary">
-                  Rp {fmt(subtotal)}
+                  Rp {fmt(total)}
                 </span>
               </div>
             </section>

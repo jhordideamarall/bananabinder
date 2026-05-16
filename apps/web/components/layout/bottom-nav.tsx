@@ -128,19 +128,17 @@ export function BottomNav() {
                 <m.div
                   whileTap={{ scale: 0.9 }}
                   className="relative flex flex-col items-center gap-1 transition-colors duration-300"
-                  style={{ color: active ? '#7EC8E3' : '#A09890' }}
+                  style={{ color: active ? '#FFD54C' : '#A09890' }}
                 >
                   <IconComp active={active} />
-                  <span className="font-heading text-[10px] font-bold tracking-tight">
-                    {label}
-                  </span>
+                  <span className="font-heading text-[10px] font-bold tracking-tight">{label}</span>
 
                   {/* Liquid Indicator */}
                   <AnimatePresence>
                     {active && (
                       <m.div
                         layoutId="active-pill"
-                        className="absolute -inset-x-5 -inset-y-3 z-[-1] rounded-[24px] border border-white/60 bg-[#7EC8E3]/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_12px_rgba(0,0,0,0.03)] backdrop-blur-lg"
+                        className="absolute -inset-x-5 -inset-y-3 z-[-1] rounded-[24px] border border-white/60 bg-[#FFD54C]/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_12px_rgba(0,0,0,0.03)] backdrop-blur-lg"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

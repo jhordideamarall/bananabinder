@@ -25,8 +25,8 @@ const DUMMY_REVIEWS = [
     initial: 'R',
     rating: 5,
     date: '28 Apr 2025',
-    content: 'Produknya bagus, anjungku suka banget. Pengiriman cepat dan packaging aman.',
-    pet: 'Golden Retriever, 3 th',
+    content: 'Bindernya rapi, materialnya terasa premium, dan packaging aman sampai rumah.',
+    useCase: 'Photocard & daily notes',
   },
   {
     id: 2,
@@ -34,8 +34,8 @@ const DUMMY_REVIEWS = [
     initial: 'B',
     rating: 5,
     date: '22 Apr 2025',
-    content: 'Kualitas premium sesuai harga. Kucing saya lebih aktif setelah makan ini.',
-    pet: 'Persian Cat, 2 th',
+    content: 'Warna sesuai foto, ring binder kokoh, refill juga gampang dipasang.',
+    useCase: 'Journaling & koleksi foto',
   },
   {
     id: 3,
@@ -43,8 +43,8 @@ const DUMMY_REVIEWS = [
     initial: 'S',
     rating: 5,
     date: '18 Apr 2025',
-    content: 'Langganan 6 bulan. Selalu on time dan produk original. Harga bersaing.',
-    pet: 'Shih Tzu, 5 th',
+    content: 'Pesan custom nama hasilnya clean. Admin responsif waktu konfirmasi desain.',
+    useCase: 'Custom gift',
   },
 ];
 
@@ -182,11 +182,16 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const activeOriginalPrice = selectedVariant ? selectedVariant.price : product.price;
   const activeStock = selectedVariant?.stock ?? product.stock ?? 99;
 
-  const images = product.images?.length
-    ? product.images
-    : product.imageUrl
-      ? [product.imageUrl]
-      : [];
+  const images = selectedVariant?.image_url
+    ? [
+        selectedVariant.image_url,
+        ...(product.images ?? []).filter((image) => image !== selectedVariant.image_url),
+      ]
+    : product.images?.length
+      ? product.images
+      : product.imageUrl
+        ? [product.imageUrl]
+        : [];
 
   const handleAddToCart = (directBuy = false) => {
     const itemName = selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name;
@@ -196,8 +201,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       variantName: selectedVariant?.name ?? null,
       name: itemName,
       price: activePrice,
-      imageUrl: product.imageUrl,
+      imageUrl: selectedVariant?.image_url ?? product.imageUrl,
       quantity,
+      // Berat dipakai untuk kalkulasi ongkir — varian boleh override berat produk.
+      weight: selectedVariant?.weight_grams ?? product.weight_grams ?? 500,
     });
 
     if (directBuy) {
@@ -274,10 +281,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 position: 'relative',
               }}
             >
-              <m.div
-                whileHover={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.3 }}
-              >
+              <m.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.3 }}>
                 <ShoppingCart size={22} strokeWidth={2} />
               </m.div>
               {hydrated && cartCount > 0 && (
@@ -306,9 +310,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               cursor: 'pointer',
             }}
           >
-            <m.div
-              whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}
-            >
+            <m.div whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}>
               <Heart size={22} fill={isWishlisted ? '#E53935' : 'none'} strokeWidth={2} />
             </m.div>
           </m.button>
@@ -612,7 +614,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         textAlign: 'left',
                       }}
                     >
-                      {rev.pet}
+                      {rev.useCase}
                     </p>
                   </div>
                 ))}

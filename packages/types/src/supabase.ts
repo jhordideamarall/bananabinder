@@ -6,31 +6,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '14.5';
   };
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       addresses: {
@@ -41,7 +16,6 @@ export type Database = {
           district: string | null;
           full_address: string;
           id: string;
-          is_active: boolean | null;
           is_default: boolean | null;
           label: string | null;
           latitude: number | null;
@@ -58,7 +32,6 @@ export type Database = {
           district?: string | null;
           full_address: string;
           id?: string;
-          is_active?: boolean | null;
           is_default?: boolean | null;
           label?: string | null;
           latitude?: number | null;
@@ -75,7 +48,6 @@ export type Database = {
           district?: string | null;
           full_address?: string;
           id?: string;
-          is_active?: boolean | null;
           is_default?: boolean | null;
           label?: string | null;
           latitude?: number | null;
@@ -138,7 +110,11 @@ export type Database = {
       };
       banners: {
         Row: {
+          accent_color: string | null;
+          bg_gradient: string | null;
           created_at: string | null;
+          cta_label: string | null;
+          description: string | null;
           end_date: string | null;
           id: string;
           image_url: string;
@@ -146,11 +122,16 @@ export type Database = {
           link: string | null;
           priority: number | null;
           start_date: string | null;
+          subtitle: string | null;
           title: string;
           type: string;
         };
         Insert: {
+          accent_color?: string | null;
+          bg_gradient?: string | null;
           created_at?: string | null;
+          cta_label?: string | null;
+          description?: string | null;
           end_date?: string | null;
           id?: string;
           image_url: string;
@@ -158,11 +139,16 @@ export type Database = {
           link?: string | null;
           priority?: number | null;
           start_date?: string | null;
+          subtitle?: string | null;
           title: string;
           type: string;
         };
         Update: {
+          accent_color?: string | null;
+          bg_gradient?: string | null;
           created_at?: string | null;
+          cta_label?: string | null;
+          description?: string | null;
           end_date?: string | null;
           id?: string;
           image_url?: string;
@@ -170,6 +156,7 @@ export type Database = {
           link?: string | null;
           priority?: number | null;
           start_date?: string | null;
+          subtitle?: string | null;
           title?: string;
           type?: string;
         };
@@ -737,6 +724,7 @@ export type Database = {
           expired_at: string | null;
           hpp_total: number | null;
           id: string;
+          inventory_released_at: string | null;
           notes: string | null;
           order_number: string;
           paid_at: string | null;
@@ -753,6 +741,7 @@ export type Database = {
           shipping_metadata: Json | null;
           shipping_method: string | null;
           shipping_service_code: string | null;
+          shipping_status: string | null;
           shipping_tracking: string | null;
           status: Database['public']['Enums']['order_status'];
           subtotal: number;
@@ -771,6 +760,7 @@ export type Database = {
           expired_at?: string | null;
           hpp_total?: number | null;
           id?: string;
+          inventory_released_at?: string | null;
           notes?: string | null;
           order_number: string;
           paid_at?: string | null;
@@ -787,6 +777,7 @@ export type Database = {
           shipping_metadata?: Json | null;
           shipping_method?: string | null;
           shipping_service_code?: string | null;
+          shipping_status?: string | null;
           shipping_tracking?: string | null;
           status?: Database['public']['Enums']['order_status'];
           subtotal?: number;
@@ -805,6 +796,7 @@ export type Database = {
           expired_at?: string | null;
           hpp_total?: number | null;
           id?: string;
+          inventory_released_at?: string | null;
           notes?: string | null;
           order_number?: string;
           paid_at?: string | null;
@@ -821,6 +813,7 @@ export type Database = {
           shipping_metadata?: Json | null;
           shipping_method?: string | null;
           shipping_service_code?: string | null;
+          shipping_status?: string | null;
           shipping_tracking?: string | null;
           status?: Database['public']['Enums']['order_status'];
           subtotal?: number;
@@ -945,6 +938,7 @@ export type Database = {
           cost_price: number;
           created_at: string | null;
           id: string;
+          image_url: string | null;
           is_active: boolean | null;
           name: string;
           price: number;
@@ -960,6 +954,7 @@ export type Database = {
           cost_price: number;
           created_at?: string | null;
           id?: string;
+          image_url?: string | null;
           is_active?: boolean | null;
           name: string;
           price: number;
@@ -975,6 +970,7 @@ export type Database = {
           cost_price?: number;
           created_at?: string | null;
           id?: string;
+          image_url?: string | null;
           is_active?: boolean | null;
           name?: string;
           price?: number;
@@ -1381,33 +1377,36 @@ export type Database = {
       };
       store_settings: {
         Row: {
+          home_banner_pilihan_label: string;
+          home_banner_promo_label: string;
           id: string;
           origin_address: string | null;
-          origin_area_id: string | null;
+          origin_area_id: string;
           origin_latitude: number | null;
           origin_longitude: number | null;
-          origin_postal_code: number | null;
-          store_name: string | null;
+          store_name: string;
           updated_at: string | null;
         };
         Insert: {
+          home_banner_pilihan_label?: string;
+          home_banner_promo_label?: string;
           id?: string;
           origin_address?: string | null;
-          origin_area_id?: string | null;
+          origin_area_id?: string;
           origin_latitude?: number | null;
           origin_longitude?: number | null;
-          origin_postal_code?: number | null;
-          store_name?: string | null;
+          store_name?: string;
           updated_at?: string | null;
         };
         Update: {
+          home_banner_pilihan_label?: string;
+          home_banner_promo_label?: string;
           id?: string;
           origin_address?: string | null;
-          origin_area_id?: string | null;
+          origin_area_id?: string;
           origin_latitude?: number | null;
           origin_longitude?: number | null;
-          origin_postal_code?: number | null;
-          store_name?: string | null;
+          store_name?: string;
           updated_at?: string | null;
         };
         Relationships: [];
@@ -1420,9 +1419,13 @@ export type Database = {
           external_id: string | null;
           id: string;
           order_id: string | null;
+          paid_at: string | null;
           payment_method: string | null;
+          provider: string | null;
+          provider_transaction_id: string | null;
           raw_response: Json | null;
           status: string;
+          updated_at: string | null;
         };
         Insert: {
           amount: number;
@@ -1431,9 +1434,13 @@ export type Database = {
           external_id?: string | null;
           id?: string;
           order_id?: string | null;
+          paid_at?: string | null;
           payment_method?: string | null;
+          provider?: string | null;
+          provider_transaction_id?: string | null;
           raw_response?: Json | null;
           status: string;
+          updated_at?: string | null;
         };
         Update: {
           amount?: number;
@@ -1442,9 +1449,13 @@ export type Database = {
           external_id?: string | null;
           id?: string;
           order_id?: string | null;
+          paid_at?: string | null;
           payment_method?: string | null;
+          provider?: string | null;
+          provider_transaction_id?: string | null;
           raw_response?: Json | null;
           status?: string;
+          updated_at?: string | null;
         };
         Relationships: [
           {
@@ -1554,6 +1565,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      webhook_events: {
+        Row: {
+          created_at: string | null;
+          event_id: string;
+          event_type: string | null;
+          id: string;
+          payload: Json;
+          processed_at: string | null;
+          provider: string;
+          reference_id: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          event_id: string;
+          event_type?: string | null;
+          id?: string;
+          payload?: Json;
+          processed_at?: string | null;
+          provider: string;
+          reference_id?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          event_id?: string;
+          event_type?: string | null;
+          id?: string;
+          payload?: Json;
+          processed_at?: string | null;
+          provider?: string;
+          reference_id?: string | null;
+        };
+        Relationships: [];
+      };
       wishlists: {
         Row: {
           created_at: string | null;
@@ -1595,49 +1639,49 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      check_phone_in_auth: { Args: { p_phone: string }; Returns: boolean };
-      create_order_v1:
-        | {
-            Args: {
-              p_address_id: string;
-              p_discount?: number;
-              p_items: Json;
-              p_order_number: string;
-              p_service_fee?: number;
-              p_shipping_cost: number;
-              p_shipping_courier: string;
-              p_shipping_courier_code: string;
-              p_shipping_service_code: string;
-              p_subtotal: number;
-              p_tax?: number;
-              p_total: number;
-              p_total_weight: number;
-              p_user_id: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              p_address_id: string;
-              p_items: Json;
-              p_order_number: string;
-              p_shipping_cost: number;
-              p_shipping_courier: string;
-              p_shipping_courier_code?: string;
-              p_shipping_service_code?: string;
-              p_subtotal: number;
-              p_total: number;
-              p_total_weight: number;
-              p_user_id: string;
-            };
-            Returns: string;
-          };
+      create_order_v1: {
+        Args: {
+          p_address_id: string;
+          p_discount?: number;
+          p_items: Json;
+          p_order_number: string;
+          p_service_fee?: number;
+          p_shipping_cost: number;
+          p_shipping_courier: string;
+          p_shipping_courier_code?: string;
+          p_shipping_service_code?: string;
+          p_subtotal: number;
+          p_tax?: number;
+          p_total: number;
+          p_total_weight?: number;
+          p_user_id: string;
+          p_voucher_code?: string;
+        };
+        Returns: string;
+      };
       is_admin: { Args: never; Returns: boolean };
       is_admin_or_owner: { Args: never; Returns: boolean };
       is_owner: { Args: never; Returns: boolean };
       is_staff_or_above: { Args: never; Returns: boolean };
+      preview_voucher_v1: {
+        Args: { p_code: string; p_subtotal: number };
+        Returns: Json;
+      };
+      reduce_stock: {
+        Args: { p_quantity: number; p_variant_id: string };
+        Returns: boolean;
+      };
+      release_order_inventory_v1: {
+        Args: { p_order_id: string; p_reason?: string };
+        Returns: boolean;
+      };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { '': string }; Returns: string[] };
+      use_coupon: { Args: { p_coupon_id: string }; Returns: undefined };
+      validate_coupon: {
+        Args: { p_code: string; p_purchase_amount: number };
+        Returns: Json;
+      };
     };
     Enums: {
       order_status:
@@ -1781,9 +1825,6 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       order_status: [

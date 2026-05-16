@@ -8,7 +8,7 @@ export async function getUserWishlist(supabase: TypedSupabaseClient) {
 
   const { data, error } = await supabase
     .from('wishlists')
-    .select(`*, products (id, name, price, promo_price, product_images (url))`)
+    .select(`*, products (id, name, price, promo_price, weight_grams, product_images (url))`)
     .eq('user_id', user.id);
 
   if (error) {

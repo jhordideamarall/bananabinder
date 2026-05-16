@@ -19,6 +19,10 @@ type VoucherUpdate = TablesUpdate<'vouchers'>;
 type VoucherInsert = TablesInsert<'vouchers'>;
 type BannerUpdate = TablesUpdate<'banners'>;
 type BannerInsert = TablesInsert<'banners'>;
+type CategoryUpdate = TablesUpdate<'categories'>;
+type CategoryInsert = TablesInsert<'categories'>;
+type StoreSettingsUpdate = TablesUpdate<'store_settings'>;
+type StoreSettingsInsert = TablesInsert<'store_settings'>;
 type OrderUpdate = TablesUpdate<'orders'>;
 
 function text(formData: FormData, key: string): string {
@@ -60,7 +64,7 @@ function slugify(input: string): string {
 }
 
 function productType(value: string): ProductType {
-  return value === 'frozen' || value === 'parcel' ? value : 'normal';
+  return value === 'parcel' ? value : 'normal';
 }
 
 function voucherType(value: string): VoucherType {
@@ -152,7 +156,11 @@ export async function saveProduct(formData: FormData): Promise<void> {
       name,
       slug,
     };
-    const { data, error } = await supabase.from('products').insert(insertPayload).select('id').single();
+    const { data, error } = await supabase
+      .from('products')
+      .insert(insertPayload)
+      .select('id')
+      .single();
     if (error) throw new Error(error.message);
     savedProductId = data.id;
   }
@@ -248,6 +256,11 @@ export async function saveBanner(formData: FormData): Promise<void> {
     start_date: nullableText(formData, 'start_date'),
     end_date: nullableText(formData, 'end_date'),
     is_active: checkbox(formData, 'is_active'),
+    subtitle: nullableText(formData, 'subtitle'),
+    description: nullableText(formData, 'description'),
+    cta_label: nullableText(formData, 'cta_label'),
+    bg_gradient: nullableText(formData, 'bg_gradient'),
+    accent_color: nullableText(formData, 'accent_color'),
   };
 
   if (bannerId) {
@@ -265,6 +278,106 @@ export async function saveBanner(formData: FormData): Promise<void> {
   }
 
   revalidatePath('/admin');
+  revalidatePath('/admin/promos');
+  revalidatePath('/');
+}
+
+export async function saveCategory(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+
+  const categoryId = text(formData, 'id');
+  const name = text(formData, 'name');
+  const slug = text(formData, 'slug') || slugify(name);
+  if (!name || !slug) {
+    throw new Error('Nama kategori dan slug wajib diisi.');
+  }
+
+  const parentId = nullableText(formData, 'parent_id');
+
+  const payload: CategoryUpdate = {
+    name,
+    slug,
+    description: nullableText(formData, 'description'),
+    image_url: nullableText(formData, 'image_url'),
+    parent_id: parentId && parentId !== categoryId ? parentId : null,
+    sort_order: numberValue(formData, 'sort_order'),
+    is_active: checkbox(formData, 'is_active'),
+  };
+
+  if (categoryId) {
+    const { error } = await supabase.from('categories').update(payload).eq('id', categoryId);
+    if (error) throw new Error(error.message);
+  } else {
+    const insertPayload: CategoryInsert = { ...payload, name, slug };
+    const { error } = await supabase.from('categories').insert(insertPayload);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/categories');
+  revalidatePath('/admin/products');
+  revalidatePath('/products');
+}
+
+export async function toggleCategoryStatus(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+
+  const categoryId = text(formData, 'id');
+  if (!categoryId) throw new Error('Category id tidak valid.');
+
+  const { error } = await supabase
+    .from('categories')
+    .update({ is_active: checkbox(formData, 'is_active') })
+    .eq('id', categoryId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/categories');
+  revalidatePath('/products');
+}
+
+export async function saveStoreSettings(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+
+  // Form label home & form origin pengiriman dipisah — masing-masing hanya
+  // meng-update field-nya sendiri supaya tidak saling menimpa.
+  const payload: StoreSettingsUpdate = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (formData.has('home_banner_promo_label')) {
+    payload.home_banner_promo_label = text(formData, 'home_banner_promo_label') || 'Banner Promo';
+    payload.home_banner_pilihan_label =
+      text(formData, 'home_banner_pilihan_label') || 'Banner Pilihan';
+  }
+
+  // Origin pengiriman — origin_area_id dipakai Biteship untuk hitung ongkir
+  // berbasis jarak dari toko. lat/lng wajib untuk kurir instant (Gojek/Grab).
+  if (formData.has('origin_area_id')) {
+    payload.origin_area_id = text(formData, 'origin_area_id') || 'IDNP6M3K2W1';
+    payload.origin_address = nullableText(formData, 'origin_address');
+    payload.origin_latitude = nullableNumber(formData, 'origin_latitude');
+    payload.origin_longitude = nullableNumber(formData, 'origin_longitude');
+  }
+
+  // store_settings is a single-row table
+  const { data: existing } = await supabase
+    .from('store_settings')
+    .select('id')
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase.from('store_settings').update(payload).eq('id', existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const insertPayload: StoreSettingsInsert = payload;
+    const { error } = await supabase.from('store_settings').insert(insertPayload);
+    if (error) throw new Error(error.message);
+  }
+
   revalidatePath('/admin/promos');
   revalidatePath('/');
 }
@@ -295,4 +408,38 @@ export async function updateOrderStatus(formData: FormData): Promise<void> {
 
   revalidatePath('/admin');
   revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+export async function toggleBannerActive(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+
+  const bannerId = text(formData, 'id');
+  if (!bannerId) throw new Error('Banner id tidak valid.');
+
+  const { error } = await supabase
+    .from('banners')
+    .update({ is_active: checkbox(formData, 'is_active') })
+    .eq('id', bannerId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/promos');
+  revalidatePath('/');
+}
+
+export async function toggleVoucherActive(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+
+  const voucherId = text(formData, 'id');
+  if (!voucherId) throw new Error('Voucher id tidak valid.');
+
+  const { error } = await supabase
+    .from('vouchers')
+    .update({ is_active: checkbox(formData, 'is_active') })
+    .eq('id', voucherId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/promos');
 }

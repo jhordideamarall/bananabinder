@@ -5,7 +5,7 @@ export interface ShippingValidationResult {
 
 /**
  * Validate product type is compatible with courier.
- * Frozen products only allowed for same-day couriers within 15km.
+ * Parcel/bundle products can require supported courier dimensions and distance rules.
  * Full implementation in Phase 5.
  */
 export function validateProductTypeForCourier(
@@ -13,13 +13,10 @@ export function validateProductTypeForCourier(
   courierCode: string,
   distanceKm: number,
 ): ShippingValidationResult {
-  if (productType === 'frozen') {
-    const isSameDay = courierCode === 'same-day';
-    if (!isSameDay) {
-      return { isValid: false, reason: 'Produk frozen hanya tersedia pengiriman same-day.' };
-    }
-    if (distanceKm > 15) {
-      return { isValid: false, reason: 'Pengiriman same-day untuk produk frozen maksimal 15km.' };
+  if (productType === 'parcel') {
+    const isInstantCourier = courierCode === 'gojek' || courierCode === 'grab';
+    if (isInstantCourier && distanceKm > 15) {
+      return { isValid: false, reason: 'Pengiriman instant untuk bundle besar maksimal 15km.' };
     }
   }
   return { isValid: true };

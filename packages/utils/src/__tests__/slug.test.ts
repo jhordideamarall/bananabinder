@@ -7,11 +7,11 @@ describe('slugify', () => {
   });
 
   it('replaces spaces with hyphens', () => {
-    expect(slugify('makanan kucing premium')).toBe('makanan-kucing-premium');
+    expect(slugify('binder custom nama')).toBe('binder-custom-nama');
   });
 
   it('removes special characters', () => {
-    expect(slugify('Makanan Kucing Premium!')).toBe('makanan-kucing-premium');
+    expect(slugify('Binder Custom Nama!')).toBe('binder-custom-nama');
   });
 
   it('collapses multiple hyphens', () => {

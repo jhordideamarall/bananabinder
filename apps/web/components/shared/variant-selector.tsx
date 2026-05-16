@@ -1,11 +1,15 @@
 'use client';
 
+import Image from 'next/image';
+
 export interface VariantOption {
   id: string;
   name: string;
   price: number;
   promoPrice?: number | null;
   stock: number;
+  image_url?: string | null;
+  weight_grams?: number | null;
 }
 
 interface VariantSelectorProps {
@@ -39,13 +43,15 @@ export function VariantSelector({ variants, selectedId, onSelect }: VariantSelec
             <button
               onClick={() => !isOutOfStock && onSelect(variant)}
               disabled={isOutOfStock}
+              className="relative overflow-hidden"
               style={{
                 flexShrink: 0,
+                width: variant.image_url ? 76 : 'auto',
                 minWidth: 54,
-                height: 38,
-                padding: '0 16px',
-                borderRadius: 12,
-                border: isSelected ? '1.5px solid #7EC8E3' : '1.5px solid var(--color-stone-3)',
+                height: variant.image_url ? 76 : 38,
+                padding: variant.image_url ? 0 : '0 16px',
+                borderRadius: variant.image_url ? 18 : 12,
+                border: isSelected ? '2px solid #7EC8E3' : '1.5px solid var(--color-stone-3)',
                 background: isSelected ? '#7EC8E3' : '#FFFFFF',
                 cursor: isOutOfStock ? 'not-allowed' : 'pointer',
                 opacity: isOutOfStock ? 0.4 : 1,
@@ -56,12 +62,38 @@ export function VariantSelector({ variants, selectedId, onSelect }: VariantSelec
                 boxShadow: isSelected ? '0 4px 12px rgba(224,123,57,0.2)' : 'none',
               }}
             >
+              {variant.image_url ? (
+                <>
+                  <Image
+                    src={variant.image_url}
+                    alt={variant.name}
+                    fill
+                    className="object-cover"
+                    sizes="76px"
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: isSelected
+                        ? 'linear-gradient(180deg, rgba(126,200,227,0.08), rgba(26,23,20,0.62))'
+                        : 'linear-gradient(180deg, transparent, rgba(26,23,20,0.58))',
+                    }}
+                  />
+                </>
+              ) : null}
               <span
                 style={{
+                  position: variant.image_url ? 'absolute' : 'static',
+                  left: variant.image_url ? 8 : undefined,
+                  right: variant.image_url ? 8 : undefined,
+                  bottom: variant.image_url ? 8 : undefined,
                   fontFamily: 'var(--font-heading)',
                   fontWeight: 700,
-                  fontSize: 13,
-                  color: isSelected ? '#FFFFFF' : '#1A1714',
+                  fontSize: variant.image_url ? 11 : 13,
+                  lineHeight: 1.1,
+                  color: variant.image_url || isSelected ? '#FFFFFF' : '#1A1714',
+                  textShadow: variant.image_url ? '0 1px 8px rgba(0,0,0,0.35)' : 'none',
                 }}
               >
                 {variant.name}

@@ -1,5 +1,5 @@
--- Overhaul Migration: Dropping old tables and applying new schema
--- This script resets the public schema and applies the Petshop master schema.
+-- Overhaul helper: dropping existing public schema objects before applying Binder schema.
+-- DANGEROUS: use only in local/dev reset workflows, never against production.
 
 DO $$ 
 DECLARE

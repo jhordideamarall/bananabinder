@@ -26,7 +26,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_GOOGLE_MAPS_KEY: z.string().min(1).optional(),
 
   // WhatsApp (Fonnte) — Phase 7+
-  FONNTE_API_KEY: z.string().min(1).optional(),
+  FONNTE_API_TOKEN: z.string().min(1).optional(),
   WHATSAPP_API_KEY: z.string().min(1).optional(),
   WHATSAPP_SENDER_NUMBER: z.string().min(1).optional(),
 });

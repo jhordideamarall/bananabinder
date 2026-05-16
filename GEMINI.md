@@ -14,7 +14,7 @@ This file contains foundational mandates for the Bananasbindery project. These i
 
 - **ALWAYS** read `prd.md` and `ARCHITECTURE.md` at the start of a session to understand the project's goal.
 - **ALWAYS** read the `claudeplan/` folder (for the long-term roadmap).
-- **ALWAYS** read the `artifacts/` folder (especially `phase-progress.md`, `biteship-pickup-error-analysis.md`, and recent session reports) to understand historical context, audit reports, and past architectural decisions.
+- **ALWAYS** read the `artifacts/` folder (especially `artifacts/README.md` and recent Binder-era session reports) to understand historical context, audit reports, and past architectural decisions.
 - **MANDATORY EXECUTION ARTIFACT (AUDIT TRAIL)**: After completing ANY task that modifies the codebase, you **MUST** create or update a detailed report in the `artifacts/` folder. This is not optional. The report must include:
   - **Context**: Summary of the task and its objective.
   - **File Manifest**: List of every file created or modified.
@@ -28,8 +28,8 @@ This file contains foundational mandates for the Bananasbindery project. These i
 
 - Certain UI decisions are **LOCKED** and must not be reverted during code restoration or bug fixing:
   - **FOOTER**: Strictly disabled/removed in `ShopLayout` for mobile-first infinite scroll feel.
-  - **BOTTOM NAV**: Strictly 4 tabs (Home, Produk, Booking, Akun).
-  - **BRANDING**: Search Bar border, Category Tags, Cards (like Grooming/Same Day), and List Separators must consistently use Salmon-Orange (`rgba(224, 123, 57, 0.3)` or `#E07B39` with opacity) for their borders to maintain theme unity.
+  - **BOTTOM NAV**: Strictly 4 tabs (Home, Produk, Pesanan, Akun).
+  - **BRANDING**: Search Bar border, Category Tags, Promo/Product cards, and List Separators must consistently use Salmon-Orange (`rgba(224, 123, 57, 0.3)` or `#E07B39` with opacity) for their borders to maintain theme unity.
   - **3D STACK / BANNER CAROUSEL**:
     - The custom piece-wise stacking algorithm must be preserved.
     - **NEVER** use `transformStyle: 'preserve-3d'` on the carousel items (causes Z-fighting/clipping).
@@ -41,7 +41,7 @@ This file contains foundational mandates for the Bananasbindery project. These i
 ### 4. Surgical Integrity & Type Safety (STRICT)
 
 - **NO SILENT SIMPLIFICATION**: Do not delete imports or variables just to pass linting without informing the user.
-- **ZERO ANY POLICY**: Use of `any` is strictly **FORBIDDEN**. 
+- **ZERO ANY POLICY**: Use of `any` is strictly **FORBIDDEN**.
   - Always define proper interfaces or types.
   - If a type is truly unknown, use `unknown` and perform type checking.
   - If a 3rd party library requires a hack, use `as unknown as YourType` with a specific `eslint-disable-next-line` and a comment explaining WHY.
@@ -83,15 +83,18 @@ This file contains foundational mandates for the Bananasbindery project. These i
 ## 🛡️ Monorepo Integrity Mandates (STRICT)
 
 ### 1. Zero-Leakage Policy
+
 - **CORE LOGIC**: Kalkulasi (Ongkir, Diskon, Poin), Validasi Bisnis, dan Algoritma **DILARANG** berada di `apps/`. Wajib ditaruh di `packages/core`.
 - **API CLIENTS**: Semua panggil Supabase RPC atau 3rd Party API (Midtrans, Biteship) wajib dibungkus dalam `@bananasbindery/api-client`. Jangan panggil langsung di dalam Page/Component.
 - **UI PRIMITIVES**: Komponen murni UI (Button, Card, Badge, PriceTag) wajib berada di `packages/ui`. `apps/web` hanya berisi komponen koordinasi (Layout, Page-Specific Blocks).
 
 ### 2. Service Portability
-- **RULE**: Jangan mengimpor `createClient` dari `@/lib/supabase/server` atau `client` langsung ke dalam logic yang bersifat reusable. 
+
+- **RULE**: Jangan mengimpor `createClient` dari `@/lib/supabase/server` atau `client` langsung ke dalam logic yang bersifat reusable.
 - **ACTION**: Logic harus menerima `supabaseClient` sebagai parameter atau menggunakan abstraksi dari `@bananasbindery/api-client`. Ini agar Mobile (React Native) bisa memakai logic yang sama.
 
 ### 3. State Management reusability
+
 - **RULE**: Shared state (Cart, User, Settings) wajib berada di `packages/store`.
 - **RATIONALE**: Agar keranjang belanja dan preferensi user sinkron antara aplikasi Web dan Mobile.
 

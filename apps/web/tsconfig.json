@@ -14,6 +14,7 @@
     "paths": {
       "@/*": ["./*"],
       "@bananasbindery/ui/*": ["../../packages/ui/src/*"],
+      "@bananasbindery/types/*": ["../../packages/types/src/*"],
       "@bananasbindery/utils/*": ["../../packages/utils/src/*"],
       "@bananasbindery/api-client/*": ["../../packages/api-client/src/*"],
       "@bananasbindery/core/*": ["../../packages/core/src/*"],

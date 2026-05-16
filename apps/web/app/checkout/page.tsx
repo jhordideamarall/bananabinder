@@ -84,6 +84,8 @@ export default function CheckoutPage() {
   const [expandedCourier, setExpandedCourier] = useState<string | null>(null);
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
+  const voucherCode = useCartStore((state) => state.voucherCode);
+  const voucherDiscount = useCartStore((state) => state.voucherDiscount);
 
   const { user } = useAuth();
 
@@ -146,14 +148,15 @@ export default function CheckoutPage() {
 
   const selectedShipping = shippingOptions.find((option) => option.id === shippingId);
   const shippingPrice = selectedShipping ? selectedShipping.price : 0;
-  
+
   // Tax 11% (Internal only, not added to total to keep it inclusive/absorbed)
   const taxAmount = Math.round(subtotal * 0.11);
   const serviceFee = 0; // Hapus sesuai request
-  const discount = 0;
+  // Diskon voucher (preview). create_order_v1 menghitung ulang server-side.
+  const discount = Math.min(voucherDiscount, subtotal);
 
-  // Total tetep Subtotal + Ongkir biar user ga bingung
-  const total = subtotal + shippingPrice;
+  // Total = Subtotal - Diskon + Ongkir
+  const total = Math.max(subtotal - discount, 0) + shippingPrice;
 
   const { mutate: handleCheckout, isPending: submitting } = useMutation({
     mutationFn: async () => {
@@ -219,6 +222,7 @@ export default function CheckoutPage() {
         tax: taxAmount,
         serviceFee,
         discount,
+        voucherCode: voucherCode ?? null,
       });
 
       // Panggil API untuk membuat transaksi Midtrans
@@ -282,11 +286,13 @@ export default function CheckoutPage() {
         onClose={() => setIsAddressSheetOpen(false)}
         onSuccess={(addr) => {
           setGuestAddress(addr);
+          // Alamat hasil simpan (guest yang baru verifikasi OTP maupun user lama)
+          // sudah punya id real dari DB — pakai langsung supaya query ongkir aktif.
+          if (addr.id) {
+            setSelectedAddressId(addr.id);
+          }
           if (user) {
-            refetchAddresses().then((res) => {
-              const realAddr = res.data?.find((a: Address) => a.full_address === addr.full_address);
-              if (realAddr) setSelectedAddressId(realAddr.id);
-            });
+            refetchAddresses();
           }
           setIsAddressSheetOpen(false);
         }}
@@ -628,6 +634,14 @@ export default function CheckoutPage() {
                     <span>Subtotal</span>
                     <span className="font-heading font-extrabold text-ink">Rp {fmt(subtotal)}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="mt-4 flex justify-between text-sm text-ink-3">
+                      <span>Diskon{voucherCode ? ` (${voucherCode})` : ''}</span>
+                      <span className="font-heading font-extrabold text-success">
+                        - Rp {fmt(discount)}
+                      </span>
+                    </div>
+                  )}
                   {selectedShipping && (
                     <div className="mt-4 flex justify-between text-sm text-ink-3">
                       <span>Ongkir</span>

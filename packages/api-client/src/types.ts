@@ -11,16 +11,7 @@ export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
 export type Loyalty = Database['public']['Tables']['loyalty']['Row'];
 export type Wishlist = Database['public']['Tables']['wishlists']['Row'];
-export type Service = Database['public']['Tables']['services']['Row'];
-export type BookingSlot = Database['public']['Tables']['booking_slots']['Row'];
-export type Booking = Database['public']['Tables']['bookings']['Row'];
-export type BookingInsert = Database['public']['Tables']['bookings']['Insert'];
-
-export interface AvailableSlot {
-  timeSlot: string;
-  available: boolean;
-}
-
+export type StoreSettings = Database['public']['Tables']['store_settings']['Row'];
 export interface ProductWithDetails {
   id: string;
   name: string;
@@ -31,6 +22,8 @@ export interface ProductWithDetails {
   rating: number;
   soldCount: number;
   category_slug?: string | null;
+  /** Berat produk (gram) — dipakai untuk kalkulasi ongkir di checkout. */
+  weight_grams: number;
 }
 
 export interface OrderWithItems extends Order {
@@ -70,6 +63,8 @@ export interface CheckoutPayload {
   tax: number;
   serviceFee: number;
   discount: number;
+  /** Kode voucher — divalidasi & dihitung ulang server-side di create_order_v1. */
+  voucherCode?: string | null;
 }
 
 export interface CartItem {

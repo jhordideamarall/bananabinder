@@ -57,6 +57,7 @@ export async function createOrder(
     p_tax: payload.tax,
     p_service_fee: payload.serviceFee,
     p_discount: payload.discount,
+    p_voucher_code: payload.voucherCode ?? undefined,
   });
 
   if (error) {

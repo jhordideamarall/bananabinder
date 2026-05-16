@@ -1,4 +1,4 @@
-
+/* eslint-disable */
 const { createClient } = require('@supabase/supabase-js');
 const dotenv = require('dotenv');
 const path = require('path');
@@ -14,9 +14,13 @@ const orderId = '2554b403-0f00-4faf-99f7-1f15fcff7788';
 
 async function testPaymentCreate() {
   console.log('--- STARTING PAYMENT CREATE TEST ---');
-  
+
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !XENDIT_SECRET_KEY) {
-    console.error('MISSING ENV VARS:', { SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY, XENDIT_SECRET_KEY: !!XENDIT_SECRET_KEY });
+    console.error('MISSING ENV VARS:', {
+      SUPABASE_URL: !!SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY,
+      XENDIT_SECRET_KEY: !!XENDIT_SECRET_KEY,
+    });
     return;
   }
 
@@ -43,7 +47,7 @@ async function testPaymentCreate() {
     .select('*')
     .eq('id', order.user_id)
     .single();
-  
+
   if (profileError) {
     console.error('PROFILE_FETCH_ERROR:', profileError);
   } else {
@@ -71,7 +75,7 @@ async function testPaymentCreate() {
     price: Math.round(Number(item.price)),
   }));
 
-  const customerEmail = profile?.email || 'customer@pawvels.com';
+  const customerEmail = profile?.email || 'customer@bananasbindery.com';
 
   const xenditPayload = {
     external_id: order.order_number,
@@ -96,13 +100,13 @@ async function testPaymentCreate() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${authString}`,
+        Authorization: `Basic ${authString}`,
       },
       body: JSON.stringify(xenditPayload),
     });
 
     const xenditData = await response.json();
-    
+
     if (!response.ok) {
       console.error('XENDIT_API_ERROR:', JSON.stringify(xenditData, null, 2));
     } else {

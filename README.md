@@ -1,4 +1,4 @@
-# 🐾 Bananasbindery: The Professional Bananasbindery Platform
+# 🍌 Bananasbindery: Binder & Photo-Product Commerce Platform
 
 [![Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
@@ -6,17 +6,17 @@
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js_15-000000.svg)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Database-Supabase-3ecf8e.svg)](https://supabase.com/)
 
-> **Bananasbindery** is a high-performance, enterprise-grade E-Commerce, Booking, and Delivery ecosystem specifically engineered for the Jakarta market. This is a private, professional project developed by **Jhordi Deamarall**.
+> **Bananasbindery** is a mobile-first commerce platform for curated binders, photocard organizers, refill paper, custom-name binders, and gift bundles. This is a private, professional project developed by **Jhordi Deamarall**.
 
 ---
 
 ## 📖 The Story & Vision
 
-Pet shops in a mega-city like Jakarta face unique challenges: overbooking for grooming services, inaccurate shipping costs for frozen products, and fragmented customer data handled manually via WhatsApp.
+Bananasbindery focuses on selling beautiful, practical binder products for photo collections, journaling, stationery organization, gifts, and custom personal keepsakes.
 
-**Bananasbindery was born to solve this.**
+**Bananasbindery was born to make binder shopping feel simple, polished, and trustworthy.**
 
-Instead of building a simple website, I architected a **comprehensive platform** that treats e-commerce as the core revenue engine while automating the complexities of service bookings and logistics. The vision is to provide store owners with full visibility into their financial health while giving customers a friction-less, mobile-first experience.
+The platform treats e-commerce as the core engine: product catalog, variants, stock, checkout, shipping, payment, promo, and admin visibility. Deprecated service concepts from the source project are not part of the active customer experience.
 
 ---
 
@@ -39,19 +39,19 @@ Business logic is never duplicated. Calculations for shipping, discounts, and po
 
 ---
 
-## ✨ Core Innovation Modules
+## ✨ Core Commerce Modules
 
-### 1. Smart Logistics Engine
+### 1. Binder Catalog & Variants
 
-Built to handle Jakarta's traffic and product types. It automatically filters courier options based on product type (e.g., Frozen foods are locked to Same-Day delivery within 15km) and integrates directly with **Biteship/RajaOngkir**.
+Curated binder products with categories such as organizer binder, aesthetic binder, custom-name binder, refill, and bundles. Variants support cover color, paper type, ring size, stock, and price overrides.
 
-### 2. Slot-Locked Booking System
+### 2. Shipping & Fulfillment
 
-A real-time grooming and pet hotel booking engine that prevents overbooking at the database level. Integrated with **Midtrans/Xendit** for mandatory DP (Down Payment) collection.
+Biteship-powered shipping for binder orders with cached rates, address area resolution, courier/service metadata, and shipment tracking lifecycle.
 
-### 3. Loyalty & Pet Profile
+### 3. Payment & Promo
 
-A personalized engine that tracks pet health/sizes to recommend products and manage loyalty points that expire dynamically after 12 months.
+Xendit invoice checkout, coupons/promos, and server-side pricing safeguards so payment totals are not trusted from the client.
 
 ### 4. Owner Intelligence
 

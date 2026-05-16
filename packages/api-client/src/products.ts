@@ -17,7 +17,7 @@ export async function getActiveProducts(
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, name, price, promo_price, slug, avg_rating, sold_count, categories(slug), product_images(url)',
+      'id, name, price, promo_price, slug, weight_grams, avg_rating, sold_count, categories(slug), product_images(url)',
     )
     .eq('is_active', true)
     .order('created_at', { ascending: false });
@@ -33,6 +33,7 @@ export async function getActiveProducts(
     slug: string;
     price: number;
     promo_price: number | null;
+    weight_grams: number | null;
     avg_rating: number;
     sold_count: number;
     categories: { slug: string } | null;
@@ -49,6 +50,7 @@ export async function getActiveProducts(
     rating: Number(p.avg_rating) || 0,
     soldCount: Number(p.sold_count) || 0,
     category_slug: p.categories?.slug || null,
+    weight_grams: Number(p.weight_grams) || 500,
   }));
 }
 
@@ -77,7 +79,16 @@ export async function getProductBySlug(supabase: TypedSupabaseClient, slug: stri
 
   type Row = Product & {
     product_images: { url: string }[];
-    product_variants: { id: string; name: string; price: number; stock: number; sku: string }[];
+    product_variants: {
+      id: string;
+      name: string;
+      price: number;
+      promo_price: number | null;
+      stock: number;
+      sku: string;
+      image_url: string | null;
+      weight_grams: number | null;
+    }[];
   };
 
   const product = data as unknown as Row;
@@ -88,7 +99,11 @@ export async function getProductBySlug(supabase: TypedSupabaseClient, slug: stri
     ...product,
     imageUrl,
     images: mappedImages.length > 0 ? mappedImages : [imageUrl],
-    variants: product.product_variants || [],
+    variants: (product.product_variants || []).map((variant) => ({
+      ...variant,
+      promoPrice: variant.promo_price,
+      weight_grams: variant.weight_grams ?? product.weight_grams ?? 500,
+    })),
     rating: Number(product.avg_rating) || 0,
     reviewCount: product.review_count || 0,
     soldCount: product.sold_count || 0,

@@ -1,0 +1,14 @@
+{
+  "id": "session-1778820767262",
+  "startedAt": "2026-05-15T04:52:47.262Z",
+  "cwd": "/Users/jhordideamarall/Projects/bananabinder",
+  "context": {},
+  "metrics": {
+    "edits": 0,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "endedAt": "2026-05-16T02:29:01.014Z",
+  "duration": 77773752
+}

@@ -72,6 +72,7 @@ export default function WishlistPage() {
                     name: string;
                     price: number;
                     promo_price?: number | null;
+                    weight_grams?: number | null;
                     product_images?: { url: string }[];
                   };
                 },
@@ -130,6 +131,7 @@ export default function WishlistPage() {
                           price: item.products?.promo_price || item.products?.price || 0,
                           imageUrl: item.products?.product_images?.[0]?.url ?? '',
                           quantity: 1,
+                          weight: item.products?.weight_grams ?? 500,
                         });
                         toast.success('Ditambahkan ke keranjang');
                       }}

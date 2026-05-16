@@ -29,7 +29,7 @@ Work efficiently, safely, and without breaking existing behavior.
 
 ## Workflow
 
-- **MANDATORY CONTEXT GATHERING**: ALWAYS read `prd.md`, `ARCHITECTURE.md`, the `claudeplan/` folder (for the long-term roadmap), and the `artifacts/` folder (especially `phase-progress.md`, `biteship-pickup-error-analysis.md`, and recent audit reports) at the start of every session. Do not blindly assume the project state without reading these files first!
+- **MANDATORY CONTEXT GATHERING**: ALWAYS read `prd.md`, `ARCHITECTURE.md`, the `claudeplan/` folder (for the long-term roadmap), and the `artifacts/` folder (especially `artifacts/README.md` and recent Binder-era audit reports) at the start of every session. Do not blindly assume the project state without reading these files first!
 - **UI/UX LOGGING PROTOCOL**: For any mobile-native optimizations (viewport, spacing, Android/iOS fixes), you **MUST** document the changes in `artifacts/ui-optimization-log.md` with file paths and rationale.
 - - **MANDATORY EXECUTION ARTIFACT**: Setiap tugas yang selesai WAJIB diikuti dengan update detail di folder `artifacts/` yang
     mendokumentasikan: **Apa** yang diubah, **Di mana** (path file), dan **Mengapa** (Rasionale Teknis). Dilarang keras melakukan modifikasi
@@ -72,15 +72,18 @@ Work efficiently, safely, and without breaking existing behavior.
 ## 🛡️ Monorepo Integrity Mandates (STRICT)
 
 ### 1. Zero-Leakage Policy
+
 - **CORE LOGIC**: Kalkulasi (Ongkir, Diskon, Poin), Validasi Bisnis, dan Algoritma **DILARANG** berada di `apps/`. Wajib ditaruh di `packages/core`.
 - **API CLIENTS**: Semua panggil Supabase RPC atau 3rd Party API (Midtrans, Biteship) wajib dibungkus dalam `@bananasbindery/api-client`. Jangan panggil langsung di dalam Page/Component.
 - **UI PRIMITIVES**: Komponen murni UI (Button, Card, Badge, PriceTag) wajib berada di `packages/ui`. `apps/web` hanya berisi komponen koordinasi (Layout, Page-Specific Blocks).
 
 ### 2. Service Portability
-- **RULE**: Jangan mengimpor `createClient` dari `@/lib/supabase/server` atau `client` langsung ke dalam logic yang bersifat reusable. 
+
+- **RULE**: Jangan mengimpor `createClient` dari `@/lib/supabase/server` atau `client` langsung ke dalam logic yang bersifat reusable.
 - **ACTION**: Logic harus menerima `supabaseClient` sebagai parameter atau menggunakan abstraksi dari `@bananasbindery/api-client`. Ini agar Mobile (React Native) bisa memakai logic yang sama.
 
 ### 3. State Management reusability
+
 - **RULE**: Shared state (Cart, User, Settings) wajib berada di `packages/store`.
 - **RATIONALE**: Agar keranjang belanja dan preferensi user sinkron antara aplikasi Web dan Mobile.
 
@@ -91,7 +94,7 @@ Work efficiently, safely, and without breaking existing behavior.
 - **Source of Truth vs. Wireframes**: `user-flow.html` is ONLY for logic & flow (what pages exist, how they connect). **DO NOT** use it as a visual or CSS reference.
 - **The True Design System** lives in the existing codebase (`app/(shop)/page.tsx`, `header.tsx`, etc.). When building pages based on `user-flow.html`, you **MUST** recycle the existing aesthetic.
 - **NEVER** overwrite existing polished components just to match the raw/placeholder styling seen in `user-flow.html`.
-- **BRANDING**: Search Bar border, Category Tags, Cards (like Grooming/Same Day), and List Separators must consistently use Salmon-Orange (`rgba(224, 123, 57, 0.3)` or `#E07B39` with opacity) for their borders to maintain theme unity.
+- **BRANDING**: Search Bar border, Category Tags, Promo/Product cards, and List Separators must consistently use Salmon-Orange (`rgba(224, 123, 57, 0.3)` or `#E07B39` with opacity) for their borders to maintain theme unity.
 - **3D STACK / CAROUSEL**:
   - The custom piece-wise stacking algorithm must be preserved.
   - **NEVER** use `transformStyle: 'preserve-3d'` on the carousel items (causes Z-fighting).

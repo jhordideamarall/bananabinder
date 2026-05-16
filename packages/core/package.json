@@ -7,7 +7,6 @@
     ".": "./src/index.ts",
     "./pricing": "./src/services/pricing.service.ts",
     "./shipping": "./src/services/shipping.service.ts",
-    "./booking": "./src/services/booking.service.ts",
     "./inventory": "./src/services/inventory.service.ts",
     "./voucher": "./src/services/voucher.service.ts"
   },

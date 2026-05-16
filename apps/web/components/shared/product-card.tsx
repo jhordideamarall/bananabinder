@@ -19,8 +19,10 @@ export interface ProductCardData {
   rating?: number;
   reviewCount?: number;
   soldCount?: number;
-  type?: 'normal' | 'frozen' | 'parcel';
+  type?: 'normal' | 'parcel';
   category?: string;
+  /** Berat produk (gram) — diteruskan ke cart untuk kalkulasi ongkir. */
+  weight_grams?: number | null;
 }
 
 interface ProductCardProps {
@@ -164,8 +166,8 @@ export function ProductCard({ product, onAddToCart, href, priority = false }: Pr
           </div>
         )}
 
-        {/* Frozen badge */}
-        {discountPct === null && product.type === 'frozen' && (
+        {/* Parcel badge */}
+        {discountPct === null && product.type === 'parcel' && (
           <div style={{ position: 'absolute', top: 10, left: 10 }}>
             <span
               style={{
@@ -180,7 +182,7 @@ export function ProductCard({ product, onAddToCart, href, priority = false }: Pr
                 fontSize: 10,
               }}
             >
-              Frozen
+              Bundle
             </span>
           </div>
         )}
