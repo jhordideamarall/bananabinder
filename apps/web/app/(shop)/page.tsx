@@ -14,6 +14,7 @@ import {
 import { BestOffersGrid } from '@/components/home/best-offers';
 import { DesktopBannerSlider } from '@/components/home/desktop-banner-slider';
 import { HomeBannerStrip } from '@/components/home/home-banner-strip';
+import { PageTitle } from '@/components/shared/page-title';
 import { ProductCard, type ProductCardData } from '@/components/shared/product-card';
 import { useCartStore } from '@/stores/cart-store';
 import { useQuery } from '@tanstack/react-query';
@@ -276,6 +277,7 @@ export default function HomePage() {
         position: 'relative',
       }}
     >
+      <PageTitle title="Beranda" />
       {/* Background fill for Header area to prevent color jump */}
       <div
         className="lg:hidden"

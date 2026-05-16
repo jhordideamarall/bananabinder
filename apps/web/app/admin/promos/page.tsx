@@ -1,17 +1,20 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Promosi',
+};
 import type { Route } from 'next';
 import type { Tables } from '@bananasbindery/types/supabase';
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
 import { createClient } from '@/lib/supabase/server';
 import { BannerManager } from '@/components/admin/promos/BannerManager';
 import { VoucherManager } from '@/components/admin/promos/VoucherManager';
-import { SettingsPanel } from '@/components/admin/promos/SettingsPanel';
 
 type VoucherRow = Tables<'vouchers'>;
 type BannerRow = Tables<'banners'>;
-type StoreSettingsRow = Tables<'store_settings'>;
 
-type TabId = 'banner' | 'voucher' | 'settings';
+type TabId = 'banner' | 'voucher';
 
 const TABS: { id: TabId; label: string; description: string }[] = [
   {
@@ -24,15 +27,10 @@ const TABS: { id: TabId; label: string; description: string }[] = [
     label: 'Voucher',
     description: 'Kode diskon untuk campaign atau loyalitas pelanggan.',
   },
-  {
-    id: 'settings',
-    label: 'Pengaturan',
-    description: 'Judul section home dan origin pengiriman.',
-  },
 ];
 
 function isTabId(value: string | undefined): value is TabId {
-  return value === 'banner' || value === 'voucher' || value === 'settings';
+  return value === 'banner' || value === 'voucher';
 }
 
 export default async function AdminPromosPage({
@@ -44,15 +42,13 @@ export default async function AdminPromosPage({
   const activeTab: TabId = isTabId(resolved.tab) ? resolved.tab : 'banner';
 
   const supabase = (await createClient()) as TypedSupabaseClient;
-  const [vouchersResult, bannersResult, settingsResult] = await Promise.all([
+  const [vouchersResult, bannersResult] = await Promise.all([
     supabase.from('vouchers').select('*').order('created_at', { ascending: false }).limit(50),
     supabase.from('banners').select('*').order('priority', { ascending: true }).limit(50),
-    supabase.from('store_settings').select('*').limit(1).maybeSingle(),
   ]);
 
   const vouchers = (vouchersResult.data ?? []) as VoucherRow[];
   const banners = (bannersResult.data ?? []) as BannerRow[];
-  const storeSettings = (settingsResult.data ?? undefined) as StoreSettingsRow | undefined;
 
   return (
     <div className="mx-auto max-w-[1240px] space-y-8">
@@ -98,7 +94,6 @@ export default async function AdminPromosPage({
 
       {activeTab === 'banner' ? <BannerManager banners={banners} /> : null}
       {activeTab === 'voucher' ? <VoucherManager vouchers={vouchers} /> : null}
-      {activeTab === 'settings' ? <SettingsPanel settings={storeSettings} /> : null}
     </div>
   );
 }

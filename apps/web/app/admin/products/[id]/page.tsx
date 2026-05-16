@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { db } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'Edit Produk',
+};
 import { getAdminCategories, getAdminProductDetail } from '@/lib/admin-data';
 import ProductForm from '@/components/admin/ProductForm';
 import { notFound } from 'next/navigation';

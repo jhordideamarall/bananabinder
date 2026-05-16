@@ -23,18 +23,22 @@ export function HomeBannerStrip({ banners, label }: HomeBannerStripProps) {
   }
 
   return (
-    <div className="mt-4 px-[clamp(16px,5vw,20px)]">
+    <div className="mt-4">
       {label ? (
-        <p className="mb-2 font-heading text-[13px] font-bold text-[#1A1714]/50">{label}</p>
+        <p className="mb-2 px-[clamp(16px,5vw,20px)] font-heading text-[13px] font-bold text-[#1A1714]/50">
+          {label}
+        </p>
       ) : null}
 
       <div
-        className="flex gap-4 overflow-x-auto pb-2"
+        className={`flex gap-4 overflow-x-auto pb-4 no-scrollbar ${banners.length === 1 ? 'justify-center' : ''}`}
         style={
           {
             scrollbarWidth: 'none',
             WebkitOverflowScrolling: 'touch',
             scrollSnapType: 'x mandatory',
+            paddingLeft: banners.length === 1 ? 0 : 'clamp(16px, 5vw, 20px)',
+            paddingRight: banners.length === 1 ? 0 : 'clamp(16px, 5vw, 20px)',
           } as CSSProperties
         }
       >
@@ -42,10 +46,9 @@ export function HomeBannerStrip({ banners, label }: HomeBannerStripProps) {
           <Link
             key={banner.id}
             href={(banner.link || '/products') as Route}
-            className="relative h-[170px] w-full flex-shrink-0 overflow-hidden no-underline lg:h-[230px]"
+            className="relative h-[210px] w-[88vw] max-w-[600px] flex-shrink-0 overflow-hidden no-underline lg:h-[280px]"
             style={{
-              scrollSnapAlign: 'start',
-              boxShadow: '0 10px 25px -5px rgba(0,0,0,0.12)',
+              scrollSnapAlign: 'center',
               borderRadius: index % 2 === 0 ? '40px 12px 40px 12px' : '12px 40px 12px 40px',
             }}
           >

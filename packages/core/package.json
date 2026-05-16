@@ -8,7 +8,8 @@
     "./pricing": "./src/services/pricing.service.ts",
     "./shipping": "./src/services/shipping.service.ts",
     "./inventory": "./src/services/inventory.service.ts",
-    "./voucher": "./src/services/voucher.service.ts"
+    "./voucher": "./src/services/voucher.service.ts",
+    "./campaign": "./src/services/campaign.service.ts"
   },
   "scripts": {
     "test": "vitest run --passWithNoTests",

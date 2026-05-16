@@ -65,6 +65,8 @@ export interface CheckoutPayload {
   discount: number;
   /** Kode voucher — divalidasi & dihitung ulang server-side di create_order_v1. */
   voucherCode?: string | null;
+  /** Campaign IDs yang akan di-apply — divalidasi & dihitung ulang server-side. */
+  campaignIds?: string[];
 }
 
 export interface CartItem {

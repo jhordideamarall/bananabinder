@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { db } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'Manajemen Produk',
+};
 import { getAdminProducts } from '@/lib/admin-data';
 import { Plus as IconPlus } from 'lucide-react';
 import Link from 'next/link';

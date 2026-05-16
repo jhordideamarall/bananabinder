@@ -7,6 +7,7 @@ import { useEffect, useState, use } from 'react';
 import { useCartStore } from '@/stores/cart-store';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { PageTitle } from '@/components/shared/page-title';
 
 export default function CheckoutSuccessPage(props: {
   searchParams: Promise<{ order_id?: string }>;
@@ -38,6 +39,7 @@ export default function CheckoutSuccessPage(props: {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-white px-8 py-20 text-center">
+      <PageTitle title="Pesanan Berhasil" />
       <m.div
         initial={{ y: -60, scale: 0.8, opacity: 0 }}
         animate={{ y: 0, scale: 1, opacity: 1 }}

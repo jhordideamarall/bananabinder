@@ -25,13 +25,12 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   icons: {
-    icon: [
-      { url: '/icon.png' },
-      { url: '/icon.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: { url: '/icon.png', sizes: '180x180', type: 'image/png' },
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   },
-  description: 'Bananasbindery — Toko binder dan alat tulis terlengkap di Jakarta. Produk premium untuk produktivitasmu.',
+  description:
+    'Bananasbindery — Toko binder dan alat tulis terlengkap di Jakarta. Produk premium untuk produktivitasmu.',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -43,7 +42,8 @@ export const metadata: Metadata = {
     siteName: 'Bananasbindery',
     url: 'https://bananasbindery.com',
     title: 'Bananasbindery — Toko Binder & Stationery Jakarta',
-    description: 'Bananasbindery — Toko binder dan alat tulis terlengkap di Jakarta. Produk premium untuk produktivitasmu.',
+    description:
+      'Bananasbindery — Toko binder dan alat tulis terlengkap di Jakarta. Produk premium untuk produktivitasmu.',
   },
 };
 

@@ -16,6 +16,7 @@ import type { Route } from 'next';
 import { useQuery } from '@tanstack/react-query';
 import { getUserLoyalty } from '@/lib/services/loyalty-client';
 import { useAuth } from '@/components/providers/auth-provider';
+import { PageTitle } from '@/components/shared/page-title';
 
 interface MenuItem {
   href: Route;
@@ -129,6 +130,7 @@ export default function AccountPage() {
 
   return (
     <div className="bg-[#FDFCFB]">
+      <PageTitle title="Akun" />
       {/* Hero Banner */}
       <m.div
         initial={{ opacity: 0, y: -10 }}

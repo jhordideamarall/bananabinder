@@ -13,7 +13,8 @@
     "./banners": "./src/banners.ts",
     "./store-settings": "./src/store-settings.ts",
     "./fonnte": "./src/fonnte.ts",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./campaigns": "./src/campaigns.ts"
   },
   "typesVersions": {
     "*": {
@@ -46,6 +47,9 @@
       ],
       "types": [
         "./src/types.ts"
+      ],
+      "campaigns": [
+        "./src/campaigns.ts"
       ]
     }
   },
@@ -54,6 +58,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@bananasbindery/core": "workspace:*",
     "@bananasbindery/types": "workspace:*",
     "@supabase/supabase-js": "^2.105.1"
   },

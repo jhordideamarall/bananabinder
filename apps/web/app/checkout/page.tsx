@@ -21,8 +21,10 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { getUserAddresses, type Address } from '@/lib/services/address-client';
 import { createOrder } from '@/lib/services/order-client';
 import { getShippingRates, type ShippingOption } from '@/lib/services/shipping-client';
+import { previewCampaigns, type CampaignPreviewResponse } from '@/lib/services/campaign-client';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import { PageTitle } from '@/components/shared/page-title';
 
 const AddressSheet = dynamic(
   () => import('@/components/checkout/address-sheet').then((mod) => mod.AddressSheet),
@@ -149,14 +151,56 @@ export default function CheckoutPage() {
   const selectedShipping = shippingOptions.find((option) => option.id === shippingId);
   const shippingPrice = selectedShipping ? selectedShipping.price : 0;
 
-  // Tax 11% (Internal only, not added to total to keep it inclusive/absorbed)
-  const taxAmount = Math.round(subtotal * 0.11);
-  const serviceFee = 0; // Hapus sesuai request
-  // Diskon voucher (preview). create_order_v1 menghitung ulang server-side.
-  const discount = Math.min(voucherDiscount, subtotal);
+  // Campaign preview — re-validated server-side at order creation.
+  const previewItemsKey = useMemo(
+    () => items.map((i) => `${i.id}:${i.quantity}:${i.price}`).join('|'),
+    [items],
+  );
+  const destinationCoords =
+    activeAddress?.latitude != null && activeAddress?.longitude != null
+      ? { latitude: Number(activeAddress.latitude), longitude: Number(activeAddress.longitude) }
+      : null;
 
-  // Total = Subtotal - Diskon + Ongkir
-  const total = Math.max(subtotal - discount, 0) + shippingPrice;
+  const { data: campaignPreview } = useQuery<CampaignPreviewResponse>({
+    queryKey: [
+      'campaign-preview',
+      previewItemsKey,
+      destinationCoords?.latitude ?? null,
+      destinationCoords?.longitude ?? null,
+    ],
+    queryFn: () =>
+      previewCampaigns(
+        items.map((i) => ({
+          productId: String(i.id),
+          quantity: i.quantity,
+          unitPrice: i.price,
+        })),
+        destinationCoords,
+      ),
+    enabled: hydrated && items.length > 0,
+    staleTime: 30_000,
+  });
+
+  const campaignItemDiscount = campaignPreview?.totalItemDiscount ?? 0;
+  const campaignShippingDiscount = Math.min(
+    campaignPreview?.totalShippingDiscount ?? 0,
+    shippingPrice,
+  );
+  const campaignIds = useMemo(
+    () => Array.from(new Set((campaignPreview?.applied ?? []).map((a) => a.campaignId))),
+    [campaignPreview],
+  );
+
+  const effectiveShippingPrice = Math.max(shippingPrice - campaignShippingDiscount, 0);
+
+  // Tax 11% (Internal only, not added to total to keep it inclusive/absorbed)
+  const totalDiscount = Math.min(voucherDiscount + campaignItemDiscount, subtotal);
+  const taxAmount = Math.round(Math.max(subtotal - totalDiscount, 0) * 0.11);
+  const serviceFee = 0; // Hapus sesuai request
+  const discount = totalDiscount;
+
+  // Total = Subtotal - Diskon + Ongkir (after free shipping subsidy)
+  const total = Math.max(subtotal - discount, 0) + effectiveShippingPrice;
 
   const { mutate: handleCheckout, isPending: submitting } = useMutation({
     mutationFn: async () => {
@@ -223,6 +267,7 @@ export default function CheckoutPage() {
         serviceFee,
         discount,
         voucherCode: voucherCode ?? null,
+        campaignIds,
       });
 
       // Panggil API untuk membuat transaksi Midtrans
@@ -281,6 +326,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-stone">
+      <PageTitle title="Checkout" />
       <AddressSheet
         isOpen={isAddressSheetOpen}
         onClose={() => setIsAddressSheetOpen(false)}
@@ -634,19 +680,46 @@ export default function CheckoutPage() {
                     <span>Subtotal</span>
                     <span className="font-heading font-extrabold text-ink">Rp {fmt(subtotal)}</span>
                   </div>
-                  {discount > 0 && (
+                  {voucherDiscount > 0 && (
                     <div className="mt-4 flex justify-between text-sm text-ink-3">
-                      <span>Diskon{voucherCode ? ` (${voucherCode})` : ''}</span>
+                      <span>Voucher{voucherCode ? ` (${voucherCode})` : ''}</span>
                       <span className="font-heading font-extrabold text-success">
-                        - Rp {fmt(discount)}
+                        - Rp {fmt(Math.min(voucherDiscount, subtotal))}
                       </span>
                     </div>
                   )}
+                  {(campaignPreview?.applied ?? [])
+                    .filter((c) => c.itemDiscounts.length > 0)
+                    .map((c) => {
+                      const sum = c.itemDiscounts.reduce((s, d) => s + d.amount, 0);
+                      return (
+                        <div
+                          key={c.campaignId}
+                          className="mt-4 flex justify-between text-sm text-ink-3"
+                        >
+                          <span>Campaign · {c.name}</span>
+                          <span className="font-heading font-extrabold text-success">
+                            - Rp {fmt(sum)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   {selectedShipping && (
                     <div className="mt-4 flex justify-between text-sm text-ink-3">
                       <span>Ongkir</span>
                       <span className="font-heading font-extrabold text-ink">
                         Rp {fmt(selectedShipping.price)}
+                      </span>
+                    </div>
+                  )}
+                  {campaignShippingDiscount > 0 && (
+                    <div className="mt-4 flex justify-between text-sm text-ink-3">
+                      <span>
+                        Gratis Ongkir ·{' '}
+                        {(campaignPreview?.applied ?? []).find((a) => a.shippingDiscount > 0)?.name}
+                      </span>
+                      <span className="font-heading font-extrabold text-success">
+                        - Rp {fmt(campaignShippingDiscount)}
                       </span>
                     </div>
                   )}

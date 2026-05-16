@@ -44,7 +44,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
           }}
         >
           <div key="desktop-spacer" className="hidden lg:block h-16" />
-          <div key={`page-content-${pathname}`}>{children}</div>
+          <div key="page-content-wrapper">{children}</div>
         </main>
 
         {/* Floating BottomNav Overlay - Mobile only */}

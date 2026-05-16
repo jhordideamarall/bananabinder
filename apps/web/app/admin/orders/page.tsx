@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { db } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'Daftar Pesanan',
+};
 import { getAdminOrders } from '@/lib/admin-data';
 import {
   Search as IconSearch,

@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { db } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'Dashboard Admin',
+};
 import { getAdminStats, getAdminRevenueChart, getAdminProducts } from '@/lib/admin-data';
 import {
   DollarSign as IconCurrencyDollar,

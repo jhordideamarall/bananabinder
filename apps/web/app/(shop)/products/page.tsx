@@ -8,6 +8,7 @@ import { useCartStore } from '@/stores/cart-store';
 import { useQuery } from '@tanstack/react-query';
 import { getActiveProducts, type ProductWithDetails } from '@/lib/services/product-client';
 import { Loader2 } from 'lucide-react';
+import { PageTitle } from '@/components/shared/page-title';
 
 function ProductsContent() {
   const searchParams = useSearchParams();
@@ -68,6 +69,7 @@ function ProductsContent() {
 
   return (
     <div className="flex flex-col min-h-screen pb-10 lg:mx-auto lg:w-full lg:max-w-[1052px]">
+      <PageTitle title="Semua Produk" />
       <div className="flex-1 pt-14">
         <ProductGrid
           products={filtered as ProductCardData[]}

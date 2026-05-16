@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useCartStore, type CartItem } from '@/stores/cart-store';
+import { PageTitle } from '@/components/shared/page-title';
 
 const fmt = (n: number) => n.toLocaleString('id-ID');
 
@@ -112,6 +113,8 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-stone">
+      <PageTitle title="Keranjang" />
+
       <header className="sticky top-0 z-50 flex h-[72px] items-center justify-between border-b border-stone-2 bg-white px-[clamp(16px,5vw,20px)]">
         <button
           onClick={() => router.back()}

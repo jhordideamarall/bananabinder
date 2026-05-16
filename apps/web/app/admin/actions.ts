@@ -379,6 +379,7 @@ export async function saveStoreSettings(formData: FormData): Promise<void> {
   }
 
   revalidatePath('/admin/promos');
+  revalidatePath('/admin/settings');
   revalidatePath('/');
 }
 

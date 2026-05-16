@@ -9,6 +9,8 @@ import {
   ShoppingCart as IconShoppingCart,
   Ticket as IconTicket,
   FolderTree as IconCategories,
+  Megaphone as IconCampaign,
+  Settings as IconSettings,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -23,7 +25,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Orders', icon: IconShoppingCart, href: '/admin/orders' as Route },
   { label: 'Products', icon: IconPackage, href: '/admin/products' as Route },
   { label: 'Categories', icon: IconCategories, href: '/admin/categories' as Route },
+  { label: 'Campaigns', icon: IconCampaign, href: '/admin/campaigns' as Route },
   { label: 'Promos', icon: IconTicket, href: '/admin/promos' as Route },
+  { label: 'Settings', icon: IconSettings, href: '/admin/settings' as Route },
 ];
 
 export function AdminSidebarNav() {

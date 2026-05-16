@@ -58,6 +58,8 @@ export async function createOrder(
     p_service_fee: payload.serviceFee,
     p_discount: payload.discount,
     p_voucher_code: payload.voucherCode ?? undefined,
+    p_campaign_ids:
+      payload.campaignIds && payload.campaignIds.length > 0 ? payload.campaignIds : undefined,
   });
 
   if (error) {

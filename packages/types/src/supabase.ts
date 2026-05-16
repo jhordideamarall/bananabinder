@@ -278,6 +278,209 @@ export type Database = {
           },
         ];
       };
+      campaign_categories: {
+        Row: {
+          campaign_id: string;
+          category_id: string;
+        };
+        Insert: {
+          campaign_id: string;
+          category_id: string;
+        };
+        Update: {
+          campaign_id?: string;
+          category_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'campaign_categories_campaign_id_fkey';
+            columns: ['campaign_id'];
+            isOneToOne: false;
+            referencedRelation: 'campaigns';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'campaign_categories_category_id_fkey';
+            columns: ['category_id'];
+            isOneToOne: false;
+            referencedRelation: 'categories';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      campaign_geo_zones: {
+        Row: {
+          campaign_id: string;
+          center_lat: number;
+          center_lng: number;
+          created_at: string;
+          id: string;
+          label: string;
+          radius_km: number;
+        };
+        Insert: {
+          campaign_id: string;
+          center_lat: number;
+          center_lng: number;
+          created_at?: string;
+          id?: string;
+          label?: string;
+          radius_km: number;
+        };
+        Update: {
+          campaign_id?: string;
+          center_lat?: number;
+          center_lng?: number;
+          created_at?: string;
+          id?: string;
+          label?: string;
+          radius_km?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'campaign_geo_zones_campaign_id_fkey';
+            columns: ['campaign_id'];
+            isOneToOne: false;
+            referencedRelation: 'campaigns';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      campaign_products: {
+        Row: {
+          campaign_id: string;
+          product_id: string;
+        };
+        Insert: {
+          campaign_id: string;
+          product_id: string;
+        };
+        Update: {
+          campaign_id?: string;
+          product_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'campaign_products_campaign_id_fkey';
+            columns: ['campaign_id'];
+            isOneToOne: false;
+            referencedRelation: 'campaigns';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'campaign_products_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      campaign_usages: {
+        Row: {
+          applied_at: string;
+          campaign_id: string;
+          discount_amount: number;
+          id: string;
+          order_id: string;
+        };
+        Insert: {
+          applied_at?: string;
+          campaign_id: string;
+          discount_amount: number;
+          id?: string;
+          order_id: string;
+        };
+        Update: {
+          applied_at?: string;
+          campaign_id?: string;
+          discount_amount?: number;
+          id?: string;
+          order_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'campaign_usages_campaign_id_fkey';
+            columns: ['campaign_id'];
+            isOneToOne: false;
+            referencedRelation: 'campaigns';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'campaign_usages_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      campaigns: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          discount_unit: Database['public']['Enums']['campaign_discount_unit'];
+          discount_value: number;
+          ends_at: string;
+          id: string;
+          is_active: boolean;
+          max_discount: number | null;
+          min_order: number;
+          name: string;
+          priority: number;
+          region_scope: Database['public']['Enums']['campaign_region_scope'];
+          stackable: boolean;
+          starts_at: string;
+          target_scope: Database['public']['Enums']['campaign_target_scope'];
+          type: Database['public']['Enums']['campaign_type'];
+          updated_at: string;
+          usage_count: number;
+          usage_limit: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          discount_unit: Database['public']['Enums']['campaign_discount_unit'];
+          discount_value: number;
+          ends_at: string;
+          id?: string;
+          is_active?: boolean;
+          max_discount?: number | null;
+          min_order?: number;
+          name: string;
+          priority?: number;
+          region_scope?: Database['public']['Enums']['campaign_region_scope'];
+          stackable?: boolean;
+          starts_at: string;
+          target_scope?: Database['public']['Enums']['campaign_target_scope'];
+          type: Database['public']['Enums']['campaign_type'];
+          updated_at?: string;
+          usage_count?: number;
+          usage_limit?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          discount_unit?: Database['public']['Enums']['campaign_discount_unit'];
+          discount_value?: number;
+          ends_at?: string;
+          id?: string;
+          is_active?: boolean;
+          max_discount?: number | null;
+          min_order?: number;
+          name?: string;
+          priority?: number;
+          region_scope?: Database['public']['Enums']['campaign_region_scope'];
+          stackable?: boolean;
+          starts_at?: string;
+          target_scope?: Database['public']['Enums']['campaign_target_scope'];
+          type?: Database['public']['Enums']['campaign_type'];
+          updated_at?: string;
+          usage_count?: number;
+          usage_limit?: number | null;
+        };
+        Relationships: [];
+      };
       cart_items: {
         Row: {
           cart_id: string;
@@ -1642,6 +1845,7 @@ export type Database = {
       create_order_v1: {
         Args: {
           p_address_id: string;
+          p_campaign_ids?: string[];
           p_discount?: number;
           p_items: Json;
           p_order_number: string;
@@ -1659,8 +1863,13 @@ export type Database = {
         };
         Returns: string;
       };
+      haversine_km: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number };
+        Returns: number;
+      };
       is_admin: { Args: never; Returns: boolean };
       is_admin_or_owner: { Args: never; Returns: boolean };
+      is_admin_or_staff: { Args: never; Returns: boolean };
       is_owner: { Args: never; Returns: boolean };
       is_staff_or_above: { Args: never; Returns: boolean };
       preview_voucher_v1: {
@@ -1684,6 +1893,10 @@ export type Database = {
       };
     };
     Enums: {
+      campaign_discount_unit: 'percentage' | 'fixed';
+      campaign_region_scope: 'all' | 'radius';
+      campaign_target_scope: 'all' | 'products' | 'categories';
+      campaign_type: 'flash_sale' | 'product_discount' | 'free_shipping';
       order_status:
         | 'pending'
         | 'paid'
@@ -1827,6 +2040,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      campaign_discount_unit: ['percentage', 'fixed'],
+      campaign_region_scope: ['all', 'radius'],
+      campaign_target_scope: ['all', 'products', 'categories'],
+      campaign_type: ['flash_sale', 'product_discount', 'free_shipping'],
       order_status: [
         'pending',
         'paid',

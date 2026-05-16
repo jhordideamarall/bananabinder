@@ -11,6 +11,7 @@ import { VariantSelector, type VariantOption } from '@/components/shared/variant
 import { useCartStore } from '@/stores/cart-store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleWishlist, getUserWishlist } from '@/lib/services/wishlist-client';
+import { PageTitle } from '@/components/shared/page-title';
 
 import type { DetailedProduct } from '@/lib/dummy-products';
 
@@ -224,6 +225,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
   return (
     <div style={{ minHeight: '100vh', background: DESIGN.bg }}>
+      <PageTitle title={product.name} />
       {/* Top Bar */}
       <div
         style={{

@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
+
+export const metadata: Metadata = {
+  title: 'Manajemen Kategori',
+};
 import Link from 'next/link';
 import { ImageIcon, Save } from 'lucide-react';
 import type { Tables } from '@bananasbindery/types/supabase';
