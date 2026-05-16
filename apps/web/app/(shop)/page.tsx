@@ -1,5 +1,5 @@
 'use client';
-import { useRef, type CSSProperties, useMemo } from 'react';
+import { useState, type CSSProperties, useMemo } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import Image from 'next/image';
@@ -13,70 +13,31 @@ import {
 } from 'framer-motion';
 import { BestOffersGrid } from '@/components/home/best-offers';
 import { DesktopBannerSlider } from '@/components/home/desktop-banner-slider';
+import { HomeBannerStrip } from '@/components/home/home-banner-strip';
 import { ProductCard, type ProductCardData } from '@/components/shared/product-card';
 import { useCartStore } from '@/stores/cart-store';
 import { useQuery } from '@tanstack/react-query';
-import {
-  getActiveProducts,
-  type ProductWithDetails,
-} from '@/lib/services/product-client';
+import { getActiveProducts, type ProductWithDetails } from '@/lib/services/product-client';
+import { getActiveBanners, type HomeBanner } from '@/lib/services/banner-client';
+import { getStoreSettings, type StoreSettings } from '@/lib/services/store-settings-client';
 import { Loader2 } from 'lucide-react';
-
-const BANNERS = [
-  {
-    id: 1,
-    tag: 'Flash Sale',
-    title: 'Diskon hingga 50%',
-    desc: 'Koleksi binder premium untuk produktivitasmu',
-    cta: 'Belanja sekarang',
-    link: '/products?sale=true',
-    bg: 'linear-gradient(135deg, #1A1714 0%, #3D2F1E 100%)',
-    accent: '#FFD54C',
-    image: '/images/products/binder-denim-pink-blue-01.jpg',
-  },
-  {
-    id: 2,
-    tag: 'New Arrivals',
-    title: 'Koleksi Binder Aesthetic',
-    desc: 'Warna-warna pastel baru sudah tersedia',
-    cta: 'Lihat koleksi',
-    link: '/products?category=aksesoris',
-    bg: 'linear-gradient(135deg, #2D1E1A 0%, #4A2B24 100%)',
-    accent: '#F2A7C3',
-    image: '/images/products/binder-rose-blossom-01.jpg',
-  },
-  {
-    id: 3,
-    tag: 'Bundling Hemat',
-    title: 'Paket Pelajar Ceria',
-    desc: 'Dapatkan 3 binder + 1 pack kertas dengan harga spesial',
-    cta: 'Cek Promo',
-    link: '/products',
-    bg: 'linear-gradient(135deg, #1E2D24 0%, #244A35 100%)',
-    accent: '#FFD54C',
-    image: '/images/products/binder-bundling-01.jpg',
-  },
-  {
-    id: 4,
-    tag: 'Custom Order',
-    title: 'Desain Binder Sendiri',
-    desc: 'Punya desain unik? Kami buatkan binder impianmu!',
-    cta: 'Mulai Custom',
-    link: '/custom',
-    bg: 'linear-gradient(135deg, #1A1714 0%, #2D1E3D 100%)',
-    accent: '#FFD54C',
-    image: '/images/products/binder-custom-nama-01.jpg',
-  },
-];
 
 const FEATURES = [
   { label: 'Same day', sub: 'Order Before 14:00', bg: '#F2A7C3', text: '#FFFFFF' },
   { label: 'Artisan binder', sub: 'Hand crafting', bg: '#FFD54C', text: '#FFFFFF' },
-  { label: 'Poin loyalty', sub: 'Setiap pembelian', bg: 'linear-gradient(135deg, #7EC8E3 0%, #5BBADF 100%)', text: '#FFFFFF' },
+  {
+    label: 'Poin loyalty',
+    sub: 'Setiap pembelian',
+    bg: 'linear-gradient(135deg, #7EC8E3 0%, #5BBADF 100%)',
+    text: '#FFFFFF',
+  },
 ];
 
+const DEFAULT_HERO_BG = 'linear-gradient(135deg, #1A1714 0%, #3D2F1E 100%)';
+const DEFAULT_HERO_ACCENT = '#FFD54C';
+
 interface BannerCardProps {
-  banner: (typeof BANNERS)[0];
+  banner: HomeBanner;
   index: number;
   scrollXProgress: MotionValue<number>;
   count: number;
@@ -114,6 +75,9 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
     zIndex.set(Math.round(100 - unCappedDistance * 10));
   });
 
+  const accent = banner.accentColor || DEFAULT_HERO_ACCENT;
+  const bg = banner.bgGradient || DEFAULT_HERO_BG;
+
   return (
     <m.div
       className="banner-card"
@@ -122,7 +86,7 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
         width: '100%',
         height: 'clamp(180px, 48vw, 210px)',
         borderRadius: 24,
-        background: banner.bg,
+        background: bg,
         padding: '28px 24px',
         overflow: 'hidden',
         display: 'flex',
@@ -138,7 +102,7 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
     >
       <div className="absolute inset-0 z-0">
         <Image
-          src={banner.image}
+          src={banner.imageUrl}
           alt=""
           fill
           priority={index === 0}
@@ -146,11 +110,11 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
           sizes="(max-width: 430px) 100vw, 430px"
         />
       </div>
-      {/* Light gradient overlay for text readability */}
       <div
         className="absolute inset-0 z-0"
         style={{
-          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.1) 75%, transparent 100%)',
+          background:
+            'linear-gradient(90deg, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.1) 75%, transparent 100%)',
         }}
       />
       <div
@@ -161,7 +125,7 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
           width: 140,
           height: 140,
           borderRadius: '50%',
-          background: banner.accent,
+          background: accent,
           opacity: 0.12,
           pointerEvents: 'none',
         }}
@@ -174,30 +138,32 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
           width: 90,
           height: 90,
           borderRadius: '50%',
-          background: banner.accent,
+          background: accent,
           opacity: 0.08,
           pointerEvents: 'none',
         }}
       />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '4px 10px',
-            borderRadius: 9999,
-            background: 'rgba(255,255,255,0.15)',
-            color: 'white',
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 600,
-            fontSize: 11,
-            letterSpacing: '0.2px',
-            marginBottom: 10,
-          }}
-        >
-          {banner.tag}
-        </span>
+        {banner.subtitle ? (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '4px 10px',
+              borderRadius: 9999,
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 600,
+              fontSize: 11,
+              letterSpacing: '0.2px',
+              marginBottom: 10,
+            }}
+          >
+            {banner.subtitle}
+          </span>
+        ) : null}
         <h1
           style={{
             fontFamily: 'var(--font-heading)',
@@ -211,33 +177,37 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
         >
           {banner.title}
         </h1>
-        <p
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 13,
-            color: 'rgba(255,255,255,0.85)',
-            marginBottom: 16,
-          }}
-        >
-          {banner.desc}
-        </p>
-        <div
-          style={{
-            pointerEvents: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '9px 18px',
-            borderRadius: 9999,
-            background: 'white',
-            color: '#1A1714',
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 700,
-            fontSize: 13,
-            textDecoration: 'none',
-          }}
-        >
-          {banner.cta}
-        </div>
+        {banner.description ? (
+          <p
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              color: 'rgba(255,255,255,0.85)',
+              marginBottom: 16,
+            }}
+          >
+            {banner.description}
+          </p>
+        ) : null}
+        {banner.ctaLabel ? (
+          <div
+            style={{
+              pointerEvents: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '9px 18px',
+              borderRadius: 9999,
+              background: 'white',
+              color: '#1A1714',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 700,
+              fontSize: 13,
+              textDecoration: 'none',
+            }}
+          >
+            {banner.ctaLabel}
+          </div>
+        ) : null}
       </div>
     </m.div>
   );
@@ -245,11 +215,11 @@ function BannerCard({ banner, index, scrollXProgress, count }: BannerCardProps) 
 
 export default function HomePage() {
   const addItem = useCartStore((state) => state.addItem);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
 
   // Initialize scroll listener — useScroll is client-side only
   const { scrollXProgress } = useScroll({
-    container: scrollRef,
+    container: scrollElement ? { current: scrollElement } : undefined,
   });
 
   // Fetch real products
@@ -258,8 +228,34 @@ export default function HomePage() {
     queryFn: getActiveProducts,
   });
 
+  // Admin-managed banners from the `banners` table (editable via /admin/promos).
+  // Hero carousel = type='hero', Strip atas = type='promo', Strip bawah = type='category'.
+  const { data: heroBanners = [] } = useQuery<HomeBanner[]>({
+    queryKey: ['home-banners', 'hero'],
+    queryFn: () => getActiveBanners('hero'),
+  });
+  const { data: promoBanners = [] } = useQuery<HomeBanner[]>({
+    queryKey: ['home-banners', 'promo'],
+    queryFn: () => getActiveBanners('promo'),
+  });
+  const { data: pilihanBanners = [] } = useQuery<HomeBanner[]>({
+    queryKey: ['home-banners', 'category'],
+    queryFn: () => getActiveBanners('category'),
+  });
+
+  // Store settings — home banner section labels editable via /admin/promos
+  const { data: storeSettings } = useQuery<StoreSettings | null>({
+    queryKey: ['store-settings'],
+    queryFn: getStoreSettings,
+  });
 
   const bestOffers = useMemo(() => products.filter((p) => (p.promoPrice ?? 0) > 0), [products]);
+
+  // Best seller — ranked automatically by sold_count
+  const bestSellers = useMemo(
+    () => [...products].sort((a, b) => (b.soldCount ?? 0) - (a.soldCount ?? 0)).slice(0, 4),
+    [products],
+  );
 
   const handleAddToCart = (product: ProductWithDetails) => {
     addItem({
@@ -267,6 +263,7 @@ export default function HomePage() {
       name: product.name,
       price: product.promoPrice ?? product.price,
       imageUrl: product.imageUrl,
+      weight: product.weight_grams ?? 500,
     });
   };
 
@@ -298,69 +295,71 @@ export default function HomePage() {
         style={{ paddingBottom: 48 }}
         className="bg-[#F5F3F0] lg:bg-transparent lg:rounded-3xl lg:mx-6 lg:pb-6"
       >
-        {/* Desktop simple slider */}
-        <DesktopBannerSlider banners={BANNERS} />
+        {/* Desktop simple slider — hanya tampil kalau admin punya hero banner */}
+        {heroBanners.length > 0 ? <DesktopBannerSlider banners={heroBanners} /> : null}
 
-        {/* Hero Carousel — mobile only */}
-        <div
-          className="banner-container lg:mx-auto lg:max-w-[1100px] lg:mt-8"
-          style={{
-            position: 'relative',
-            marginTop: 40,
-            height: 'clamp(210px, 55vw, 240px)',
-            width: '100%',
-            overflow: 'hidden',
-            padding: '0 clamp(16px, 5vw, 20px)',
-          }}
-        >
+        {/* Hero Carousel — mobile only, hanya tampil kalau admin punya hero banner */}
+        {heroBanners.length > 0 ? (
           <div
+            className="banner-container lg:mx-auto lg:max-w-[1100px] lg:mt-8 lg:hidden"
             style={{
               position: 'relative',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              perspective: '1200px',
+              marginTop: 40,
+              height: 'clamp(210px, 55vw, 240px)',
+              width: '100%',
+              overflow: 'hidden',
+              padding: '0 clamp(16px, 5vw, 20px)',
             }}
           >
-            {BANNERS.map((banner, i) => (
-              <BannerCard
-                key={banner.id}
-                banner={banner}
-                index={i}
-                scrollXProgress={scrollXProgress}
-                count={BANNERS.length}
-              />
-            ))}
+            <div
+              style={{
+                position: 'relative',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                perspective: '1200px',
+              }}
+            >
+              {heroBanners.map((banner, i) => (
+                <BannerCard
+                  key={banner.id}
+                  banner={banner}
+                  index={i}
+                  scrollXProgress={scrollXProgress}
+                  count={heroBanners.length}
+                />
+              ))}
+            </div>
+            <div
+              ref={setScrollElement}
+              style={{
+                position: 'absolute',
+                inset: '0 16px',
+                overflowX: 'scroll',
+                overflowY: 'hidden',
+                display: 'flex',
+                scrollSnapType: 'x mandatory',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                zIndex: 200,
+                opacity: 0,
+              }}
+            >
+              {heroBanners.map((banner) => (
+                <div
+                  key={`scroll-${banner.id}`}
+                  style={{
+                    minWidth: '100%',
+                    height: '100%',
+                    scrollSnapAlign: 'center',
+                    flexShrink: 0,
+                  }}
+                />
+              ))}
+            </div>
           </div>
-          <div
-            ref={scrollRef}
-            style={{
-              position: 'absolute',
-              inset: '0 16px',
-              overflowX: 'scroll',
-              overflowY: 'hidden',
-              display: 'flex',
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
-              scrollbarWidth: 'none',
-              zIndex: 200,
-              opacity: 0,
-            }}
-          >
-            {BANNERS.map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  minWidth: '100%',
-                  height: '100%',
-                  scrollSnapAlign: 'center',
-                  flexShrink: 0,
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        ) : null}
 
         {/* Feature strip with Animated Border */}
         <div
@@ -378,11 +377,12 @@ export default function HomePage() {
             transition={{
               duration: 4,
               repeat: Infinity,
-              ease: "linear",
+              ease: 'linear',
             }}
             className="absolute inset-[-150%] z-0"
             style={{
-              background: 'conic-gradient(from 0deg, transparent 0%, transparent 40%, #FFFFFF 50%, transparent 60%, transparent 100%)',
+              background:
+                'conic-gradient(from 0deg, transparent 0%, transparent 40%, #FFFFFF 50%, transparent 60%, transparent 100%)',
               opacity: 0.8,
             }}
           />
@@ -449,7 +449,6 @@ export default function HomePage() {
           minHeight: '100vh',
         }}
       >
-
         <div style={{ marginBottom: 8, marginTop: 12 }} className="lg:mt-16">
           <div
             style={{
@@ -572,7 +571,67 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div>
+        {/* Banner admin — editable di /admin/promos */}
+        <HomeBannerStrip
+          banners={promoBanners}
+          label={storeSettings?.home_banner_promo_label ?? 'Banner Promo'}
+        />
+
+        {/* Best Seller — ranking otomatis dari sold_count */}
+        {bestSellers.length > 0 && (
+          <div className="mt-2">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '20px clamp(16px, 5vw, 20px) 12px',
+                justifyContent: 'space-between',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: '#1A1714',
+                }}
+              >
+                Best Seller
+              </span>
+              <Link
+                href={'/products'}
+                style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  color: '#7EC8E3',
+                  textDecoration: 'none',
+                }}
+              >
+                Lainnya
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 px-[clamp(16px,5vw,20px)] lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
+              {bestSellers.map((p) => (
+                <ProductCard
+                  key={`best-${p.id}`}
+                  product={p}
+                  onAddToCart={handleAddToCart as unknown as (product: ProductCardData) => void}
+                  priority={false}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Banner kedua — di bawah Best Seller */}
+        <HomeBannerStrip
+          banners={pilihanBanners}
+          label={storeSettings?.home_banner_pilihan_label ?? 'Banner Pilihan'}
+        />
+
+        {/* Semua Produk — selalu jadi section terakhir di home */}
+        <div className="mt-2">
           <div
             style={{
               display: 'flex',
@@ -610,14 +669,16 @@ export default function HomePage() {
                 <div key={i} className="aspect-[4/5] w-full animate-pulse rounded-2xl bg-stone-2" />
               ))
             ) : products.length > 0 ? (
-              products.map((p, index) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  onAddToCart={handleAddToCart as unknown as (product: ProductCardData) => void}
-                  priority={index < 4}
-                />
-              ))
+              products
+                .slice(0, 4)
+                .map((p, index) => (
+                  <ProductCard
+                    key={`all-${p.id}`}
+                    product={p}
+                    onAddToCart={handleAddToCart as unknown as (product: ProductCardData) => void}
+                    priority={index < 4}
+                  />
+                ))
             ) : (
               <div className="col-span-2 py-10 text-center text-sm font-medium text-ink-4">
                 Belum ada produk tersedia.

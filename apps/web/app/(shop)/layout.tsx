@@ -20,20 +20,19 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
       <div className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FFFDF5] lg:bg-transparent">
         {/* Mobile-only Background & Header */}
         {!isProductDetail && (
-          <div key="mobile-header-group">
+          <div key="mobile-header-wrapper">
             <div
-              key="mobile-bg-blob"
               className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#FFD54C] lg:hidden"
               style={{ maxWidth: 430, height: '40vh' }}
             />
-            <div key="mobile-header-wrapper" className="lg:hidden">
+            <div className="lg:hidden">
               <Header />
             </div>
           </div>
         )}
 
         <main
-          key="main-view-container"
+          key="shop-main-content"
           className="relative z-10 flex min-h-[100dvh] flex-col bg-transparent lg:pb-12"
           style={{
             paddingTop: isProductDetail
@@ -45,12 +44,12 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
           }}
         >
           <div key="desktop-spacer" className="hidden lg:block h-16" />
-          {children}
+          <div key={`page-content-${pathname}`}>{children}</div>
         </main>
 
         {/* Floating BottomNav Overlay - Mobile only */}
         {!isProductDetail && (
-          <div key="mobile-nav-group" className="lg:hidden">
+          <div key="bottom-nav-wrapper" className="lg:hidden">
             <BottomNav />
           </div>
         )}

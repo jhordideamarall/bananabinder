@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from 'react';
 import {
   IconDashboard,
   IconPackage,
@@ -7,17 +7,17 @@ import {
   IconUsers,
   IconArrowLeft,
   IconLogout,
-} from "@tabler/icons-react";
-import Link from "next/link";
-import { Badge } from "@bananasbindery/ui";
+} from '@tabler/icons-react';
+import Link from 'next/link';
+import { Badge } from '@bananasbindery/ui';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const menuItems = [
-    { label: "Dashboard", icon: IconDashboard, href: "/admin" },
-    { label: "Orders", icon: IconShoppingCart, href: "/admin/orders" },
-    { label: "Products", icon: IconPackage, href: "/admin/products" },
-    { label: "Coupons", icon: IconTicket, href: "/admin/coupons" },
-    { label: "Customers", icon: IconUsers, href: "/admin/customers" },
+    { label: 'Dashboard', icon: IconDashboard, href: '/admin' },
+    { label: 'Orders', icon: IconShoppingCart, href: '/admin/orders' },
+    { label: 'Products', icon: IconPackage, href: '/admin/products' },
+    { label: 'Coupons', icon: IconTicket, href: '/admin/coupons' },
+    { label: 'Customers', icon: IconUsers, href: '/admin/customers' },
   ];
 
   return (
@@ -64,9 +64,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <main className="flex-1">
         <header className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
-          <h1 className="text-lg font-black text-gray-900">
-            Bananasbindery Control
-          </h1>
+          <h1 className="text-lg font-black text-gray-900">Bananasbindery Control</h1>
           <div className="flex items-center gap-4">
             <Badge className="bg-primary/10 text-primary border-none font-bold">
               Admin Account

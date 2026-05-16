@@ -23,7 +23,6 @@ const NotificationSheet = dynamic(
   { ssr: false },
 );
 
-
 const MapPin = () => (
   <svg
     width="13"
@@ -435,6 +434,7 @@ export function Header() {
                   className="flex gap-2.5 overflow-x-auto pb-4 no-scrollbar pl-5 pr-5"
                 >
                   <m.div
+                    key="cat-semua"
                     variants={{
                       hidden: { y: 10, opacity: 0, scale: 0.88 },
                       show: {
@@ -456,13 +456,13 @@ export function Header() {
                   {isLoadingCats
                     ? Array.from({ length: 4 }).map((_, i) => (
                         <m.div
-                          key={i}
+                          key={`cat-skeleton-${i}`}
                           className="h-8 w-20 animate-pulse rounded-full bg-stone-2 flex-shrink-0"
                         />
                       ))
                     : dbCategories.map((cat: Category) => (
                         <m.div
-                          key={cat.id}
+                          key={`cat-item-${cat.id}`}
                           variants={{
                             hidden: { y: 10, opacity: 0, scale: 0.88 },
                             show: {
