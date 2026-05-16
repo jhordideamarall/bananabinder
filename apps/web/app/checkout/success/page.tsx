@@ -1,28 +1,16 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { m } from 'framer-motion';
-
-const CheckIcon = () => (
-  <svg
-    width="48"
-    height="48"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="3"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
 
 import { useEffect, useState, use } from 'react';
 import { useCartStore } from '@/stores/cart-store';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 
-export default function CheckoutSuccessPage(props: { searchParams: Promise<{ order_id?: string }> }) {
+export default function CheckoutSuccessPage(props: {
+  searchParams: Promise<{ order_id?: string }>;
+}) {
   const searchParams = use(props.searchParams);
   const orderId = searchParams.order_id;
   const clearCart = useCartStore((state) => state.clearCart);
@@ -45,24 +33,36 @@ export default function CheckoutSuccessPage(props: { searchParams: Promise<{ ord
         .single();
       return data;
     },
-    enabled: !!orderId
+    enabled: !!orderId,
   });
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-white px-8 py-20 text-center">
       <m.div
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-green-50 text-green-600 shadow-sm"
+        initial={{ y: -60, scale: 0.8, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+          mass: 1.2,
+          delay: 0.1,
+        }}
+        className="relative mb-8 h-40 w-40"
       >
-        <CheckIcon />
+        <Image
+          src="/checkout.png"
+          alt="Checkout Success"
+          fill
+          className="object-contain"
+          priority
+        />
       </m.div>
 
       <m.h1
-        initial={{ y: 10, opacity: 0 }}
+        initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.4, duration: 0.4, ease: 'easeOut' }}
         className="mb-3 font-heading text-2xl font-extrabold tracking-tight text-ink"
       >
         Pesanan Dikonfirmasi
@@ -71,23 +71,23 @@ export default function CheckoutSuccessPage(props: { searchParams: Promise<{ ord
       <m.p
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.5, duration: 0.4 }}
         className="mb-8 text-sm text-ink-3"
       >
         Terima kasih! Pesananmu sedang diproses. Kamu bisa pantau status pengiriman di menu pesanan.
       </m.p>
 
       <m.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="mb-12 w-full rounded-2xl bg-stone p-5 text-center shadow-inner"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.7, type: 'spring', stiffness: 200, damping: 25 }}
+        className="mb-12 w-full rounded-2xl bg-stone p-5 text-center shadow-inner border border-white/40"
       >
         <p className="mb-1 text-[11px] font-medium text-ink-4 uppercase tracking-widest">
           Nomor Pesanan
         </p>
         <p className="font-heading text-lg font-extrabold tracking-tighter text-ink">
-          {mounted ? (order?.order_number || '...') : '...'}
+          {mounted ? order?.order_number || '...' : '...'}
         </p>
       </m.div>
 

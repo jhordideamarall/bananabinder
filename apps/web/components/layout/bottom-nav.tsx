@@ -108,6 +108,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { scrollY } = useScroll();
   const [isVisible, setIsVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const lastYRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -132,10 +133,13 @@ export function BottomNav() {
   });
 
   useEffect(() => {
+    setMounted(true);
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="fixed bottom-[24px] left-1/2 z-[100] w-full max-w-[430px] -translate-x-1/2 px-6 pointer-events-none">
