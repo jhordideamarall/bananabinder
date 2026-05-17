@@ -1,3 +1,8 @@
+import { createClient } from '@/lib/supabase/client';
+import { getActiveCampaigns as _getActiveCampaigns } from '@bananasbindery/api-client/campaigns';
+
+export const getActiveCampaigns = () => _getActiveCampaigns(createClient());
+
 export interface CampaignPreviewItem {
   productId: string;
   quantity: number;

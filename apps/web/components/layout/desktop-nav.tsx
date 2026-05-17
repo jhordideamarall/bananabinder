@@ -27,7 +27,6 @@ const NotificationSheet = dynamic(
   { ssr: false },
 );
 
-
 const FilterIcon = () => (
   <svg
     width="18"
@@ -409,7 +408,7 @@ export function DesktopNav() {
                             <p className="line-clamp-1 font-heading text-[13px] font-bold text-ink">
                               {product.name}
                             </p>
-                            <p className="font-heading text-[12px] font-black text-primary">
+                            <p className="font-heading text-[12px] font-black text-[#E53935]">
                               {formatPrice(product.promoPrice || product.price)}
                             </p>
                           </div>

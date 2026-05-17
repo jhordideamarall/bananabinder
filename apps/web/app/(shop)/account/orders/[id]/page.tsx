@@ -74,10 +74,10 @@ export default function OrderDetailPage() {
         .select('*, order_items(*, products(*, product_images(*))), addresses(*)')
         .eq('id', orderId)
         .single();
-      
+
       if (error) throw error;
       return data as unknown as Order;
-    }
+    },
   });
 
   if (isLoading) {
@@ -92,8 +92,12 @@ export default function OrderDetailPage() {
     return (
       <div className="flex h-dvh flex-col items-center justify-center bg-[#FDFCFB] px-10 text-center">
         <Package size={48} className="text-ink-4" />
-        <h2 className="mt-4 font-heading text-[18px] font-extrabold text-ink">Pesanan Tidak Ditemukan</h2>
-        <button onClick={() => router.back()} className="mt-6 text-primary font-bold">Kembali</button>
+        <h2 className="mt-4 font-heading text-[18px] font-extrabold text-ink">
+          Pesanan Tidak Ditemukan
+        </h2>
+        <button onClick={() => router.back()} className="mt-6 text-primary font-bold">
+          Kembali
+        </button>
       </div>
     );
   }
@@ -121,12 +125,20 @@ export default function OrderDetailPage() {
         <div className="rounded-[28px] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-stone-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-bold text-ink-4 uppercase tracking-wider">Status Pesanan</p>
-              <h2 className="mt-1 font-heading text-[20px] font-extrabold" style={{ color: st.text }}>
+              <p className="text-[11px] font-bold text-ink-4 uppercase tracking-wider">
+                Status Pesanan
+              </p>
+              <h2
+                className="mt-1 font-heading text-[20px] font-extrabold"
+                style={{ color: st.text }}
+              >
                 {STATUS_LABEL[order.status]}
               </h2>
             </div>
-            <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ background: st.bg, color: st.text }}>
+            <div
+              className="h-12 w-12 rounded-2xl flex items-center justify-center"
+              style={{ background: st.bg, color: st.text }}
+            >
               <Package size={24} />
             </div>
           </div>
@@ -147,14 +159,16 @@ export default function OrderDetailPage() {
           <div className="pl-11">
             <p className="text-[14px] font-extrabold text-ink">{order.addresses?.recipient_name}</p>
             <p className="mt-1 text-[13px] text-ink-3 leading-relaxed">
-              {order.addresses?.phone}<br />
-              {order.addresses?.full_address}<br />
+              {order.addresses?.phone}
+              <br />
+              {order.addresses?.full_address}
+              <br />
               {order.addresses?.city}, {order.addresses?.postal_code}
             </p>
           </div>
-          
+
           {order.status === 'shipped' && (
-            <button 
+            <button
               onClick={() => router.push(`/account/orders/${order.id}/tracking` as Route)}
               className="mt-6 flex w-full items-center justify-between rounded-2xl bg-stone-1 px-5 py-4 border border-stone-2 hover:bg-stone-2 transition-colors"
             >
@@ -182,8 +196,12 @@ export default function OrderDetailPage() {
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-extrabold text-ink line-clamp-1">{item.products?.name}</p>
-                  <p className="mt-1 text-[12px] font-bold text-ink-4">{item.quantity} x {formatPrice(item.price)}</p>
+                  <p className="text-[14px] font-extrabold text-ink line-clamp-1">
+                    {item.products?.name}
+                  </p>
+                  <p className="mt-1 text-[12px] font-bold text-[#E53935]">
+                    {item.quantity} x {formatPrice(item.price)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -205,15 +223,23 @@ export default function OrderDetailPage() {
             </div>
             <div className="flex justify-between text-[13px]">
               <span className="font-bold text-ink-4">Total Harga Produk</span>
-              <span className="font-extrabold text-ink">{formatPrice(order.total - (order.shipping_cost || 0))}</span>
+              <span className="font-extrabold text-[#E53935]">
+                {formatPrice(order.total - (order.shipping_cost || 0))}
+              </span>
             </div>
             <div className="flex justify-between text-[13px]">
               <span className="font-bold text-ink-4">Ongkos Kirim</span>
-              <span className="font-extrabold text-ink">{formatPrice(order.shipping_cost || 0)}</span>
+              <span className="font-extrabold text-[#E53935]">
+                {formatPrice(order.shipping_cost || 0)}
+              </span>
             </div>
             <div className="mt-4 pt-4 border-t border-stone-2/50 flex justify-between items-center">
-              <span className="font-heading text-[15px] font-extrabold text-ink">Total Pembayaran</span>
-              <span className="font-heading text-[18px] font-extrabold text-primary">{formatPrice(order.total)}</span>
+              <span className="font-heading text-[15px] font-extrabold text-ink">
+                Total Pembayaran
+              </span>
+              <span className="font-heading text-[18px] font-extrabold text-[#E53935]">
+                {formatPrice(order.total)}
+              </span>
             </div>
           </div>
         </div>

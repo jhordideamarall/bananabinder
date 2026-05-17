@@ -228,7 +228,7 @@ export default function OrdersPage() {
                         </p>
                         <div className="mt-2 flex items-center justify-between">
                           <p className="text-[12px] font-bold text-ink-3">Total Pesanan</p>
-                          <p className="font-heading text-[16px] font-extrabold text-primary">
+                          <p className="font-heading text-[16px] font-extrabold text-[#E53935]">
                             {formatPrice(order.total)}
                           </p>
                         </div>

@@ -506,7 +506,7 @@ export default function CheckoutPage() {
                           <p className="line-clamp-1 font-heading text-[13px] font-extrabold text-ink">
                             {item.name}
                           </p>
-                          <p className="mt-1 text-sm font-medium text-ink-3">
+                          <p className="mt-1 text-sm font-medium text-[#E53935]">
                             x{item.quantity} · Rp {fmt(item.price)}
                           </p>
                         </div>
@@ -571,7 +571,7 @@ export default function CheckoutPage() {
                                 {options[0].courier_name}
                               </p>
                               {hasSelected && !isExpanded && selectedOption && (
-                                <p className="mt-1 text-[13px] font-bold text-primary">
+                                <p className="mt-1 text-[13px] font-bold text-[#E53935]">
                                   {selectedOption.service_name} · Rp {fmt(selectedOption.price)}
                                 </p>
                               )}
@@ -624,7 +624,7 @@ export default function CheckoutPage() {
                                           </p>
                                         </div>
                                         <div className="text-right">
-                                          <p className="font-heading text-[14px] font-extrabold text-primary">
+                                          <p className="font-heading text-[14px] font-extrabold text-[#E53935]">
                                             Rp {fmt(option.price)}
                                           </p>
                                         </div>
@@ -678,7 +678,9 @@ export default function CheckoutPage() {
                   </h3>
                   <div className="flex justify-between text-sm text-ink-3">
                     <span>Subtotal</span>
-                    <span className="font-heading font-extrabold text-ink">Rp {fmt(subtotal)}</span>
+                    <span className="font-heading font-extrabold text-[#E53935]">
+                      Rp {fmt(subtotal)}
+                    </span>
                   </div>
                   {voucherDiscount > 0 && (
                     <div className="mt-4 flex justify-between text-sm text-ink-3">
@@ -707,7 +709,7 @@ export default function CheckoutPage() {
                   {selectedShipping && (
                     <div className="mt-4 flex justify-between text-sm text-ink-3">
                       <span>Ongkir</span>
-                      <span className="font-heading font-extrabold text-ink">
+                      <span className="font-heading font-extrabold text-[#E53935]">
                         Rp {fmt(selectedShipping.price)}
                       </span>
                     </div>
@@ -726,7 +728,7 @@ export default function CheckoutPage() {
                   <div className="my-4 h-px bg-stone-2" />
                   <div className="flex justify-between">
                     <span className="font-heading text-[14px] font-extrabold text-ink">Total</span>
-                    <span className="font-heading text-[18px] font-extrabold text-primary">
+                    <span className="font-heading text-[18px] font-extrabold text-[#E53935]">
                       Rp {fmt(total)}
                     </span>
                   </div>

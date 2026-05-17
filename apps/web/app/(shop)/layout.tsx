@@ -17,17 +17,11 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
         <div className="desktop-hero-bg" />
       </div>
 
-      <div className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FFFDF5] lg:bg-transparent">
-        {/* Mobile-only Background & Header */}
+      <div className="shop-layout-container relative mx-auto min-h-[100dvh] w-full overflow-x-hidden lg:overflow-visible bg-[#FFFFFF] lg:bg-transparent">
+        {/* Mobile-only Header */}
         {!isProductDetail && (
-          <div key="mobile-header-wrapper">
-            <div
-              className="absolute top-0 left-1/2 w-full -translate-x-1/2 bg-[#FFD54C] lg:hidden"
-              style={{ maxWidth: 430, height: '40vh' }}
-            />
-            <div className="lg:hidden">
-              <Header />
-            </div>
+          <div key="mobile-header-wrapper" className="lg:hidden">
+            <Header />
           </div>
         )}
 

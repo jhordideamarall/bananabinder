@@ -154,12 +154,11 @@ export function BottomNav() {
           transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.8 }}
           className="pointer-events-auto relative flex h-[68px] w-full items-center justify-around overflow-hidden rounded-[32px] px-2"
           style={{
-            background: 'rgba(255, 213, 76, 0.78)',
-            backdropFilter: 'blur(24px) saturate(250%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(250%)',
-            border: '1px solid rgba(255, 255, 255, 0.45)',
-            boxShadow:
-              'inset 0 1px 1px rgba(255, 255, 255, 0.6), 0 12px 30px rgba(255, 213, 76, 0.25)',
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(30px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 20px 40px rgba(0, 0, 0, 0.1)',
             pointerEvents: isVisible ? 'auto' : 'none',
           }}
         >
@@ -184,7 +183,7 @@ export function BottomNav() {
                     {active && (
                       <m.div
                         layoutId="active-pill"
-                        className="absolute -inset-x-5 -inset-y-3 z-[-1] rounded-[24px] border border-white/60 bg-white/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.05)] backdrop-blur-lg"
+                        className="absolute -inset-x-5 -inset-y-3 z-[-1] rounded-[24px] border border-white/40 bg-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.04)] backdrop-blur-xl"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

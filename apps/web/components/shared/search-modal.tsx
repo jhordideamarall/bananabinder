@@ -188,7 +188,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             {!trimmedQuery && (
               <span
                 className="rounded-full px-2.5 py-1 font-heading text-[11px] font-bold"
-                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+                style={{ background: '#F0FBF4', color: '#2D7D52' }}
               >
                 Promo
               </span>
@@ -271,7 +271,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         {hasDiscount && (
                           <div
                             className="absolute top-1 left-1 rounded-md px-1 font-heading text-[9px] font-bold text-white"
-                            style={{ background: 'var(--color-primary)', lineHeight: '14px' }}
+                            style={{ background: '#E53935', lineHeight: '14px' }}
                           >
                             -{discountPct}%
                           </div>
@@ -296,7 +296,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
                       {/* Price */}
                       <div className="flex-shrink-0 text-right">
-                        <p className="font-heading text-[14px] font-extrabold text-primary">
+                        <p className="font-heading text-[14px] font-extrabold text-[#E53935]">
                           {formatPrice(displayPrice)}
                         </p>
                         {hasDiscount && (
@@ -309,8 +309,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           style={{
                             width: 26,
                             height: 26,
-                            background: 'var(--color-primary-light)',
-                            color: 'var(--color-primary)',
+                            background: 'rgba(229, 57, 53, 0.1)',
+                            color: '#E53935',
                           }}
                         >
                           &gt;

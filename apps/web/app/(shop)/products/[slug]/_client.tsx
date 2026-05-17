@@ -501,7 +501,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 </div>
                 <button
                   className="qty-btn"
-                  style={{ width: 40, height: 40, color: 'var(--color-primary)' }}
+                  style={{ width: 40, height: 40, color: '#E53935' }}
                   onClick={() => {
                     const newQty = Math.min(activeStock, quantity + 1);
                     if (newQty > quantity) {
@@ -681,7 +681,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               fontFamily: 'var(--font-heading)',
               fontWeight: 800,
               fontSize: 20,
-              color: 'var(--color-primary)',
+              color: '#E53935',
             }}
           >
             Rp {fmt(activePrice * quantity)}

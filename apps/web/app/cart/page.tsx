@@ -142,7 +142,7 @@ export default function CartPage() {
                   <h2 className="line-clamp-2 font-heading text-[14px] font-extrabold leading-[17px] text-ink">
                     {item.name}
                   </h2>
-                  <p className="mt-0.5 font-heading text-[16px] font-extrabold leading-5 text-primary">
+                  <p className="mt-0.5 font-heading text-[16px] font-extrabold leading-5 text-[#E53935]">
                     Rp {fmt(item.price)}
                   </p>
 
@@ -166,8 +166,8 @@ export default function CartPage() {
                         {item.quantity}
                       </span>
                       <button
-                        className="qty-btn text-primary"
-                        style={{ width: 32, height: 32 }}
+                        className="qty-btn"
+                        style={{ width: 32, height: 32, color: '#E53935' }}
                         aria-label={`Tambah ${item.name}`}
                         onClick={() => setItemQuantity(item.id, item.variantId, item.quantity + 1)}
                       >
@@ -176,7 +176,7 @@ export default function CartPage() {
                     </div>
                   </div>
                 </div>
-                <p className="self-center whitespace-nowrap font-heading text-[13px] font-extrabold text-ink">
+                <p className="self-center whitespace-nowrap font-heading text-[13px] font-extrabold text-[#E53935]">
                   Rp {fmt(item.price * item.quantity)}
                 </p>
               </div>
@@ -251,7 +251,9 @@ export default function CartPage() {
               </h2>
               <div className="flex justify-between text-[15px] text-ink-3">
                 <span>Subtotal</span>
-                <span className="font-heading font-extrabold text-ink">Rp {fmt(subtotal)}</span>
+                <span className="font-heading font-extrabold text-[#E53935]">
+                  Rp {fmt(subtotal)}
+                </span>
               </div>
               {discount > 0 && (
                 <div className="mt-4 flex justify-between text-[15px] text-ink-3">
@@ -270,7 +272,7 @@ export default function CartPage() {
               <div className="my-5 h-px bg-stone-2" />
               <div className="flex justify-between">
                 <span className="font-heading text-[14px] font-extrabold text-ink">Subtotal</span>
-                <span className="font-heading text-[19px] font-extrabold text-primary">
+                <span className="font-heading text-[19px] font-extrabold text-[#E53935]">
                   Rp {fmt(total)}
                 </span>
               </div>

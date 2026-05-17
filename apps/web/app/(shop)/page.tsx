@@ -13,6 +13,7 @@ import {
 } from 'framer-motion';
 import { BestOffersGrid } from '@/components/home/best-offers';
 import { DesktopBannerSlider } from '@/components/home/desktop-banner-slider';
+import { FlashSaleCountdown } from '@/components/home/flash-sale-countdown';
 import { HomeBannerStrip } from '@/components/home/home-banner-strip';
 import { PageTitle } from '@/components/shared/page-title';
 import { ProductCard, type ProductCardData } from '@/components/shared/product-card';
@@ -25,7 +26,7 @@ import { Loader2 } from 'lucide-react';
 
 const FEATURES = [
   { label: 'Same day', sub: 'Order Before 14:00', bg: '#F2A7C3', text: '#FFFFFF' },
-  { label: 'Artisan binder', sub: 'Hand crafting', bg: '#FFD54C', text: '#FFFFFF' },
+  { label: 'Artisan binder', sub: 'Hand crafting', bg: '#4DB6AC', text: '#FFFFFF' },
   {
     label: 'Poin loyalty',
     sub: 'Setiap pembelian',
@@ -287,7 +288,7 @@ export default function HomePage() {
           left: 0,
           right: 0,
           height: 200,
-          background: '#F5F3F0',
+          background: '#FFFFFF',
           zIndex: 0,
         }}
       />
@@ -295,7 +296,7 @@ export default function HomePage() {
       {/* Top Section (Grey Background) - Banner & Same Day */}
       <div
         style={{ paddingBottom: 48 }}
-        className="bg-[#F5F3F0] lg:bg-transparent lg:rounded-3xl lg:mx-6 lg:pb-6"
+        className="bg-[#FFFFFF] lg:bg-transparent lg:rounded-3xl lg:mx-6 lg:pb-6"
       >
         {/* Desktop simple slider — hanya tampil kalau admin punya hero banner */}
         {heroBanners.length > 0 ? <DesktopBannerSlider banners={heroBanners} /> : null}
@@ -471,21 +472,7 @@ export default function HomePage() {
               >
                 Penawaran Terbaik
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: '#6B6460' }}>
-                  Berakhir dalam
-                </span>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-heading)',
-                    fontWeight: 700,
-                    fontSize: 13,
-                    color: '#7EC8E3',
-                  }}
-                >
-                  02:14:38
-                </span>
-              </div>
+              <FlashSaleCountdown />
             </div>
             <Link
               href={'/products?sale=true'}

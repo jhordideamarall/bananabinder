@@ -20,7 +20,7 @@ export function PriceTag({ price, promoPrice, size = 'md' }: PriceTagProps) {
           fontFamily: 'var(--font-heading)',
           fontWeight: 800,
           fontSize,
-          color: 'var(--color-primary)',
+          color: '#E53935',
           lineHeight: 1,
           letterSpacing: '-0.3px',
         }}

@@ -38,7 +38,7 @@ const PlusIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="white"
+    stroke="#E53935"
     strokeWidth="3.5"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -194,10 +194,10 @@ export function ProductCard({ product, onAddToCart, href, priority = false }: Pr
             whileTap={{ scale: 0.9 }}
             animate={{
               scale: justAdded ? [1, 1.16, 0.98, 1] : 1,
-              backgroundColor: justAdded ? '#7EC8E3' : '#FFD54C',
+              backgroundColor: justAdded ? '#7EC8E3' : '#FFFFFF',
               boxShadow: justAdded
                 ? '0 7px 18px rgba(126,200,227,0.34)'
-                : '0 4px 12px rgba(255, 213, 76, 0.34)',
+                : '0 4px 12px rgba(0, 0, 0, 0.08)',
             }}
             transition={{
               duration: 0.22,
@@ -210,13 +210,13 @@ export function ProductCard({ product, onAddToCart, href, priority = false }: Pr
               width: 32,
               height: 32,
               borderRadius: 10,
-              backgroundColor: '#7EC8E3',
-              border: 'none',
+              backgroundColor: '#FFFFFF',
+              border: '1.5px solid rgba(229, 57, 53, 0.1)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(126,200,227,0.34)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
               overflow: 'visible',
             }}
           >

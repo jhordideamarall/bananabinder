@@ -107,7 +107,7 @@ export default function WishlistPage() {
                       {item.products?.name || 'Produk tidak dikenal'}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="font-heading text-[14px] font-extrabold text-primary">
+                      <span className="font-heading text-[14px] font-extrabold text-[#E53935]">
                         {formatPrice(item.products?.promo_price || item.products?.price || 0)}
                       </span>
                       {(item.products?.promo_price ?? 0) > 0 && (
