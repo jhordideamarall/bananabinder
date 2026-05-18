@@ -3,7 +3,16 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { m } from 'framer-motion';
-import { ChevronLeft, ShoppingCart, Heart, Check, Plus, Minus, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ShoppingCart,
+  Heart,
+  Check,
+  Plus,
+  Minus,
+  ChevronRight,
+  MessageCircle,
+} from 'lucide-react';
 import { PriceTag } from '@/components/shared/price-tag';
 import { RatingStars } from '@/components/shared/rating-stars';
 import { ProductGallery } from '@/components/shared/product-gallery';
@@ -12,6 +21,7 @@ import { useCartStore } from '@/stores/cart-store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleWishlist, getUserWishlist } from '@/lib/services/wishlist-client';
 import { PageTitle } from '@/components/shared/page-title';
+import { ProductChatLauncher } from './_product-chat-launcher';
 
 import type { DetailedProduct } from '@/lib/dummy-products';
 
@@ -140,6 +150,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   );
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: wishlist = [] } = useQuery({
@@ -653,6 +664,18 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         </div>
       </div>
 
+      <ProductChatLauncher
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        product={{
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          imageUrl: selectedVariant?.image_url ?? product.imageUrl ?? images[0] ?? null,
+        }}
+        variant={selectedVariant ? { id: selectedVariant.id, name: selectedVariant.name } : null}
+      />
+
       {/* Bottom Bar */}
       <div
         style={{
@@ -688,6 +711,26 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
+          <m.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setChatOpen(true)}
+            style={{
+              width: 54,
+              height: 48,
+              borderRadius: DESIGN.radius,
+              border: '1.5px solid rgba(224, 123, 57, 0.3)',
+              background: '#FFFFFF',
+              color: 'var(--color-primary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+            aria-label="Chat admin tentang produk ini"
+          >
+            <MessageCircle size={19} />
+          </m.button>
           <m.button
             whileTap={{ scale: 0.95 }}
             onClick={() => handleAddToCart(false)}

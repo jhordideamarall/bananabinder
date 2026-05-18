@@ -28,6 +28,9 @@ export interface ProductWithDetails {
 
 export interface OrderWithItems extends Order {
   order_items: (OrderItem & {
+    product_name?: string | null;
+    variant_name?: string | null;
+    custom_details?: CustomOrderDetails | null;
     products?: { name: string; product_images?: { url: string }[] };
   })[];
 }
@@ -43,6 +46,20 @@ export interface ShippingOption {
   service_name: string;
 }
 
+export interface CustomOrderDetails {
+  [key: string]: string | number | null | undefined;
+  size: string;
+  material: string;
+  personalization: string;
+  designNotes?: string | null;
+  referenceUrl?: string | null;
+  referenceImagePath?: string | null;
+  referenceImageUrl?: string | null;
+  referenceImageName?: string | null;
+  referenceImageType?: string | null;
+  referenceImageSize?: string | number | null;
+}
+
 export interface CheckoutPayload {
   addressId: string;
   items: {
@@ -52,6 +69,7 @@ export interface CheckoutPayload {
     price: number;
     product_name: string;
     variant_name: string | null;
+    custom_details?: CustomOrderDetails | null;
   }[];
   total: number;
   subtotal: number;
@@ -78,4 +96,5 @@ export interface CartItem {
   quantity: number;
   imageUrl?: string | null;
   weight?: number;
+  customDetails?: CustomOrderDetails | null;
 }

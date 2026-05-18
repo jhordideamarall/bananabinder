@@ -1,20 +1,40 @@
 import { Buffer } from 'node:buffer';
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { sendWhatsAppMessage } from '@bananasbindery/api-client/fonnte';
 import { createClient } from '@/lib/supabase/server';
 
 interface PaymentCreateBody {
   orderId?: string;
 }
 
+interface CustomOrderDetails {
+  size: string;
+  material: string;
+  personalization: string;
+  designNotes?: string | null;
+  referenceUrl?: string | null;
+}
+
 interface OrderItemWithProduct {
   product_name?: string | null;
+  variant_name?: string | null;
   quantity: number;
   price: number;
+  custom_details?: unknown;
   products?: {
     name: string | null;
     weight_grams: number | null;
   } | null;
+}
+
+interface WhatsAppConfirmationResult {
+  attempted: boolean;
+  success: boolean;
+  target?: string;
+  provider_ids?: string[];
+  reason?: string;
+  sent_at: string;
 }
 
 interface XenditInvoiceResponse {
@@ -48,6 +68,100 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const parsePaymentCreateBody = (value: unknown): PaymentCreateBody => {
   if (!isRecord(value)) return {};
   return typeof value.orderId === 'string' ? { orderId: value.orderId } : {};
+};
+
+const isCustomOrderDetails = (value: unknown): value is CustomOrderDetails =>
+  isRecord(value) &&
+  typeof value.size === 'string' &&
+  typeof value.material === 'string' &&
+  typeof value.personalization === 'string';
+
+const formatRupiah = (value: number): string => `Rp ${value.toLocaleString('id-ID')}`;
+
+const buildCustomOrderMessage = (params: {
+  customerName: string;
+  orderNumber: string;
+  total: number;
+  invoiceUrl: string;
+  items: OrderItemWithProduct[];
+}): string => {
+  const customLines = params.items
+    .map((item, index) => {
+      if (!isCustomOrderDetails(item.custom_details)) return null;
+      const notes = item.custom_details.designNotes
+        ? `\nCatatan: ${item.custom_details.designNotes}`
+        : '';
+      const reference = item.custom_details.referenceUrl
+        ? `\nReferensi: ${item.custom_details.referenceUrl}`
+        : '';
+      const productName = item.product_name || item.products?.name || 'Custom Binder';
+      return [
+        `${index + 1}. ${productName}`,
+        `Varian: ${item.variant_name || item.custom_details.size}`,
+        `Ukuran: ${item.custom_details.size}`,
+        `Material: ${item.custom_details.material}`,
+        `Teks/Nama: ${item.custom_details.personalization}`,
+        `Qty: ${item.quantity}${notes}${reference}`,
+      ].join('\n');
+    })
+    .filter((line): line is string => Boolean(line));
+
+  return `Halo Kak ${params.customerName}! 👋\n\nPesanan custom binder Kakak sudah kami terima. Mohon cek detailnya agar tidak miss sebelum produksi.\n\nOrder: *${params.orderNumber}*\nTotal: *${formatRupiah(params.total)}*\n\nDetail custom:\n${customLines.join('\n\n')}\n\nLink pembayaran:\n${params.invoiceUrl}\n\nKalau detail di atas sudah benar, cukup balas *YA*. Kalau ada revisi, balas detail revisinya ya Kak.\n\n— Tim Bananasbindery`;
+};
+
+const sendCustomOrderConfirmation = async (params: {
+  apiKey?: string;
+  target?: string | null;
+  customerName: string;
+  orderNumber: string;
+  total: number;
+  invoiceUrl: string;
+  items: OrderItemWithProduct[];
+}): Promise<WhatsAppConfirmationResult | null> => {
+  const hasCustomItems = params.items.some((item) => isCustomOrderDetails(item.custom_details));
+  if (!hasCustomItems) return null;
+
+  const sentAt = new Date().toISOString();
+  if (!params.apiKey) {
+    return {
+      attempted: false,
+      success: false,
+      reason: 'FONNTE_API_TOKEN belum dikonfigurasi.',
+      sent_at: sentAt,
+    };
+  }
+  if (!params.target) {
+    return {
+      attempted: false,
+      success: false,
+      reason: 'Nomor WhatsApp customer kosong.',
+      sent_at: sentAt,
+    };
+  }
+
+  try {
+    const result = await sendWhatsAppMessage(params.apiKey, {
+      target: params.target,
+      message: buildCustomOrderMessage(params),
+    });
+    return {
+      attempted: true,
+      success: result.success,
+      target: params.target,
+      provider_ids: result.id,
+      reason: result.reason,
+      sent_at: sentAt,
+    };
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error('Gagal mengirim WhatsApp konfirmasi.');
+    return {
+      attempted: true,
+      success: false,
+      target: params.target,
+      reason: err.message,
+      sent_at: sentAt,
+    };
+  }
 };
 
 export async function POST(req: Request) {
@@ -109,6 +223,12 @@ export async function POST(req: Request) {
       .eq('id', order.user_id)
       .single();
 
+    const { data: address } = await supabaseAdmin
+      .from('addresses')
+      .select('phone, recipient_name')
+      .eq('id', order.address_id)
+      .single();
+
     const { data: orderItems } = await supabaseAdmin
       .from('order_items')
       .select('*, products(name, weight_grams)')
@@ -118,7 +238,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order items not found' }, { status: 400 });
     }
 
-    const items = (orderItems as unknown as OrderItemWithProduct[]).map((item) => ({
+    const typedOrderItems = orderItems as unknown as OrderItemWithProduct[];
+
+    const items = typedOrderItems.map((item) => ({
       name: (item.products?.name || item.product_name || 'Produk Bananasbindery').slice(0, 255),
       quantity: item.quantity,
       price: Math.round(Number(item.price)),
@@ -137,6 +259,9 @@ export async function POST(req: Request) {
     }
 
     const customerEmail = profile?.email || user.email || 'customer@bananasbindery.com';
+    const customerName =
+      profile?.name || address?.recipient_name || user.email?.split('@')[0] || 'Customer';
+    const customerPhone = profile?.phone || address?.phone || null;
     const protocol = req.headers.get('x-forwarded-proto') || 'http';
     const host = req.headers.get('host');
     const dynamicBaseUrl = host
@@ -149,9 +274,9 @@ export async function POST(req: Request) {
       payer_email: customerEmail,
       description: `Pembayaran Pesanan ${order.order_number} - Bananasbindery`,
       customer: {
-        given_names: profile?.name || user.email?.split('@')[0] || 'Customer',
+        given_names: customerName,
         email: customerEmail,
-        mobile_number: profile?.phone || '',
+        mobile_number: customerPhone || '',
       },
       items,
       success_redirect_url: `${dynamicBaseUrl}/checkout/success?order_id=${order.id}`,
@@ -192,6 +317,20 @@ export async function POST(req: Request) {
       raw_response: invoice,
     });
 
+    const whatsappConfirmation = await sendCustomOrderConfirmation({
+      apiKey: process.env.FONNTE_API_TOKEN,
+      target: customerPhone,
+      customerName,
+      orderNumber: order.order_number,
+      total: Number(order.total),
+      invoiceUrl: invoice.invoice_url,
+      items: typedOrderItems,
+    });
+
+    if (whatsappConfirmation && !whatsappConfirmation.success) {
+      console.warn('CUSTOM_ORDER_WHATSAPP_CONFIRMATION_WARN:', whatsappConfirmation.reason);
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from('orders')
       .update({
@@ -201,6 +340,7 @@ export async function POST(req: Request) {
           external_id: invoice.external_id,
           status: invoice.status,
           expiry_date: invoice.expiry_date,
+          custom_order_whatsapp: whatsappConfirmation,
         },
       })
       .eq('id', orderId);

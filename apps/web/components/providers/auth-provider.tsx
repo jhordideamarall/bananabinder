@@ -18,19 +18,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
 
   useEffect(() => {
     const setData = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-      if (error) throw error;
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+        if (error) throw error;
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch {
+        setSession(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -46,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, [supabase, router]);
+  }, [supabase]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

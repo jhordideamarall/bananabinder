@@ -35,6 +35,17 @@ const fmt = (n: number) => n.toLocaleString('id-ID');
 
 const steps = ['Alamat', 'Pengiriman', 'Bayar'];
 
+const customSignature = (details: CartItem['customDetails']): string =>
+  details
+    ? JSON.stringify({
+        size: details.size,
+        material: details.material,
+        personalization: details.personalization,
+        designNotes: details.designNotes ?? null,
+        referenceUrl: details.referenceUrl ?? null,
+      })
+    : '';
+
 function Thumb({ item, size = 52 }: { item: CartItem; size?: number }) {
   const label = item.name
     .split(' ')
@@ -229,6 +240,7 @@ export default function CheckoutPage() {
         price: item.price,
         product_name: item.name,
         variant_name: item.variantName || null,
+        custom_details: item.customDetails ?? null,
       }));
 
       // Validate all product IDs
@@ -498,7 +510,7 @@ export default function CheckoutPage() {
                   <div className="flex flex-col gap-3">
                     {items.map((item) => (
                       <div
-                        key={`${item.id}-${item.variantId ?? 'base'}`}
+                        key={`${item.id}-${item.variantId ?? 'base'}-${customSignature(item.customDetails)}`}
                         className="flex items-center gap-3"
                       >
                         <Thumb item={item} />
@@ -506,6 +518,21 @@ export default function CheckoutPage() {
                           <p className="line-clamp-1 font-heading text-[13px] font-extrabold text-ink">
                             {item.name}
                           </p>
+                          {item.variantName ? (
+                            <p className="mt-0.5 text-[12px] font-bold text-ink-4">
+                              {item.variantName}
+                            </p>
+                          ) : null}
+                          {item.customDetails ? (
+                            <div className="mt-1 rounded-xl border border-primary/20 bg-primary/5 px-2.5 py-2 text-[11px] leading-relaxed text-ink-3">
+                              <p className="font-heading font-extrabold text-primary">
+                                Custom: {item.customDetails.personalization}
+                              </p>
+                              <p>
+                                {item.customDetails.size} · {item.customDetails.material}
+                              </p>
+                            </div>
+                          ) : null}
                           <p className="mt-1 text-sm font-medium text-[#E53935]">
                             x{item.quantity} · Rp {fmt(item.price)}
                           </p>

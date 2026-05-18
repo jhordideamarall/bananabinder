@@ -81,6 +81,8 @@ export default async function AdminDashboardPage() {
 
   const quickActions: { label: string; href: Route }[] = [
     { label: 'Tambah produk', href: '/admin/products/new' },
+    { label: 'Handle custom order', href: '/admin/custom-orders' },
+    { label: 'Setup paket custom', href: '/admin/custom-orders/setup' },
     { label: 'Buat voucher', href: '/admin/promos' },
     { label: 'Kelola kategori', href: '/admin/categories' },
     { label: 'Edit banner home', href: '/admin/promos' },

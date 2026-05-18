@@ -559,6 +559,137 @@ export type Database = {
           },
         ];
       };
+      chat_conversations: {
+        Row: {
+          admin_unread_count: number;
+          ai_mode: string;
+          assigned_admin_id: string | null;
+          created_at: string;
+          customer_unread_count: number;
+          id: string;
+          last_admin_message_at: string | null;
+          last_customer_message_at: string | null;
+          last_message_at: string | null;
+          order_id: string | null;
+          product_id: string | null;
+          status: string;
+          subject: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          admin_unread_count?: number;
+          ai_mode?: string;
+          assigned_admin_id?: string | null;
+          created_at?: string;
+          customer_unread_count?: number;
+          id?: string;
+          last_admin_message_at?: string | null;
+          last_customer_message_at?: string | null;
+          last_message_at?: string | null;
+          order_id?: string | null;
+          product_id?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          admin_unread_count?: number;
+          ai_mode?: string;
+          assigned_admin_id?: string | null;
+          created_at?: string;
+          customer_unread_count?: number;
+          id?: string;
+          last_admin_message_at?: string | null;
+          last_customer_message_at?: string | null;
+          last_message_at?: string | null;
+          order_id?: string | null;
+          product_id?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'chat_conversations_assigned_admin_id_fkey';
+            columns: ['assigned_admin_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_conversations_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_conversations_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_conversations_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      chat_messages: {
+        Row: {
+          body: string;
+          conversation_id: string;
+          created_at: string;
+          id: string;
+          metadata: Json;
+          read_at: string | null;
+          sender_id: string | null;
+          sender_type: string;
+        };
+        Insert: {
+          body: string;
+          conversation_id: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          read_at?: string | null;
+          sender_id?: string | null;
+          sender_type: string;
+        };
+        Update: {
+          body?: string;
+          conversation_id?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          read_at?: string | null;
+          sender_id?: string | null;
+          sender_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'chat_messages_conversation_id_fkey';
+            columns: ['conversation_id'];
+            isOneToOne: false;
+            referencedRelation: 'chat_conversations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_messages_sender_id_fkey';
+            columns: ['sender_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       categories: {
         Row: {
           created_at: string | null;
@@ -1580,6 +1711,8 @@ export type Database = {
       };
       store_settings: {
         Row: {
+          custom_order_materials: Json;
+          custom_order_product_slug: string;
           home_banner_pilihan_label: string;
           home_banner_promo_label: string;
           id: string;
@@ -1591,6 +1724,8 @@ export type Database = {
           updated_at: string | null;
         };
         Insert: {
+          custom_order_materials?: Json;
+          custom_order_product_slug?: string;
           home_banner_pilihan_label?: string;
           home_banner_promo_label?: string;
           id?: string;
@@ -1602,6 +1737,8 @@ export type Database = {
           updated_at?: string | null;
         };
         Update: {
+          custom_order_materials?: Json;
+          custom_order_product_slug?: string;
           home_banner_pilihan_label?: string;
           home_banner_promo_label?: string;
           id?: string;

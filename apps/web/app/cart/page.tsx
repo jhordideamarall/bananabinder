@@ -11,6 +11,17 @@ import { PageTitle } from '@/components/shared/page-title';
 
 const fmt = (n: number) => n.toLocaleString('id-ID');
 
+const customSignature = (details: CartItem['customDetails']): string =>
+  details
+    ? JSON.stringify({
+        size: details.size,
+        material: details.material,
+        personalization: details.personalization,
+        designNotes: details.designNotes ?? null,
+        referenceUrl: details.referenceUrl ?? null,
+      })
+    : '';
+
 function ProductThumb({ item }: { item: CartItem }) {
   const label = item.name
     .split(' ')
@@ -134,7 +145,7 @@ export default function CartPage() {
           {hasItems ? (
             items.map((item) => (
               <div
-                key={`${item.id}-${item.variantId ?? 'base'}`}
+                key={`${item.id}-${item.variantId ?? 'base'}-${customSignature(item.customDetails)}`}
                 className="grid grid-cols-[64px_minmax(0,1fr)_auto] gap-x-3 border-b border-stone-2 px-[clamp(16px,5vw,20px)] py-3.5"
               >
                 <ProductThumb item={item} />
@@ -142,6 +153,25 @@ export default function CartPage() {
                   <h2 className="line-clamp-2 font-heading text-[14px] font-extrabold leading-[17px] text-ink">
                     {item.name}
                   </h2>
+                  {item.variantName ? (
+                    <p className="mt-0.5 text-[12px] font-bold text-ink-4">{item.variantName}</p>
+                  ) : null}
+                  {item.customDetails ? (
+                    <div className="mt-1 rounded-xl border border-primary/20 bg-primary/5 px-2.5 py-2 text-[11px] leading-relaxed text-ink-3">
+                      <p className="font-heading font-extrabold text-primary">
+                        Custom: {item.customDetails.personalization}
+                      </p>
+                      <p>
+                        {item.customDetails.size} · {item.customDetails.material}
+                      </p>
+                      {item.customDetails.designNotes ? (
+                        <p>Note: {item.customDetails.designNotes}</p>
+                      ) : null}
+                      {item.customDetails.referenceUrl ? (
+                        <p>Ref: {item.customDetails.referenceUrl}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <p className="mt-0.5 font-heading text-[16px] font-extrabold leading-5 text-[#E53935]">
                     Rp {fmt(item.price)}
                   </p>
@@ -154,9 +184,14 @@ export default function CartPage() {
                         aria-label={`Hapus ${item.name}`}
                         onClick={() => {
                           if (item.quantity === 1) {
-                            removeItem(item.id, item.variantId);
+                            removeItem(item.id, item.variantId, item.customDetails);
                           } else {
-                            setItemQuantity(item.id, item.variantId, item.quantity - 1);
+                            setItemQuantity(
+                              item.id,
+                              item.variantId,
+                              item.quantity - 1,
+                              item.customDetails,
+                            );
                           }
                         }}
                       >
@@ -169,7 +204,14 @@ export default function CartPage() {
                         className="qty-btn"
                         style={{ width: 32, height: 32, color: '#E53935' }}
                         aria-label={`Tambah ${item.name}`}
-                        onClick={() => setItemQuantity(item.id, item.variantId, item.quantity + 1)}
+                        onClick={() =>
+                          setItemQuantity(
+                            item.id,
+                            item.variantId,
+                            item.quantity + 1,
+                            item.customDetails,
+                          )
+                        }
                       >
                         <Plus size={15} />
                       </button>

@@ -88,6 +88,7 @@ export async function getProductBySlug(supabase: TypedSupabaseClient, slug: stri
       sku: string;
       image_url: string | null;
       weight_grams: number | null;
+      is_active: boolean | null;
     }[];
   };
 

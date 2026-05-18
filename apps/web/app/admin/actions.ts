@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import type { Enums, TablesInsert, TablesUpdate } from '@bananasbindery/types/supabase';
+import type { Enums, Json, TablesInsert, TablesUpdate } from '@bananasbindery/types/supabase';
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
 import { createClient } from '@/lib/supabase/server';
 
@@ -24,6 +24,8 @@ type CategoryInsert = TablesInsert<'categories'>;
 type StoreSettingsUpdate = TablesUpdate<'store_settings'>;
 type StoreSettingsInsert = TablesInsert<'store_settings'>;
 type OrderUpdate = TablesUpdate<'orders'>;
+type ProductVariantUpdate = TablesUpdate<'product_variants'>;
+type ProductVariantInsert = TablesInsert<'product_variants'>;
 
 function text(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -47,6 +49,10 @@ function nullableNumber(formData: FormData, key: string): number | null {
   if (!raw) return null;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function indexedBoolean(formData: FormData, key: string): boolean {
+  return formData.get(key) === 'on' || formData.get(key) === 'true';
 }
 
 function checkbox(formData: FormData, key: string): boolean {
@@ -409,7 +415,265 @@ export async function updateOrderStatus(formData: FormData): Promise<void> {
 
   revalidatePath('/admin');
   revalidatePath('/admin/orders');
+  revalidatePath('/admin/custom-orders');
   revalidatePath(`/admin/orders/${orderId}`);
+}
+
+export async function updateCustomOrderControl(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+
+  const orderId = text(formData, 'id');
+  if (!orderId) throw new Error('Order id tidak valid.');
+
+  const status = orderStatus(text(formData, 'status'));
+  const nextPaymentStatus = paymentStatus(text(formData, 'payment_status'));
+  const finalTotal = numberValue(formData, 'total');
+  const productName = text(formData, 'product_name');
+  const variantName = nullableText(formData, 'variant_name');
+  const material = text(formData, 'material');
+  const personalization = text(formData, 'personalization');
+  const notes = nullableText(formData, 'notes');
+  const now = new Date().toISOString();
+
+  const payload: OrderUpdate = {
+    status,
+    payment_status: nextPaymentStatus,
+    notes,
+    updated_at: now,
+  };
+
+  if (finalTotal > 0) {
+    payload.subtotal = finalTotal;
+    payload.total = finalTotal;
+  }
+  if (status === 'shipped') payload.shipped_at = now;
+  if (status === 'delivered') payload.delivered_at = now;
+  if (nextPaymentStatus === 'paid') payload.paid_at = now;
+
+  const { error } = await supabase
+    .from('orders')
+    .update(payload)
+    .eq('id', orderId)
+    .eq('payment_method', 'custom_request');
+  if (error) throw new Error(error.message);
+
+  const { data: items, error: itemReadError } = await supabase
+    .from('order_items')
+    .select('id, quantity, product_name, variant_name, custom_details')
+    .eq('order_id', orderId)
+    .limit(1);
+  if (itemReadError) throw new Error(itemReadError.message);
+
+  type EditableCustomItem = {
+    id: string;
+    quantity: number;
+    custom_details?: unknown;
+  };
+  const item = items?.[0] as unknown as EditableCustomItem | undefined;
+  if (item) {
+    const previousDetails =
+      typeof item.custom_details === 'object' && item.custom_details !== null
+        ? (item.custom_details as Record<string, unknown>)
+        : {};
+    const nextDetails: Record<string, unknown> = {
+      ...previousDetails,
+    };
+    if (material) nextDetails.material = material;
+    if (personalization) nextDetails.personalization = personalization;
+
+    const quantity = Math.max(1, Number(item.quantity ?? 1));
+    const itemPayload: Record<string, unknown> = {
+      custom_details: nextDetails as Json,
+    };
+    if (productName) itemPayload.product_name = productName;
+    if (variantName !== undefined) itemPayload.variant_name = variantName;
+    if (finalTotal > 0) {
+      itemPayload.price = Math.round(finalTotal / quantity);
+      itemPayload.subtotal = finalTotal;
+    }
+
+    const { error: itemUpdateError } = await supabase
+      .from('order_items')
+      .update(itemPayload as never)
+      .eq('id', item.id);
+    if (itemUpdateError) throw new Error(itemUpdateError.message);
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/custom-orders');
+  revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath('/account/orders');
+  revalidatePath(`/account/orders/${orderId}`);
+}
+
+export async function saveCustomOrderCatalog(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+
+  const productId = text(formData, 'product_id');
+  const productName = text(formData, 'product_name');
+  const productSlug =
+    text(formData, 'product_slug') || slugify(productName || 'binder-custom-nama');
+  const basePrice = numberValue(formData, 'base_price');
+  const productWeight = numberValue(formData, 'product_weight', 500);
+  const materialCount = numberValue(formData, 'material_count');
+  const rawMaterials =
+    materialCount > 0
+      ? Array.from({ length: materialCount }, (_, index) => text(formData, `material_${index}`))
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : text(formData, 'materials')
+          .split(/\r?\n/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+  const seenMaterials = new Set<string>();
+  const materials = rawMaterials.filter((item) => {
+    const key = item.toLowerCase();
+    if (seenMaterials.has(key)) return false;
+    seenMaterials.add(key);
+    return true;
+  });
+  const variantCount = numberValue(formData, 'variant_count');
+
+  if (!productId || !productName || !productSlug) {
+    throw new Error('Produk custom tidak valid.');
+  }
+  if (basePrice <= 0) {
+    throw new Error('Harga dasar custom harus lebih dari 0.');
+  }
+  if (materials.length === 0) {
+    throw new Error('Minimal 1 bahan custom wajib diisi.');
+  }
+
+  const productUpdate: ProductUpdate = {
+    name: productName,
+    slug: productSlug,
+    price: basePrice,
+    cost_price: basePrice,
+    weight_grams: productWeight,
+    is_active: checkbox(formData, 'product_active'),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: productError } = await supabase
+    .from('products')
+    .update(productUpdate)
+    .eq('id', productId);
+  if (productError) throw new Error(productError.message);
+
+  const { data: existingVariants, error: existingVariantsError } = await supabase
+    .from('product_variants')
+    .select('id, name')
+    .eq('product_id', productId);
+  if (existingVariantsError) throw new Error(existingVariantsError.message);
+
+  const existingVariantIdByName = new Map<string, string>();
+  for (const variant of existingVariants ?? []) {
+    const key = variant.name.trim().toLowerCase();
+    if (key && !existingVariantIdByName.has(key)) {
+      existingVariantIdByName.set(key, variant.id);
+    }
+  }
+
+  const submittedVariantNames = new Set<string>();
+  const now = new Date().toISOString();
+
+  for (let index = 0; index < variantCount; index += 1) {
+    const id = text(formData, `variant_id_${index}`);
+    const name = text(formData, `variant_name_${index}`);
+    const price = numberValue(formData, `variant_price_${index}`);
+    const promoPrice = nullableNumber(formData, `variant_promo_price_${index}`);
+    const stock = numberValue(formData, `variant_stock_${index}`);
+    const weight = numberValue(formData, `variant_weight_${index}`, productWeight);
+    const isActive = indexedBoolean(formData, `variant_active_${index}`);
+    const shouldDelete = indexedBoolean(formData, `variant_delete_${index}`);
+
+    if (shouldDelete && id) {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({ is_active: false, updated_at: now })
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+      continue;
+    }
+
+    if (!name) continue;
+
+    const normalizedName = name.toLowerCase();
+    if (submittedVariantNames.has(normalizedName)) {
+      if (id) {
+        const { error } = await supabase
+          .from('product_variants')
+          .update({ is_active: false, updated_at: now })
+          .eq('id', id);
+        if (error) throw new Error(error.message);
+      }
+      continue;
+    }
+    submittedVariantNames.add(normalizedName);
+
+    const targetVariantId = id || existingVariantIdByName.get(normalizedName) || '';
+
+    if (targetVariantId) {
+      const update: ProductVariantUpdate = {
+        name,
+        price: price > 0 ? price : basePrice,
+        promo_price: promoPrice,
+        stock,
+        weight_grams: weight,
+        cost_price: basePrice,
+        sort_order: index,
+        is_active: isActive,
+        updated_at: now,
+      };
+      const { error } = await supabase
+        .from('product_variants')
+        .update(update)
+        .eq('id', targetVariantId);
+      if (error) throw new Error(error.message);
+    } else if (!shouldDelete) {
+      const insert: ProductVariantInsert = {
+        product_id: productId,
+        name,
+        price: price > 0 ? price : basePrice,
+        promo_price: promoPrice,
+        stock,
+        weight_grams: weight,
+        cost_price: basePrice,
+        sort_order: index,
+        is_active: isActive,
+      };
+      const { error } = await supabase.from('product_variants').insert(insert);
+      if (error) throw new Error(error.message);
+    }
+  }
+
+  const payload: StoreSettingsUpdate = {
+    custom_order_product_slug: productSlug,
+    custom_order_materials: materials as unknown as Json,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: existing } = await supabase
+    .from('store_settings')
+    .select('id')
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase.from('store_settings').update(payload).eq('id', existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from('store_settings').insert(payload as StoreSettingsInsert);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath('/custom');
+  revalidatePath('/admin/custom-orders');
+  revalidatePath('/admin/products');
+  revalidatePath(`/products/${productSlug}`);
 }
 
 export async function toggleBannerActive(formData: FormData): Promise<void> {

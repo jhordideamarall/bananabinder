@@ -39,6 +39,22 @@ function formatPrice(v: number) {
   return `Rp ${v.toLocaleString('id-ID')}`;
 }
 
+function metadataFlow(value: unknown): string | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const flow = (value as Record<string, unknown>).flow;
+  return typeof flow === 'string' ? flow : null;
+}
+
+function isCustomRequestOrder(order: {
+  payment_method?: string | null;
+  payment_metadata?: unknown;
+}): boolean {
+  return (
+    order.payment_method === 'custom_request' ||
+    metadataFlow(order.payment_metadata) === 'custom_request'
+  );
+}
+
 const TABS = [
   { id: 'all', label: 'Semua' },
   { id: 'pending', label: 'Belum Bayar' },
@@ -167,6 +183,12 @@ export default function OrdersPage() {
               const st = STATUS_COLOR[order.status] || STATUS_COLOR.pending;
               const itemsCount = order.order_items?.length || 0;
               const firstItem = order.order_items?.[0];
+              const hasCustomItem = order.order_items?.some((item) => item.custom_details) ?? false;
+              const isCustomRequest = isCustomRequestOrder(order);
+              const statusLabel =
+                isCustomRequest && order.status === 'pending'
+                  ? 'Menunggu Konfirmasi'
+                  : STATUS_LABEL[order.status];
 
               return (
                 <m.div
@@ -188,7 +210,7 @@ export default function OrdersPage() {
                       className="rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-tight"
                       style={{ background: st.bg, color: st.text }}
                     >
-                      {STATUS_LABEL[order.status]}
+                      {statusLabel}
                     </span>
                   </div>
 
@@ -217,8 +239,20 @@ export default function OrdersPage() {
 
                       <div className="min-w-0 flex-1 py-0.5">
                         <p className="font-heading text-[14px] font-extrabold text-ink line-clamp-1">
-                          {firstItem?.products?.name || 'Produk Bananasbindery'}
+                          {firstItem?.products?.name ||
+                            firstItem?.product_name ||
+                            'Produk Bananasbindery'}
                         </p>
+                        {hasCustomItem ? (
+                          <span className="mt-1 inline-flex rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-primary">
+                            Custom binder
+                          </span>
+                        ) : null}
+                        {isCustomRequest ? (
+                          <p className="mt-1 text-[11px] font-bold leading-relaxed text-ink-4">
+                            Admin akan konfirmasi desain dan pembayaran final lewat WhatsApp.
+                          </p>
+                        ) : null}
                         <p className="mt-1 text-[11px] font-bold text-ink-3">
                           {new Intl.DateTimeFormat('id-ID', {
                             day: 'numeric',
@@ -237,7 +271,7 @@ export default function OrdersPage() {
 
                     {/* Action Buttons */}
                     <div className="mt-5 flex gap-2">
-                      {order.status === 'pending' && (
+                      {order.status === 'pending' && !isCustomRequest && (
                         <button
                           onClick={() => handlePay(order.id)}
                           disabled={isPaying}
@@ -249,6 +283,12 @@ export default function OrdersPage() {
                             'Bayar Sekarang'
                           )}
                         </button>
+                      )}
+
+                      {order.status === 'pending' && isCustomRequest && (
+                        <div className="flex-1 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3 text-center text-[12px] font-extrabold text-primary">
+                          Menunggu Konfirmasi Admin
+                        </div>
                       )}
 
                       {order.status === 'shipped' && (

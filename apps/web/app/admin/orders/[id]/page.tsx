@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -8,6 +9,7 @@ import { notFound } from 'next/navigation';
 import {
   ArrowLeft as IconArrowLeft,
   MapPin as IconMapPin,
+  MessageCircle as IconMessageCircle,
   Package as IconPackage,
   Truck as IconTruck,
   User as IconUser,
@@ -71,6 +73,7 @@ export default async function AdminOrderDetailPage({
   const trackingId =
     (shippingMeta.courier_tracking_id as string | undefined) ?? order.shipping_tracking ?? null;
   const biteshipStatus = shippingMeta.biteship_status as string | undefined;
+  const hasCustomItems = order.items.some((item) => item.custom_details);
 
   return (
     <div className="space-y-6">
@@ -118,6 +121,41 @@ export default async function AdminOrderDetailPage({
                       <p className="mt-0.5 text-xs font-medium text-gray-400">
                         {item.quantity} x {fmt(item.price)}
                       </p>
+                      {item.custom_details ? (
+                        <div className="mt-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs font-medium leading-5 text-gray-600">
+                          <p className="font-black uppercase tracking-wide text-primary">
+                            Brief Custom
+                          </p>
+                          <p>Ukuran: {item.custom_details.size}</p>
+                          <p>Material: {item.custom_details.material}</p>
+                          <p>Teks/Nama: {item.custom_details.personalization}</p>
+                          {item.custom_details.designNotes ? (
+                            <p>Catatan: {item.custom_details.designNotes}</p>
+                          ) : null}
+                          {item.custom_details.referenceUrl ? (
+                            <p className="break-all">
+                              Referensi: {item.custom_details.referenceUrl}
+                            </p>
+                          ) : null}
+                          {item.custom_details.referenceImageUrl ? (
+                            <div className="mt-2 overflow-hidden rounded-lg border border-primary/15 bg-white">
+                              <div className="relative aspect-[4/3]">
+                                <Image
+                                  src={item.custom_details.referenceImageUrl}
+                                  alt="Foto referensi custom"
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                              {item.custom_details.referenceImageName ? (
+                                <p className="truncate px-2 py-1.5 text-[11px] text-gray-500">
+                                  {item.custom_details.referenceImageName}
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                     <span className="shrink-0 text-sm font-black text-gray-900">
                       {fmt(item.subtotal)}
@@ -145,6 +183,55 @@ export default async function AdminOrderDetailPage({
               </div>
             </CardContent>
           </Card>
+
+          {hasCustomItems ? (
+            <Card className="border-none shadow-xl shadow-gray-100/50">
+              <CardContent className="p-6">
+                <div className="mb-3 flex items-center gap-2 font-heading text-base font-black text-gray-900">
+                  <IconMessageCircle className="h-4 w-4 text-primary" /> Konfirmasi WhatsApp Custom
+                </div>
+                {order.custom_order_whatsapp ? (
+                  <div className="space-y-3 text-sm">
+                    <div
+                      className={`inline-flex rounded-xl px-3 py-1 text-xs font-black uppercase tracking-wider ${
+                        order.custom_order_whatsapp.success
+                          ? 'bg-green-100 text-green-700'
+                          : order.custom_order_whatsapp.attempted
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-amber-100 text-amber-700'
+                      }`}
+                    >
+                      {order.custom_order_whatsapp.success
+                        ? 'Terkirim'
+                        : order.custom_order_whatsapp.attempted
+                          ? 'Gagal terkirim'
+                          : 'Belum dicoba'}
+                    </div>
+                    <div className="grid gap-2">
+                      <Row label="Nomor tujuan" value={order.custom_order_whatsapp.target || '-'} />
+                      <Row label="Waktu" value={formatDate(order.custom_order_whatsapp.sent_at)} />
+                      {order.custom_order_whatsapp.provider_ids?.length ? (
+                        <Row
+                          label="Provider ID"
+                          value={order.custom_order_whatsapp.provider_ids.join(', ')}
+                        />
+                      ) : null}
+                    </div>
+                    {order.custom_order_whatsapp.reason ? (
+                      <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-5 text-amber-800">
+                        {order.custom_order_whatsapp.reason}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium leading-6 text-gray-500">
+                    Detail custom sudah tersimpan di order. WhatsApp otomatis akan tercatat di sini
+                    setelah request dibuat.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Card className="border-none shadow-xl shadow-gray-100/50">

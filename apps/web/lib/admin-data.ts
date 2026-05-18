@@ -27,6 +27,7 @@ export interface AdminProductVariant {
   image_url: string | null;
   weight_grams: number | null;
   sort_order: number | null;
+  is_active: boolean | null;
 }
 
 export interface AdminProduct {
@@ -151,6 +152,7 @@ function toAdminProduct(product: ProductRowWithRelations): AdminProduct {
         image_url: variant.image_url,
         weight_grams: variant.weight_grams,
         sort_order: variant.sort_order,
+        is_active: variant.is_active,
       }))
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
   };
@@ -453,6 +455,19 @@ export async function getAdminOrders(
   };
 }
 
+export interface AdminCustomOrderDetails {
+  size: string;
+  material: string;
+  personalization: string;
+  designNotes?: string | null;
+  referenceUrl?: string | null;
+  referenceImagePath?: string | null;
+  referenceImageUrl?: string | null;
+  referenceImageName?: string | null;
+  referenceImageType?: string | null;
+  referenceImageSize?: number | null;
+}
+
 export interface AdminOrderItem {
   id: string;
   product_name: string;
@@ -461,6 +476,16 @@ export interface AdminOrderItem {
   price: number;
   subtotal: number;
   image_url: string | null;
+  custom_details: AdminCustomOrderDetails | null;
+}
+
+export interface AdminCustomOrderWhatsApp {
+  attempted: boolean;
+  success: boolean;
+  target?: string;
+  provider_ids?: string[];
+  reason?: string;
+  sent_at: string;
 }
 
 export interface AdminOrderDetail {
@@ -483,6 +508,7 @@ export interface AdminOrderDetail {
   paid_at: string | null;
   shipped_at: string | null;
   delivered_at: string | null;
+  custom_order_whatsapp: AdminCustomOrderWhatsApp | null;
   customer: { name: string | null; phone: string | null; email: string | null } | null;
   address: {
     recipient_name: string | null;
@@ -495,6 +521,134 @@ export interface AdminOrderDetail {
   items: AdminOrderItem[];
 }
 
+export interface AdminCustomOrderListItem {
+  id: string;
+  order_number: string;
+  status: string;
+  payment_status: string;
+  total: number;
+  notes: string | null;
+  created_at: string;
+  customer: { name: string | null; phone: string | null; email: string | null } | null;
+  product_name: string;
+  variant_name: string | null;
+  quantity: number;
+  image_url: string | null;
+  custom_details: AdminCustomOrderDetails;
+  custom_order_whatsapp: AdminCustomOrderWhatsApp | null;
+}
+
+export interface AdminCustomOrderCatalogConfig {
+  product: AdminProduct | null;
+  productSlug: string;
+  materials: string[];
+}
+
+function parseCustomDetails(value: unknown): AdminCustomOrderDetails | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (
+    typeof record.size !== 'string' ||
+    typeof record.material !== 'string' ||
+    typeof record.personalization !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    size: record.size,
+    material: record.material,
+    personalization: record.personalization,
+    designNotes: typeof record.designNotes === 'string' ? record.designNotes : null,
+    referenceUrl: typeof record.referenceUrl === 'string' ? record.referenceUrl : null,
+    referenceImagePath:
+      typeof record.referenceImagePath === 'string' ? record.referenceImagePath : null,
+    referenceImageUrl:
+      typeof record.referenceImageUrl === 'string' ? record.referenceImageUrl : null,
+    referenceImageName:
+      typeof record.referenceImageName === 'string' ? record.referenceImageName : null,
+    referenceImageType:
+      typeof record.referenceImageType === 'string' ? record.referenceImageType : null,
+    referenceImageSize:
+      typeof record.referenceImageSize === 'number' ? record.referenceImageSize : null,
+  };
+}
+
+function parseCustomOrderWhatsApp(value: unknown): AdminCustomOrderWhatsApp | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const metadata = value as Record<string, unknown>;
+  const whatsapp = metadata.custom_order_whatsapp;
+  if (typeof whatsapp !== 'object' || whatsapp === null) return null;
+  const record = whatsapp as Record<string, unknown>;
+  if (
+    typeof record.attempted !== 'boolean' ||
+    typeof record.success !== 'boolean' ||
+    typeof record.sent_at !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    attempted: record.attempted,
+    success: record.success,
+    target: typeof record.target === 'string' ? record.target : undefined,
+    provider_ids: Array.isArray(record.provider_ids)
+      ? record.provider_ids.filter((item): item is string => typeof item === 'string')
+      : undefined,
+    reason: typeof record.reason === 'string' ? record.reason : undefined,
+    sent_at: record.sent_at,
+  };
+}
+
+async function withSignedReferenceImage(
+  supabaseInput: TypedSupabaseClient,
+  details: AdminCustomOrderDetails | null,
+): Promise<AdminCustomOrderDetails | null> {
+  if (!details?.referenceImagePath) return details;
+  const { data } = await supabaseInput.storage
+    .from('custom-order-references')
+    .createSignedUrl(details.referenceImagePath, 60 * 60);
+  return {
+    ...details,
+    referenceImageUrl: data?.signedUrl ?? details.referenceImageUrl ?? null,
+  };
+}
+
+function parseStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+}
+
+export async function getAdminCustomOrderCatalogConfig(
+  supabaseInput: ClientInput,
+): Promise<AdminCustomOrderCatalogConfig> {
+  const supabase = await client(supabaseInput);
+  const { data: settings } = await supabase
+    .from('store_settings')
+    .select('custom_order_product_slug, custom_order_materials')
+    .limit(1)
+    .maybeSingle();
+
+  const productSlug = settings?.custom_order_product_slug || 'binder-custom-nama';
+  const materials = parseStringArray(settings?.custom_order_materials);
+  const { data: product, error } = await supabase
+    .from('products')
+    .select(
+      '*, categories(id, name, slug), product_images(url, sort_order), product_variants(id, name, stock, price, promo_price, image_url, weight_grams, sort_order, is_active)',
+    )
+    .eq('slug', productSlug)
+    .maybeSingle();
+
+  return {
+    product:
+      error || !product ? null : toAdminProduct(product as unknown as ProductRowWithRelations),
+    productSlug,
+    materials:
+      materials.length > 0
+        ? materials
+        : ['Premium Leather', 'Canvas Texture', 'Hardcover Matte', 'Transparent Flexy'],
+  };
+}
+
 export async function getAdminOrderDetail(
   supabaseInput: ClientInput,
   id: string,
@@ -503,7 +657,7 @@ export async function getAdminOrderDetail(
   const { data, error } = await supabase
     .from('orders')
     .select(
-      '*, profiles:user_id(name, phone, email), addresses:address_id(recipient_name, phone, full_address, city, district, postal_code), order_items(id, product_name, variant_name, quantity, price, subtotal, products(product_images(url)))',
+      '*, profiles:user_id(name, phone, email), addresses:address_id(recipient_name, phone, full_address, city, district, postal_code), order_items(id, product_name, variant_name, quantity, price, subtotal, custom_details, products(product_images(url)))',
     )
     .eq('id', id)
     .single();
@@ -527,11 +681,28 @@ export async function getAdminOrderDetail(
       quantity: number;
       price: number;
       subtotal: number;
+      custom_details: unknown;
       products: { product_images: { url: string }[] | null } | null;
     }[];
   };
 
   const order = data as unknown as DetailRow;
+
+  const items = await Promise.all(
+    (order.order_items ?? []).map(async (item) => ({
+      id: item.id,
+      product_name: item.product_name,
+      variant_name: item.variant_name,
+      quantity: item.quantity,
+      price: Number(item.price),
+      subtotal: Number(item.subtotal),
+      image_url: item.products?.product_images?.[0]?.url ?? null,
+      custom_details: await withSignedReferenceImage(
+        supabase,
+        parseCustomDetails(item.custom_details),
+      ),
+    })),
+  );
 
   return {
     id: order.id,
@@ -553,17 +724,76 @@ export async function getAdminOrderDetail(
     paid_at: order.paid_at,
     shipped_at: order.shipped_at,
     delivered_at: order.delivered_at,
+    custom_order_whatsapp: parseCustomOrderWhatsApp(order.payment_metadata),
     customer: order.profiles,
     address: order.addresses,
-    items: (order.order_items ?? []).map((item) => ({
-      id: item.id,
-      product_name: item.product_name,
-      variant_name: item.variant_name,
-      quantity: item.quantity,
-      price: Number(item.price),
-      subtotal: Number(item.subtotal),
-      image_url: item.products?.product_images?.[0]?.url ?? null,
-    })),
+    items,
+  };
+}
+
+export async function getAdminCustomOrders(
+  supabaseInput: ClientInput,
+  options: { status: string | null; page: number; limit: number },
+): Promise<{ data: AdminCustomOrderListItem[]; total: number }> {
+  const supabase = await client(supabaseInput);
+  const from = (options.page - 1) * options.limit;
+  const to = from + options.limit - 1;
+  let query = supabase
+    .from('orders')
+    .select(
+      '*, profiles:user_id(name, phone, email), order_items(id, product_name, variant_name, quantity, custom_details, products(product_images(url)))',
+      { count: 'exact' },
+    )
+    .eq('payment_method', 'custom_request')
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (options.status) query = query.eq('status', options.status as OrderRow['status']);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+
+  type CustomOrderRow = OrderRow & {
+    profiles: { name: string | null; phone: string | null; email: string | null } | null;
+    order_items: {
+      product_name: string;
+      variant_name: string | null;
+      quantity: number;
+      custom_details: unknown;
+      products: { product_images: { url: string }[] | null } | null;
+    }[];
+  };
+
+  const orders = (data ?? []) as unknown as CustomOrderRow[];
+  const customOrders: Array<AdminCustomOrderListItem | null> = await Promise.all(
+    orders.map(async (order): Promise<AdminCustomOrderListItem | null> => {
+      const item = order.order_items?.find((row) => parseCustomDetails(row.custom_details));
+      const parsedDetails = item ? parseCustomDetails(item.custom_details) : null;
+      const customDetails = await withSignedReferenceImage(supabase, parsedDetails);
+      if (!item || !customDetails) return null;
+
+      return {
+        id: order.id,
+        order_number: order.order_number,
+        status: order.status,
+        payment_status: order.payment_status,
+        total: Number(order.total ?? 0),
+        notes: order.notes,
+        created_at: order.created_at ?? new Date(0).toISOString(),
+        customer: order.profiles,
+        product_name: item.product_name,
+        variant_name: item.variant_name,
+        quantity: item.quantity,
+        image_url: item.products?.product_images?.[0]?.url ?? null,
+        custom_details: customDetails,
+        custom_order_whatsapp: parseCustomOrderWhatsApp(order.payment_metadata),
+      };
+    }),
+  );
+
+  return {
+    data: customOrders.filter((order): order is AdminCustomOrderListItem => order !== null),
+    total: count ?? 0,
   };
 }
 

@@ -1,0 +1,10 @@
+alter function public.handle_new_user() set search_path = public, pg_temp;
+alter function public.handle_updated_at() set search_path = public, pg_temp;
+alter function public.haversine_km(numeric, numeric, numeric, numeric) set search_path = public, pg_temp;
+alter function public.is_admin() set search_path = public, pg_temp;
+alter function public.is_admin_or_owner() set search_path = public, pg_temp;
+alter function public.is_admin_or_staff() set search_path = public, pg_temp;
+alter function public.is_owner() set search_path = public, pg_temp;
+alter function public.is_staff_or_above() set search_path = public, pg_temp;
+alter function public.set_campaign_updated_at() set search_path = public, pg_temp;
+alter function public.update_avg_rating() set search_path = public, pg_temp;

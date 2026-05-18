@@ -11,6 +11,8 @@ import {
   FolderTree as IconCategories,
   Megaphone as IconCampaign,
   Settings as IconSettings,
+  MessageSquare as IconMessageSquare,
+  ClipboardList as IconClipboardList,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -23,7 +25,9 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: IconDashboard, href: '/admin' as Route },
   { label: 'Orders', icon: IconShoppingCart, href: '/admin/orders' as Route },
+  { label: 'Custom Order', icon: IconClipboardList, href: '/admin/custom-orders' as Route },
   { label: 'Products', icon: IconPackage, href: '/admin/products' as Route },
+  { label: 'Chats', icon: IconMessageSquare, href: '/admin/chats' as Route },
   { label: 'Categories', icon: IconCategories, href: '/admin/categories' as Route },
   { label: 'Campaigns', icon: IconCampaign, href: '/admin/campaigns' as Route },
   { label: 'Promos', icon: IconTicket, href: '/admin/promos' as Route },

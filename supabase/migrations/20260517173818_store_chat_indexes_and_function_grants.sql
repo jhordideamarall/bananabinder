@@ -1,0 +1,4 @@
+-- Placeholder for the migration version created by Supabase MCP when adding
+-- store chat indexes and function grants in the remote database. The actual
+-- idempotent SQL lives at the end of 20260518002000_store_chat.sql so fresh
+-- local databases create the chat tables before indexing them.
