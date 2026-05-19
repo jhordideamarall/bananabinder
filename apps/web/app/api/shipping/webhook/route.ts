@@ -203,6 +203,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Update Failed' }, { status: 500 });
     }
 
+    const webhookEventId = [
+      order_id || order.id,
+      event,
+      status || courier_tracking_id || courier_waybill_id || price || order_price || 'received',
+    ].join(':');
+    const { error: eventError } = await supabaseAdmin.from('webhook_events').insert({
+      provider: 'biteship',
+      event_id: webhookEventId,
+      event_type: event,
+      reference_id: order_id || order.id,
+      payload: body,
+    });
+
+    if (eventError) {
+      console.warn('Biteship webhook event audit skipped:', eventError.message);
+    }
+
     console.log(`Order ${order.order_number} updated to shipping_status: ${shippingStatus}`);
 
     return NextResponse.json({ success: true });

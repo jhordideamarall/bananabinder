@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
-import { getIntegrationMode, listIntegrationSecretStatuses } from '@/lib/integration-secrets';
+import {
+  getIntegrationMode,
+  listIntegrationSecretStatuses,
+  listIntegrationWebhookStatuses,
+} from '@/lib/integration-secrets';
 import { IntegrationSetup } from '@/components/admin/integrations/IntegrationSetup';
 
 export const metadata: Metadata = {
@@ -9,8 +13,9 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AdminIntegrationsPage() {
-  const statuses = await listIntegrationSecretStatuses();
-  const [xenditMode, biteshipMode] = await Promise.all([
+  const [statuses, webhookStatuses, xenditMode, biteshipMode] = await Promise.all([
+    listIntegrationSecretStatuses(),
+    listIntegrationWebhookStatuses(),
     getIntegrationMode('xendit'),
     getIntegrationMode('biteship'),
   ]);
@@ -40,6 +45,7 @@ export default async function AdminIntegrationsPage() {
       <IntegrationSetup
         appUrl={appUrl}
         statuses={statuses}
+        webhookStatuses={webhookStatuses}
         xenditMode={xenditMode}
         biteshipMode={biteshipMode}
       />

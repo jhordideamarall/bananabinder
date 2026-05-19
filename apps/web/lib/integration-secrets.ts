@@ -27,6 +27,14 @@ export interface IntegrationSecretStatus {
   updated_at: string | null;
 }
 
+export interface IntegrationWebhookStatus {
+  provider: Extract<IntegrationProvider, 'xendit' | 'biteship'>;
+  event_type: string | null;
+  reference_id: string | null;
+  processed_at: string | null;
+  created_at: string | null;
+}
+
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -125,6 +133,25 @@ export async function listIntegrationSecretStatuses(): Promise<IntegrationSecret
   }
 
   return (data ?? []) as IntegrationSecretStatus[];
+}
+
+export async function listIntegrationWebhookStatuses(): Promise<IntegrationWebhookStatus[]> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('webhook_events')
+    .select('provider, event_type, reference_id, processed_at, created_at')
+    .in('provider', ['xendit', 'biteship'])
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.warn('INTEGRATION_WEBHOOK_STATUS_WARN:', error.message);
+    return [];
+  }
+
+  return (data ?? []) as IntegrationWebhookStatus[];
 }
 
 export async function recordIntegrationTestResult(

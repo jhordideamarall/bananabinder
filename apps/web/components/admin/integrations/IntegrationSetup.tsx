@@ -23,6 +23,7 @@ import type {
   IntegrationProvider,
   IntegrationSecretKey,
   IntegrationSecretStatus,
+  IntegrationWebhookStatus,
 } from '@/lib/integration-secrets';
 import {
   deleteIntegrationSecret,
@@ -34,6 +35,7 @@ import {
 interface IntegrationSetupProps {
   appUrl: string;
   statuses: IntegrationSecretStatus[];
+  webhookStatuses: IntegrationWebhookStatus[];
   xenditMode: IntegrationMode;
   biteshipMode: IntegrationMode;
 }
@@ -408,12 +410,20 @@ function TabButton({
   );
 }
 
-function StatusPill({ active, children }: { active: boolean; children: React.ReactNode }) {
+type StatusTone = 'success' | 'warning' | 'danger' | 'neutral' | 'info';
+
+function StatusPill({ tone, children }: { tone: StatusTone; children: React.ReactNode }) {
+  const classes: Record<StatusTone, string> = {
+    success: 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/15',
+    warning: 'bg-amber-500/12 text-amber-800 ring-amber-500/20',
+    danger: 'bg-red-500/10 text-red-700 ring-red-500/15',
+    neutral: 'bg-black/[0.04] text-[#666] ring-black/[0.06]',
+    info: 'bg-[#5B2BBF]/10 text-[#5B2BBF] ring-[#5B2BBF]/15',
+  };
+
   return (
     <span
-      className={`inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold ${
-        active ? 'bg-emerald-500/14 text-emerald-700' : 'bg-red-500/10 text-red-700'
-      }`}
+      className={`inline-flex min-h-7 items-center rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${classes[tone]}`}
     >
       {children}
     </span>
@@ -431,13 +441,129 @@ function MaskedKey({ saved }: { saved: boolean }) {
   );
 }
 
+function latestTestFor(statuses: IntegrationSecretStatus[], provider: IntegrationProvider) {
+  return statuses
+    .filter((status) => status.provider === provider && status.last_tested_at)
+    .sort((a, b) => String(b.last_tested_at).localeCompare(String(a.last_tested_at)))[0];
+}
+
+function latestWebhookFor(
+  webhookStatuses: IntegrationWebhookStatus[],
+  provider: Extract<IntegrationProvider, 'xendit' | 'biteship'>,
+) {
+  return webhookStatuses.find((status) => status.provider === provider);
+}
+
+function CredentialChips({
+  credentials,
+  statuses,
+  provider,
+}: {
+  credentials: Array<{ key: IntegrationSecretKey; label: string }>;
+  statuses: IntegrationSecretStatus[];
+  provider: IntegrationProvider;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {credentials.map((credential) => {
+        const saved = Boolean(statusFor(statuses, provider, credential.key)?.is_configured);
+        return (
+          <StatusPill key={credential.key} tone={saved ? 'success' : 'danger'}>
+            {saved ? `${credential.label} tersimpan` : `${credential.label} kosong`}
+          </StatusPill>
+        );
+      })}
+    </div>
+  );
+}
+
+function TestSignal({
+  provider,
+  statuses,
+}: {
+  provider: IntegrationProvider;
+  statuses: IntegrationSecretStatus[];
+}) {
+  const latest = latestTestFor(statuses, provider);
+
+  if (!latest) {
+    return (
+      <div className="max-w-[240px] space-y-1">
+        <StatusPill tone="warning">Belum dites</StatusPill>
+        <p className="text-[11px] leading-relaxed text-[#86868B]">
+          Jalankan tombol test di detail provider.
+        </p>
+      </div>
+    );
+  }
+
+  const success = latest.last_test_status === 'success';
+
+  return (
+    <div className="max-w-[260px] space-y-1">
+      <StatusPill tone={success ? 'success' : 'danger'}>
+        {success ? 'Test berhasil' : 'Test gagal'}
+      </StatusPill>
+      <p className="text-[11px] leading-relaxed text-[#666]">
+        {formatDate(latest.last_tested_at)}
+        {latest.last_test_message ? ` - ${latest.last_test_message}` : ''}
+      </p>
+    </div>
+  );
+}
+
+function WebhookSignal({
+  provider,
+  webhookStatuses,
+}: {
+  provider?: Extract<IntegrationProvider, 'xendit' | 'biteship'>;
+  webhookStatuses: IntegrationWebhookStatus[];
+}) {
+  if (!provider) {
+    return (
+      <div className="max-w-[240px] space-y-1">
+        <StatusPill tone="neutral">Tidak perlu webhook</StatusPill>
+        <p className="text-[11px] leading-relaxed text-[#86868B]">
+          Fonnte dipantau lewat test device dan pesan.
+        </p>
+      </div>
+    );
+  }
+
+  const latest = latestWebhookFor(webhookStatuses, provider);
+
+  if (!latest) {
+    return (
+      <div className="max-w-[260px] space-y-1">
+        <StatusPill tone="warning">Belum ada event masuk</StatusPill>
+        <p className="text-[11px] leading-relaxed text-[#86868B]">
+          Pasang URL webhook di dashboard vendor, lalu lakukan test transaksi.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-[280px] space-y-1">
+      <StatusPill tone="success">Event diterima</StatusPill>
+      <p className="text-[11px] leading-relaxed text-[#666]">
+        {formatDate(latest.processed_at ?? latest.created_at)}
+        {latest.event_type ? ` - ${latest.event_type}` : ''}
+        {latest.reference_id ? ` (${latest.reference_id})` : ''}
+      </p>
+    </div>
+  );
+}
+
 function TokenApiTable({
   statuses,
+  webhookStatuses,
   xenditMode,
   biteshipMode,
   onOpenDetail,
 }: {
   statuses: IntegrationSecretStatus[];
+  webhookStatuses: IntegrationWebhookStatus[];
   xenditMode: IntegrationMode;
   biteshipMode: IntegrationMode;
   onOpenDetail: (tab: ProviderDetailTab) => void;
@@ -450,7 +576,10 @@ function TokenApiTable({
     secretKey: IntegrationSecretKey;
     dateKey: IntegrationSecretKey;
     mode: string;
-    columns: [string, string, string];
+    modeTone: StatusTone;
+    isActiveMode: boolean;
+    credentials: Array<{ key: IntegrationSecretKey; label: string }>;
+    webhookProvider?: Extract<IntegrationProvider, 'xendit' | 'biteship'>;
   }> = [
     {
       id: 'biteship-test',
@@ -460,7 +589,10 @@ function TokenApiTable({
       secretKey: 'test_api_key',
       dateKey: 'test_api_key',
       mode: biteshipMode === 'test' ? 'Dipakai website' : 'Siap testing',
-      columns: ['Rates API', 'Order API', 'Tracking API'],
+      modeTone: biteshipMode === 'test' ? 'info' : 'neutral',
+      isActiveMode: biteshipMode === 'test',
+      credentials: [{ key: 'test_api_key', label: 'Test API Key' }],
+      webhookProvider: 'biteship',
     },
     {
       id: 'biteship-live',
@@ -470,7 +602,13 @@ function TokenApiTable({
       secretKey: 'api_key',
       dateKey: 'api_key',
       mode: biteshipMode === 'production' ? 'Dipakai website' : 'Disimpan untuk live',
-      columns: ['Rates API', 'Order API', 'Tracking API'],
+      modeTone: biteshipMode === 'production' ? 'info' : 'neutral',
+      isActiveMode: biteshipMode === 'production',
+      credentials: [
+        { key: 'api_key', label: 'Live API Key' },
+        { key: 'webhook_token', label: 'Webhook Token' },
+      ],
+      webhookProvider: 'biteship',
     },
     {
       id: 'xendit-test',
@@ -480,7 +618,13 @@ function TokenApiTable({
       secretKey: 'test_secret_key',
       dateKey: 'test_secret_key',
       mode: xenditMode === 'test' ? 'Dipakai website' : 'Siap testing',
-      columns: ['Secret Key', 'Callback Token', 'Webhook'],
+      modeTone: xenditMode === 'test' ? 'info' : 'neutral',
+      isActiveMode: xenditMode === 'test',
+      credentials: [
+        { key: 'test_secret_key', label: 'Test Secret' },
+        { key: 'test_callback_token', label: 'Callback Token' },
+      ],
+      webhookProvider: 'xendit',
     },
     {
       id: 'xendit-live',
@@ -490,7 +634,13 @@ function TokenApiTable({
       secretKey: 'secret_key',
       dateKey: 'secret_key',
       mode: xenditMode === 'production' ? 'Dipakai website' : 'Disimpan untuk live',
-      columns: ['Secret Key', 'Callback Token', 'Webhook'],
+      modeTone: xenditMode === 'production' ? 'info' : 'neutral',
+      isActiveMode: xenditMode === 'production',
+      credentials: [
+        { key: 'secret_key', label: 'Live Secret' },
+        { key: 'callback_token', label: 'Callback Token' },
+      ],
+      webhookProvider: 'xendit',
     },
     {
       id: 'fonnte',
@@ -500,7 +650,9 @@ function TokenApiTable({
       secretKey: 'api_token',
       dateKey: 'api_token',
       mode: 'WhatsApp aktif',
-      columns: ['Device', 'Pesan Test', 'Notifikasi'],
+      modeTone: 'neutral',
+      isActiveMode: true,
+      credentials: [{ key: 'api_token', label: 'API Token' }],
     },
   ];
 
@@ -510,12 +662,11 @@ function TokenApiTable({
         <table className="min-w-[980px] w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-black/[0.06] bg-[#FAFAFA] text-[12px] font-semibold text-[#5B2BBF]">
-              <th className="px-5 py-4">Nama</th>
-              <th className="px-5 py-4">Kunci API</th>
-              <th className="px-5 py-4">Tanggal Disimpan</th>
-              <th className="px-5 py-4">Status 1</th>
-              <th className="px-5 py-4">Status 2</th>
-              <th className="px-5 py-4">Status 3</th>
+              <th className="px-5 py-4">Integrasi</th>
+              <th className="px-5 py-4">Credential</th>
+              <th className="px-5 py-4">Mode</th>
+              <th className="px-5 py-4">Test terakhir</th>
+              <th className="px-5 py-4">Webhook / event</th>
               <th className="px-5 py-4">Aksi</th>
             </tr>
           </thead>
@@ -523,38 +674,57 @@ function TokenApiTable({
             {rows.map((row) => {
               const status = statusFor(statuses, row.provider, row.secretKey);
               const saved = Boolean(status?.is_configured);
-              const isXenditTest = row.id === 'xendit-test';
-              const xenditCallbackKey: IntegrationSecretKey = isXenditTest
-                ? 'test_callback_token'
-                : 'callback_token';
-              const callbackSaved =
-                row.provider !== 'xendit' ||
-                Boolean(statusFor(statuses, 'xendit', xenditCallbackKey)?.is_configured);
-              const biteshipWebhookSaved =
-                row.provider !== 'biteship' ||
-                Boolean(statusFor(statuses, 'biteship', 'webhook_token')?.is_configured);
-              const allReady = saved && callbackSaved && biteshipWebhookSaved;
 
               return (
                 <tr key={row.id} className="border-b border-black/[0.06] last:border-b-0">
                   <td className="px-5 py-4 align-middle">
                     <p className="text-[13px] font-semibold text-[#1D1D1F]">{row.name}</p>
-                    <p className="mt-1 text-[12px] text-[#86868B]">{row.mode}</p>
+                    <p className="mt-1 text-[12px] text-[#86868B]">
+                      {row.provider === 'fonnte'
+                        ? 'Notifikasi WhatsApp'
+                        : row.id.endsWith('test')
+                          ? 'Sandbox / testing'
+                          : 'Live / production'}
+                    </p>
                   </td>
                   <td className="px-5 py-4 align-middle">
-                    <MaskedKey saved={saved} />
-                  </td>
-                  <td className="px-5 py-4 align-middle text-[13px] text-[#555]">
-                    {formatDate(statusFor(statuses, row.provider, row.dateKey)?.updated_at ?? null)}
-                  </td>
-                  <td className="px-5 py-4 align-middle">
-                    <StatusPill active={saved}>{saved ? 'Aktif' : row.columns[0]}</StatusPill>
-                  </td>
-                  <td className="px-5 py-4 align-middle">
-                    <StatusPill active={allReady}>{allReady ? 'Aktif' : row.columns[1]}</StatusPill>
+                    <div className="space-y-2">
+                      <MaskedKey saved={saved} />
+                      <CredentialChips
+                        credentials={row.credentials}
+                        provider={row.provider}
+                        statuses={statuses}
+                      />
+                    </div>
                   </td>
                   <td className="px-5 py-4 align-middle">
-                    <StatusPill active={allReady}>{allReady ? 'Aktif' : row.columns[2]}</StatusPill>
+                    <div className="space-y-1">
+                      <StatusPill tone={row.modeTone}>{row.mode}</StatusPill>
+                      <p className="text-[11px] leading-relaxed text-[#86868B]">
+                        Disimpan:{' '}
+                        {formatDate(
+                          statusFor(statuses, row.provider, row.dateKey)?.updated_at ?? null,
+                        )}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 align-middle">
+                    <TestSignal provider={row.provider} statuses={statuses} />
+                  </td>
+                  <td className="px-5 py-4 align-middle">
+                    {row.webhookProvider && !row.isActiveMode ? (
+                      <div className="max-w-[260px] space-y-1">
+                        <StatusPill tone="neutral">Dilacak di mode aktif</StatusPill>
+                        <p className="text-[11px] leading-relaxed text-[#86868B]">
+                          Event provider ditampilkan di baris yang sedang dipakai website.
+                        </p>
+                      </div>
+                    ) : (
+                      <WebhookSignal
+                        provider={row.webhookProvider}
+                        webhookStatuses={webhookStatuses}
+                      />
+                    )}
                   </td>
                   <td className="px-5 py-4 align-middle">
                     <div className="flex flex-col items-start gap-2">
@@ -592,6 +762,7 @@ function TokenApiTable({
 export function IntegrationSetup({
   appUrl,
   statuses,
+  webhookStatuses,
   xenditMode,
   biteshipMode,
 }: IntegrationSetupProps) {
@@ -646,17 +817,20 @@ export function IntegrationSetup({
           <div className="space-y-5 p-6">
             <TokenApiTable
               statuses={statuses}
+              webhookStatuses={webhookStatuses}
               xenditMode={xenditMode}
               biteshipMode={biteshipMode}
               onOpenDetail={setActiveTab}
             />
             <div className="rounded-xl border border-[#5B2BBF]/15 bg-[#F7F3FF] p-4">
-              <p className="text-[13px] font-semibold text-[#1D1D1F]">Cara membaca tabel ini</p>
+              <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                Cara membaca status integrasi
+              </p>
               <p className="mt-2 text-[12px] leading-relaxed text-[#555]">
-                Jika baris menampilkan titik-titik dan badge Aktif, artinya credential sudah
-                tersimpan di Supabase Vault. Input detail tetap kosong karena secret tidak boleh
-                dibuka lagi ke browser. Kalau salah input, klik Buang Kunci lalu simpan ulang dari
-                halaman detail provider.
+                Credential tersimpan hanya berarti secret sudah aman di Supabase Vault. Webhook
+                dianggap sehat hanya kalau kolom Webhook / event menampilkan event yang benar-benar
+                pernah masuk ke endpoint website. Input detail tetap kosong karena secret tidak
+                boleh dibuka ulang ke browser.
               </p>
             </div>
           </div>
@@ -728,6 +902,7 @@ export function IntegrationSetup({
                   'Tambahkan webhook URL di atas untuk invoice/payment link events.',
                   'Aktifkan event invoice paid/settled dan expired.',
                   'Set Mode Testing, klik Test Xendit. Kalau berhasil, coba checkout kecil di mode test.',
+                  'Status webhook di overview baru hijau setelah Xendit benar-benar mengirim event ke endpoint website.',
                   'Set Mode Production hanya setelah payment channel live sudah aktif di dashboard Xendit.',
                 ]}
               />
@@ -804,6 +979,7 @@ export function IntegrationSetup({
                   'Untuk aktivasi Order API, buka Biteship Dashboard > Integrasi > Aktivasi Order API.',
                   'Di form Biteship, pilih courier yang dipakai website. Jangan centang COD, asuransi, atau resi sendiri kalau fitur itu belum dipakai.',
                   'Masuk Mode Testing Biteship, buat 1 order test delivered dan 1 order test cancelled, lalu paste ID-nya ke form aktivasi.',
+                  'Status webhook di overview baru hijau setelah Biteship mengirim event order.status/order.price/order.waybill_id ke website.',
                   'Setelah Order API berubah Aktif, isi Live API Key dan pindahkan Mode Biteship ke Production.',
                 ]}
               />
@@ -929,30 +1105,52 @@ export function IntegrationSetup({
               Webhook harus memakai domain online. Jangan pakai localhost untuk production.
             </p>
           </div>
-          <div className="grid gap-6 p-6 lg:grid-cols-2">
-            <div className="space-y-4 rounded-xl border border-black/[0.06] bg-[#FAFAFA] p-4">
-              <WebhookBox label="Xendit Webhook" value={xenditWebhookUrl} />
-              <StepList
-                items={[
-                  'Pasang URL ini di Xendit Dashboard > Settings > Webhooks.',
-                  'Pastikan token yang disimpan di halaman ini sama dengan Callback Verification Token Xendit.',
-                  'Endpoint kita membaca header x-callback-token dan menolak webhook yang tokennya salah.',
-                  'Test checkout di Mode Testing, bayar invoice test, lalu cek status order berubah paid.',
-                ]}
-              />
+          <div className="space-y-6 p-6">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-black/[0.06] bg-[#FAFAFA] p-4">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#86868B]">
+                  Sinyal Xendit
+                </p>
+                <div className="mt-3">
+                  <WebhookSignal provider="xendit" webhookStatuses={webhookStatuses} />
+                </div>
+              </div>
+              <div className="rounded-xl border border-black/[0.06] bg-[#FAFAFA] p-4">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#86868B]">
+                  Sinyal Biteship
+                </p>
+                <div className="mt-3">
+                  <WebhookSignal provider="biteship" webhookStatuses={webhookStatuses} />
+                </div>
+              </div>
             </div>
-            <div className="space-y-4 rounded-xl border border-black/[0.06] bg-[#FAFAFA] p-4">
-              <WebhookBox label="Biteship Webhook" value={biteshipWebhookUrl} />
-              <StepList
-                items={[
-                  'Pasang URL ini di Biteship Dashboard > Integrasi/Webhook.',
-                  'Aktifkan event order.status, order.price, dan order.waybill_id jika tersedia.',
-                  'Aktifkan webhook auth dan kirim header Authorization: Bearer <Webhook Token> sesuai token yang disimpan di tab Biteship.',
-                  'Endpoint kita menolak event Biteship jika Webhook Token belum disimpan atau header auth salah.',
-                  'Webhook ini dipakai untuk update status pengiriman dan data resi di order.',
-                  'Setelah Order API aktif, lakukan 1 pesanan internal kecil untuk memastikan resi masuk.',
-                ]}
-              />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-4 rounded-xl border border-black/[0.06] bg-[#FAFAFA] p-4">
+                <WebhookBox label="Xendit Webhook" value={xenditWebhookUrl} />
+                <StepList
+                  items={[
+                    'Pasang URL ini di Xendit Dashboard > Settings > Webhooks.',
+                    'Pastikan token yang disimpan di halaman ini sama dengan Callback Verification Token Xendit.',
+                    'Endpoint kita membaca header x-callback-token dan menolak webhook yang tokennya salah.',
+                    'Test checkout di Mode Testing, bayar invoice test, lalu cek status order berubah paid.',
+                    'Kalau test berhasil, halaman overview akan menampilkan event Xendit terakhir yang diterima.',
+                  ]}
+                />
+              </div>
+              <div className="space-y-4 rounded-xl border border-black/[0.06] bg-[#FAFAFA] p-4">
+                <WebhookBox label="Biteship Webhook" value={biteshipWebhookUrl} />
+                <StepList
+                  items={[
+                    'Pasang URL ini di Biteship Dashboard > Integrasi/Webhook.',
+                    'Aktifkan event order.status, order.price, dan order.waybill_id jika tersedia.',
+                    'Aktifkan webhook auth dan kirim header Authorization: Bearer <Webhook Token> sesuai token yang disimpan di tab Biteship.',
+                    'Endpoint kita menolak event Biteship jika Webhook Token belum disimpan atau header auth salah.',
+                    'Webhook ini dipakai untuk update status pengiriman dan data resi di order.',
+                    'Setelah Order API aktif, lakukan 1 pesanan internal kecil untuk memastikan resi masuk.',
+                    'Kalau event diterima, halaman overview akan menampilkan event Biteship terakhir yang diterima.',
+                  ]}
+                />
+              </div>
             </div>
           </div>
         </section>
