@@ -71,6 +71,13 @@ export async function POST(req: Request) {
 
       if (orderError || !order) {
         console.warn(`Webhook received for unknown order: ${external_id}`);
+        await supabaseAdmin.from('webhook_events').insert({
+          provider: 'xendit',
+          event_id: eventId,
+          event_type: status,
+          reference_id: external_id,
+          payload: body,
+        });
         return NextResponse.json({ success: true, message: 'Order not found, skipping' });
       }
 
@@ -124,10 +131,18 @@ export async function POST(req: Request) {
             'BITESHIP_API_KEY',
           );
           if (!biteshipApiKey) {
-            console.error(
-              'Biteship Webhook Error: BITESHIP_API_KEY is not defined in environment variables',
-            );
-            return NextResponse.json({ success: true, message: 'Biteship API Key missing' });
+            console.error('Biteship Webhook Error: Biteship API Key is not configured.');
+            await supabaseAdmin
+              .from('orders')
+              .update({
+                shipping_metadata: {
+                  ...(order.shipping_metadata as ShippingMetadata),
+                  biteship_error: { message: 'Biteship API Key belum disimpan.' },
+                  last_retry_at: new Date().toISOString(),
+                },
+              })
+              .eq('id', order.id);
+            throw new Error('Biteship API Key belum disimpan.');
           }
 
           const address = order.addresses;
@@ -135,7 +150,7 @@ export async function POST(req: Request) {
 
           // Koordinat Pengirim (Origin) - Fallback ke Toko Bananas Bindery
           // (Taman Yasmin, Cilendek Timur, Bogor Barat 16112). Sumber kebenaran
-          // tetap store_settings yang diatur via /admin/promos.
+          // tetap store_settings yang diatur via Admin > Settings.
           const originLat = storeSettings?.origin_latitude
             ? Number(storeSettings.origin_latitude)
             : -6.570345;

@@ -111,6 +111,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'Event ignored' });
     }
 
+    const webhookEventId = [
+      order_id || courier_tracking_id || courier_waybill_id || 'unknown',
+      event,
+      status || price || order_price || 'received',
+    ].join(':');
+
     // 2. Cari order yang memiliki biteship_order_id tersebut
     // Kita simpan biteship_order_id di dalam shipping_metadata
     const { data: order, error: orderError } = await supabaseAdmin
@@ -121,6 +127,16 @@ export async function POST(req: Request) {
 
     if (orderError || !order) {
       console.warn(`Biteship webhook received for unknown order: ${order_id}`);
+      const { error: eventError } = await supabaseAdmin.from('webhook_events').insert({
+        provider: 'biteship',
+        event_id: webhookEventId,
+        event_type: event,
+        reference_id: order_id || courier_tracking_id || courier_waybill_id || null,
+        payload: body,
+      });
+      if (eventError) {
+        console.warn('Biteship webhook event audit skipped:', eventError.message);
+      }
       return NextResponse.json({ success: true, message: 'Order not found' });
     }
 
@@ -203,11 +219,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Update Failed' }, { status: 500 });
     }
 
-    const webhookEventId = [
-      order_id || order.id,
-      event,
-      status || courier_tracking_id || courier_waybill_id || price || order_price || 'received',
-    ].join(':');
     const { error: eventError } = await supabaseAdmin.from('webhook_events').insert({
       provider: 'biteship',
       event_id: webhookEventId,

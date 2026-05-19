@@ -1,7 +1,19 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { biteshipAuthHeader, getIntegrationSecret } from '@/lib/integration-secrets';
+
+const BITESHIP_COURIERS = 'gojek,grab,jne,lion,sicepat,jnt,idexpress,anteraja,sap,lalamove';
+
+const getSupabaseAdmin = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createAdminClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+};
 
 /**
  * Fungsi untuk mencari Area ID Biteship secara otomatis berdasarkan
@@ -99,14 +111,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. CEK CACHE (Hemat Saldo!)
-    const couriers = 'jne,jnt,sicepat,anteraja,grab,gojek';
-    const { data: cachedRate } = await supabase
+    const cacheClient = getSupabaseAdmin() ?? supabase;
+    const { data: cachedRate } = await cacheClient
       .from('shipping_rates_cache')
       .select('rates_data')
       .eq('origin_area_id', originAreaId)
       .eq('destination_area_id', destinationAreaId)
       .eq('total_weight', totalWeight)
-      .eq('couriers_list', couriers)
+      .eq('couriers_list', BITESHIP_COURIERS)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 
@@ -118,7 +130,7 @@ export async function POST(req: NextRequest) {
     const apiKey = await getIntegrationSecret('biteship', 'api_key', 'BITESHIP_API_KEY');
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'Biteship API Key belum terpasang di .env' },
+        { error: 'Biteship API Key belum disimpan di Admin > Integrations.' },
         { status: 500 },
       );
     }
@@ -142,7 +154,7 @@ export async function POST(req: NextRequest) {
     } = {
       origin_area_id: originAreaId,
       destination_area_id: destinationAreaId,
-      couriers: 'gojek,grab,jne,lion,sicepat,jnt,idexpress,anteraja,sap,lalamove',
+      couriers: BITESHIP_COURIERS,
       items: items.map((item) => ({
         name: item.name || 'Produk binder Bananasbindery',
         description: item.description || item.name || 'Produk binder Bananasbindery',
@@ -207,17 +219,20 @@ export async function POST(req: NextRequest) {
     // 7. Simpan Hasil ke Cache (upsert — refresh row lama yang sudah expired
     //    tanpa kena duplicate key pada unique constraint).
     if (data.success) {
-      await supabase.from('shipping_rates_cache').upsert(
+      const { error: cacheError } = await cacheClient.from('shipping_rates_cache').upsert(
         {
           origin_area_id: originAreaId,
           destination_area_id: destinationAreaId,
           total_weight: totalWeight,
-          couriers_list: couriers,
+          couriers_list: BITESHIP_COURIERS,
           rates_data: results,
           expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         },
         { onConflict: 'origin_area_id,destination_area_id,total_weight,couriers_list' },
       );
+      if (cacheError) {
+        console.warn('SHIPPING_RATES_CACHE_WRITE_WARN:', cacheError.message);
+      }
     }
 
     return NextResponse.json(results);

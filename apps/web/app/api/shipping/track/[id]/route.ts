@@ -7,6 +7,20 @@ interface ShippingMetadata {
   biteship_order_id?: string;
   courier_tracking_id?: string;
   courier_waybill_id?: string;
+  courier_company?: string;
+}
+
+const getSupabaseAdmin = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+};
+
+async function readJson(response: Response) {
+  return response.json().catch(() => ({}));
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,10 +37,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     }
 
     // 1. Inisialisasi Supabase
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase admin is not configured' }, { status: 503 });
+    }
 
     // 2. Ambil biteship_order_id dari database
     const { data: order, error } = await supabase
@@ -55,6 +69,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const biteshipOrderId = metadata?.biteship_order_id;
     const courierTrackingId = metadata?.courier_tracking_id;
     const courierWaybillId = metadata?.courier_waybill_id;
+    const courierCompany = metadata?.courier_company;
 
     if (!biteshipOrderId && !courierTrackingId) {
       return NextResponse.json({ error: 'Tracking not available yet' }, { status: 400 });
@@ -103,13 +118,30 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: 'Biteship API key is not configured' }, { status: 503 });
     }
 
-    const biteshipRes = await fetch(`https://api.biteship.com/v1/trackings/${trackingId}`, {
+    let biteshipRes = await fetch(`https://api.biteship.com/v1/trackings/${trackingId}`, {
       headers: {
         Authorization: biteshipAuthHeader(biteshipApiKey),
       },
     });
 
-    const trackingData = await biteshipRes.json();
+    let trackingData = await readJson(biteshipRes);
+
+    if (!biteshipRes.ok && courierWaybillId && courierCompany) {
+      const publicTrackingRes = await fetch(
+        `https://api.biteship.com/v1/trackings/${courierWaybillId}/couriers/${courierCompany}`,
+        {
+          headers: {
+            Authorization: biteshipAuthHeader(biteshipApiKey),
+          },
+        },
+      );
+      const publicTrackingData = await readJson(publicTrackingRes);
+
+      if (publicTrackingRes.ok) {
+        biteshipRes = publicTrackingRes;
+        trackingData = publicTrackingData;
+      }
+    }
 
     if (!biteshipRes.ok) {
       return NextResponse.json(trackingData, { status: biteshipRes.status });

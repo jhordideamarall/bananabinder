@@ -269,11 +269,15 @@ export async function POST(req: Request) {
       profile?.name || address?.recipient_name || user.email?.split('@')[0] || 'Customer';
     const customerPhone = profile?.phone || address?.phone || null;
     const formattedCustomerPhone = formatXenditPhone(customerPhone);
-    const protocol = req.headers.get('x-forwarded-proto') || 'http';
-    const host = req.headers.get('host');
-    const dynamicBaseUrl = host
-      ? `${protocol}://${host}`
-      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const configuredAppUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '');
+    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+    const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    const dynamicBaseUrl =
+      configuredAppUrl && !configuredAppUrl.includes('localhost')
+        ? configuredAppUrl
+        : forwardedHost
+          ? `${forwardedProto}://${forwardedHost}`
+          : 'https://bananasbindery.com';
 
     const xenditPayload = {
       external_id: order.order_number,
