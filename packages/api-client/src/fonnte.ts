@@ -45,6 +45,7 @@ interface FonnteRawResponse {
   reason?: string;
   id?: string[];
   device?: string;
+  device_status?: string;
   quota?: number | string;
   message?: string;
 }
@@ -125,7 +126,9 @@ export async function checkFonnteDevice(apiKey: string): Promise<FonnteDeviceRes
   return {
     success: ok,
     device: raw.device,
-    status: typeof raw.status === 'string' ? raw.status : ok ? 'connect' : 'unknown',
+    status:
+      raw.device_status ||
+      (typeof raw.status === 'string' ? raw.status : ok ? 'connect' : 'unknown'),
     quota: typeof raw.quota === 'string' ? Number(raw.quota) : raw.quota,
     reason: ok ? undefined : raw.reason || 'Device Fonnte tidak terhubung.',
   };
