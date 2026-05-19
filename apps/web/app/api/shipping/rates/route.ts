@@ -19,11 +19,16 @@ const getSupabaseAdmin = () => {
  * Fungsi untuk mencari Area ID Biteship secara otomatis berdasarkan
  * nama Kecamatan, Kota, dan Kode Pos.
  */
-async function resolveAreaId(district: string, city: string, postalCode: string) {
+async function resolveAreaId(
+  district: string | null | undefined,
+  city: string | null | undefined,
+  postalCode: string | null | undefined,
+) {
   const apiKey = await getIntegrationSecret('biteship', 'api_key', 'BITESHIP_API_KEY');
   if (!apiKey) return null;
 
-  const searchQuery = postalCode || `${district}, ${city}`;
+  const searchQuery = postalCode || [district, city].filter(Boolean).join(', ');
+  if (!searchQuery) return null;
 
   try {
     const response = await fetch(
