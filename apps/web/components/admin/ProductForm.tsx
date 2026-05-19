@@ -60,6 +60,7 @@ interface ProductDetail {
   } | null;
   price: number;
   promo_price: number | null;
+  stock: number | null;
   weight_grams: number | null;
   is_active: boolean | null;
   productVariants: ProductVariantRow[];
@@ -127,6 +128,7 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
   const [description, setDescription] = useState(initialData?.description || '');
   const [basePrice, setBasePrice] = useState(initialData?.price || 0);
   const [promoPrice, setPromoPrice] = useState<number | ''>(initialData?.promo_price ?? '');
+  const [productStock, setProductStock] = useState(initialData?.stock ?? 0);
   const [weight, setWeight] = useState(initialData?.weight_grams || 500);
   const [categoryId, setCategoryId] = useState(initialData?.category_id || '');
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
@@ -142,7 +144,8 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
 
   const selectedCategory =
     categories.find((category) => category.id === categoryId) ?? initialData?.category ?? null;
-  const totalStock = variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0);
+  const variantStock = variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0);
+  const totalStock = Number(productStock || 0) + variantStock;
   const displaySlug = slugify(name);
   const numericPromoPrice =
     promoPrice === '' || Number(promoPrice) <= 0 ? null : Number(promoPrice);
@@ -192,7 +195,7 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
         }
         if (totalStock <= 0) {
           throw new Error(
-            'Produk aktif harus punya stok. Tambahkan stok varian atau nonaktifkan produk.',
+            'Produk aktif harus punya stok. Isi stok produk utama, stok varian, atau nonaktifkan produk.',
           );
         }
         if (variants.some((variant) => Number(variant.weight_grams) <= 0)) {
@@ -217,6 +220,7 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
           category_id: categoryId || null,
           base_price: Number(basePrice),
           promo_price: numericPromoPrice,
+          product_stock: Number(productStock),
           weight: Number(weight),
           is_active: isActive,
           variants: variants.map((variant) => ({
@@ -269,7 +273,8 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
           <p className="mt-1 text-[13px] text-[#86868B]">
             {selectedCategory ? `Kategori: ${selectedCategory.name}` : 'Belum ada kategori'}
             {' · '}
-            {variants.length} varian · stok total {totalStock}
+            stok produk utama {Number(productStock || 0)} · {variants.length} varian · stok varian{' '}
+            {variantStock} · stok total {totalStock}
             {hasProductDiscount ? ` · diskon ${productDiscountPct}%` : ''}
           </p>
         </div>
@@ -381,6 +386,21 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
                 />
                 <span className="block text-[11px] text-[#86868B]">
                   Diskon produk. Varian otomatis mengikuti persentase yang sama.
+                </span>
+              </label>
+
+              <label className="space-y-1.5">
+                <span className={labelClass}>Stok produk utama</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={productStock}
+                  onChange={(e) => setProductStock(Number(e.target.value))}
+                  className={fieldClass}
+                  required
+                />
+                <span className="block text-[11px] text-[#86868B]">
+                  Dipakai kalau pembeli tidak memilih varian.
                 </span>
               </label>
 
@@ -609,7 +629,15 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
                 <dd className="font-medium text-[#1D1D1F]">{images.length}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-[#86868B]">Stok total</dt>
+                <dt className="text-[#86868B]">Stok produk utama</dt>
+                <dd className="font-medium text-[#1D1D1F]">{Number(productStock || 0)}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-[#86868B]">Stok varian</dt>
+                <dd className="font-medium text-[#1D1D1F]">{variantStock}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-[#86868B]">Stok gabungan</dt>
                 <dd className="font-medium text-[#1D1D1F]">{totalStock}</dd>
               </div>
             </dl>

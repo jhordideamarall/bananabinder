@@ -224,6 +224,14 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       setVariantError('Harga produk belum valid. Hubungi admin sebelum checkout.');
       return;
     }
+    if (activeStock <= 0) {
+      setVariantError(
+        selectedVariant
+          ? 'Stok varian ini habis.'
+          : 'Stok produk utama habis. Pilih varian yang tersedia atau hubungi admin.',
+      );
+      return;
+    }
 
     const itemName = selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name;
     addItem({
@@ -471,7 +479,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 fontWeight: 500,
               }}
             >
-              Stok {fmt(activeStock)}
+              {selectedVariant ? 'Stok varian' : 'Stok produk utama'} {fmt(activeStock)}
             </span>
           </div>
 

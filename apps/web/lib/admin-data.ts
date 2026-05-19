@@ -81,6 +81,7 @@ export interface AdminProductPayload {
   category_id?: string | null;
   base_price: number;
   promo_price?: number | null;
+  product_stock?: number | null;
   weight: number;
   is_active: boolean;
   variants: {
@@ -208,7 +209,7 @@ export async function createAdminProduct(
     price: payload.base_price,
     promo_price: payload.promo_price ?? null,
     cost_price: payload.base_price,
-    stock: payload.variants.reduce((sum, variant) => sum + variant.stock, 0),
+    stock: Number(payload.product_stock ?? 0),
     weight_grams: payload.weight,
     is_active: payload.is_active,
     type: 'normal',
@@ -239,7 +240,7 @@ export async function updateAdminProduct(
     price: payload.base_price,
     promo_price: payload.promo_price ?? null,
     cost_price: payload.base_price,
-    stock: payload.variants.reduce((sum, variant) => sum + variant.stock, 0),
+    stock: Number(payload.product_stock ?? 0),
     weight_grams: payload.weight,
     is_active: payload.is_active,
     updated_at: new Date().toISOString(),

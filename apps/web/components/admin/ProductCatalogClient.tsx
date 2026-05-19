@@ -38,6 +38,7 @@ export function ProductCatalogClient({ products }: ProductCatalogClientProps) {
   const totalStock = products.reduce(
     (sum, product) =>
       sum +
+      Number(product.stock ?? 0) +
       product.productVariants.reduce(
         (variantSum, variant) => variantSum + Number(variant.stock ?? 0),
         0,
@@ -45,15 +46,19 @@ export function ProductCatalogClient({ products }: ProductCatalogClientProps) {
     0,
   );
   const lowStockCount = products.filter((product) => {
+    const mainStock = Number(product.stock ?? 0);
     const productStock = product.productVariants.reduce(
       (sum, variant) => sum + Number(variant.stock ?? 0),
       0,
     );
-    return productStock > 0 && productStock < 10;
+    const combinedStock = mainStock + productStock;
+    return combinedStock > 0 && combinedStock < 10;
   }).length;
   const outOfStockCount = products.filter(
     (product) =>
-      product.productVariants.reduce((sum, variant) => sum + Number(variant.stock ?? 0), 0) <= 0,
+      Number(product.stock ?? 0) +
+        product.productVariants.reduce((sum, variant) => sum + Number(variant.stock ?? 0), 0) <=
+      0,
   ).length;
 
   return (
@@ -102,10 +107,12 @@ export function ProductCatalogClient({ products }: ProductCatalogClientProps) {
         {visibleProducts.map((product) => {
           const hasDiscount = Boolean(product.promo_price && product.promo_price < product.price);
           const displayPrice = product.promo_price ?? product.price;
-          const productStock = product.productVariants.reduce(
+          const mainStock = Number(product.stock ?? 0);
+          const variantStock = product.productVariants.reduce(
             (sum, variant) => sum + Number(variant.stock ?? 0),
             0,
           );
+          const productStock = mainStock + variantStock;
           const stockTone =
             productStock <= 0 ? 'danger' : productStock < 10 ? 'warning' : 'success';
 
@@ -195,6 +202,21 @@ export function ProductCatalogClient({ products }: ProductCatalogClientProps) {
                         : 'Stok aman'}
                   </span>
                   <span>{productStock.toLocaleString('id-ID')} pcs</span>
+                </div>
+
+                <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] font-medium text-[#86868B]">
+                  <div className="rounded-xl bg-black/[0.03] px-3 py-2">
+                    <span className="block">Produk utama</span>
+                    <span className="mt-0.5 block text-[13px] font-semibold text-[#1D1D1F]">
+                      {mainStock.toLocaleString('id-ID')} pcs
+                    </span>
+                  </div>
+                  <div className="rounded-xl bg-black/[0.03] px-3 py-2">
+                    <span className="block">Varian</span>
+                    <span className="mt-0.5 block text-[13px] font-semibold text-[#1D1D1F]">
+                      {variantStock.toLocaleString('id-ID')} pcs
+                    </span>
+                  </div>
                 </div>
 
                 <Link
