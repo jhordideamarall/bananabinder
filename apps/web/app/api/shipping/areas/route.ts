@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { biteshipAuthHeader, getIntegrationSecret } from '@/lib/integration-secrets';
 
 interface BiteshipAreaResponse {
   areas?: Array<{ id: string; name: string; postal_code?: string }>;
@@ -8,7 +9,7 @@ interface BiteshipAreaResponse {
 
 export async function GET(req: Request) {
   try {
-    const apiKey = process.env.BITESHIP_API_KEY;
+    const apiKey = await getIntegrationSecret('biteship', 'api_key', 'BITESHIP_API_KEY');
     if (!apiKey) {
       return NextResponse.json({ error: 'Biteship API key is not configured' }, { status: 503 });
     }
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
       `https://api.biteship.com/v1/maps/areas?countries=ID&input=${encodeURIComponent(input)}`,
       {
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: biteshipAuthHeader(apiKey),
           'Content-Type': 'application/json',
         },
       },

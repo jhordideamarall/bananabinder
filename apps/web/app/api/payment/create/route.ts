@@ -1,8 +1,8 @@
-import { Buffer } from 'node:buffer';
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { sendWhatsAppMessage } from '@bananasbindery/api-client/fonnte';
 import { createClient } from '@/lib/supabase/server';
+import { getIntegrationSecret, xenditAuthHeader } from '@/lib/integration-secrets';
 
 interface PaymentCreateBody {
   orderId?: string;
@@ -77,6 +77,16 @@ const isCustomOrderDetails = (value: unknown): value is CustomOrderDetails =>
   typeof value.personalization === 'string';
 
 const formatRupiah = (value: number): string => `Rp ${value.toLocaleString('id-ID')}`;
+
+const formatXenditPhone = (input?: string | null): string | undefined => {
+  if (!input) return undefined;
+  const digits = input.replace(/[^0-9]/g, '');
+  if (!digits) return undefined;
+  if (digits.startsWith('0')) return `+62${digits.slice(1)}`;
+  if (digits.startsWith('62')) return `+${digits}`;
+  if (digits.startsWith('8')) return `+62${digits}`;
+  return `+${digits}`;
+};
 
 const buildCustomOrderMessage = (params: {
   customerName: string;
@@ -166,7 +176,7 @@ const sendCustomOrderConfirmation = async (params: {
 
 export async function POST(req: Request) {
   try {
-    const xenditSecretKey = process.env.XENDIT_SECRET_KEY;
+    const xenditSecretKey = await getIntegrationSecret('xendit', 'secret_key', 'XENDIT_SECRET_KEY');
     if (!xenditSecretKey) {
       return NextResponse.json({ error: 'Payment provider is not configured' }, { status: 503 });
     }
@@ -254,14 +264,11 @@ export async function POST(req: Request) {
       });
     }
 
-    if (order.discount && Number(order.discount) > 0) {
-      items.push({ name: 'Diskon', quantity: 1, price: -Math.round(Number(order.discount)) });
-    }
-
     const customerEmail = profile?.email || user.email || 'customer@bananasbindery.com';
     const customerName =
       profile?.name || address?.recipient_name || user.email?.split('@')[0] || 'Customer';
     const customerPhone = profile?.phone || address?.phone || null;
+    const formattedCustomerPhone = formatXenditPhone(customerPhone);
     const protocol = req.headers.get('x-forwarded-proto') || 'http';
     const host = req.headers.get('host');
     const dynamicBaseUrl = host
@@ -276,21 +283,25 @@ export async function POST(req: Request) {
       customer: {
         given_names: customerName,
         email: customerEmail,
-        mobile_number: customerPhone || '',
+        ...(formattedCustomerPhone ? { mobile_number: formattedCustomerPhone } : {}),
       },
       items,
       success_redirect_url: `${dynamicBaseUrl}/checkout/success?order_id=${order.id}`,
       failure_redirect_url: `${dynamicBaseUrl}/account/orders`,
       currency: 'IDR',
       reminder_time: 1,
+      metadata: {
+        order_id: order.id,
+        order_number: order.order_number,
+        discount: Math.round(Number(order.discount || 0)),
+      },
     };
 
-    const authString = Buffer.from(`${xenditSecretKey}:`).toString('base64');
     const response = await fetch(XENDIT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Basic ${authString}`,
+        Authorization: xenditAuthHeader(xenditSecretKey),
       },
       body: JSON.stringify(xenditPayload),
     });
@@ -318,7 +329,7 @@ export async function POST(req: Request) {
     });
 
     const whatsappConfirmation = await sendCustomOrderConfirmation({
-      apiKey: process.env.FONNTE_API_TOKEN,
+      apiKey: await getIntegrationSecret('fonnte', 'api_token', 'FONNTE_API_TOKEN'),
       target: customerPhone,
       customerName,
       orderNumber: order.order_number,

@@ -1,4 +1,3 @@
-import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import type { Route } from 'next';
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
@@ -7,11 +6,9 @@ import {
   type ChatMessageItem,
   getAdminChatConversations,
   getAdminChatMessages,
-  sendAdminChatMessage,
 } from '@bananasbindery/api-client/chat';
-import { getUser } from '@/lib/auth';
-import { isAdmin } from '@/lib/admin';
 import { supabaseAdmin } from '@/lib/supabase';
+import { ChatReplyForm } from '@/components/admin/chats/ChatReplyForm';
 import { AdminChatRealtime } from './_admin-chat-realtime';
 
 interface AdminChatsPageProps {
@@ -67,21 +64,6 @@ const getThreadContext = (
 
   return { productName, productSlug, variantName, productImageUrl };
 };
-
-async function replyChat(formData: FormData): Promise<void> {
-  'use server';
-
-  const user = await getUser();
-  if (!user || !(await isAdmin(user.id))) return;
-
-  const conversationId = formData.get('conversationId');
-  const message = formData.get('message');
-  if (typeof conversationId !== 'string' || typeof message !== 'string') return;
-
-  const supabase = supabaseAdmin as unknown as TypedSupabaseClient;
-  await sendAdminChatMessage(supabase, user.id, conversationId, message);
-  revalidatePath('/admin/chats');
-}
 
 export default async function AdminChatsPage({ searchParams }: AdminChatsPageProps) {
   const { conversation: selectedId } = await searchParams;
@@ -242,22 +224,7 @@ export default async function AdminChatsPage({ searchParams }: AdminChatsPagePro
                 })}
               </div>
 
-              <form action={replyChat} className="flex gap-3 border-t border-black/10 p-4">
-                <input type="hidden" name="conversationId" value={activeConversation.id} />
-                <textarea
-                  name="message"
-                  rows={3}
-                  required
-                  placeholder="Balas customer..."
-                  className="min-h-[84px] flex-1 resize-none rounded-xl border border-primary/30 px-3 py-2 text-[14px] outline-none focus:border-primary"
-                />
-                <button
-                  type="submit"
-                  className="rounded-xl bg-primary px-5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
-                >
-                  Kirim
-                </button>
-              </form>
+              <ChatReplyForm conversationId={activeConversation.id} />
             </>
           ) : (
             <div className="px-5 py-12 text-center text-[14px] text-[#86868B]">

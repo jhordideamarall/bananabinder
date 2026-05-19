@@ -1,6 +1,15 @@
+'use client';
+
+import { useActionState } from 'react';
 import { Save, Type as IconType } from 'lucide-react';
 import type { Tables } from '@bananasbindery/types/supabase';
-import { saveStoreSettings } from '@/app/admin/actions';
+import { saveStoreSettingsWithFeedback } from '@/app/admin/action-feedback';
+import {
+  AdminActionMessage,
+  PendingAwareSubmitButton,
+  initialAdminActionState,
+  useRefreshOnActionState,
+} from '@/components/admin/ActionFeedback';
 
 type StoreSettingsRow = Tables<'store_settings'>;
 
@@ -13,8 +22,14 @@ interface HomeBannerLabelsFormProps {
 }
 
 export function HomeBannerLabelsForm({ settings }: HomeBannerLabelsFormProps) {
+  const [saveState, saveAction] = useActionState(
+    saveStoreSettingsWithFeedback,
+    initialAdminActionState,
+  );
+  useRefreshOnActionState(saveState);
+
   return (
-    <form action={saveStoreSettings} className="rounded-2xl border border-black/[0.06] bg-white">
+    <form action={saveAction} className="rounded-2xl border border-black/[0.06] bg-white">
       <div className="flex items-start gap-3 border-b border-black/[0.06] px-6 py-5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/20 text-[#1D1D1F]">
           <IconType className="h-5 w-5" strokeWidth={1.75} />
@@ -48,14 +63,17 @@ export function HomeBannerLabelsForm({ settings }: HomeBannerLabelsFormProps) {
           />
         </label>
       </div>
-      <footer className="flex items-center justify-end border-t border-black/[0.06] bg-[#FAFAFA] px-6 py-4">
-        <button
-          type="submit"
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-[#1D1D1F] px-5 text-[14px] font-medium text-white transition-colors hover:bg-black"
+      <footer className="flex flex-col gap-3 border-t border-black/[0.06] bg-[#FAFAFA] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <AdminActionMessage state={saveState} />
+        </div>
+        <PendingAwareSubmitButton
+          pendingText="Menyimpan label..."
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#1D1D1F] px-5 text-[14px] font-medium text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Save className="h-4 w-4" strokeWidth={2} />
           Simpan label
-        </button>
+        </PendingAwareSubmitButton>
       </footer>
     </form>
   );

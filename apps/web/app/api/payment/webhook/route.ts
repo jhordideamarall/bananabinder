@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { biteshipAuthHeader, getIntegrationSecret } from '@/lib/integration-secrets';
 
 interface ShippingMetadata {
   biteship_order_id?: string;
@@ -18,11 +19,6 @@ const getSupabaseAdmin = () => {
   return createClient(url, key);
 };
 
-const XENDIT_CALLBACK_TOKEN = process.env.XENDIT_CALLBACK_TOKEN || '';
-const BITESHIP_API_KEY = process.env.BITESHIP_API_KEY || '';
-// Disamakan dengan default DB store_settings agar origin pengiriman konsisten.
-const BITESHIP_ORIGIN_AREA_ID = process.env.BITESHIP_ORIGIN_AREA_ID || 'IDNP6M3K2W1';
-
 export async function POST(req: Request) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
@@ -34,12 +30,17 @@ export async function POST(req: Request) {
     const body = await req.json();
     const headers = req.headers;
     const callbackToken = headers.get('x-callback-token');
+    const xenditCallbackToken = await getIntegrationSecret(
+      'xendit',
+      'callback_token',
+      'XENDIT_CALLBACK_TOKEN',
+    );
 
     console.log('Xendit Webhook Received:', JSON.stringify(body, null, 2));
 
     // Fail-closed: tolak kalau token belum di-set di env ATAU tidak cocok.
     // Sebelumnya validasi dilewati saat env kosong → webhook terbuka.
-    if (!XENDIT_CALLBACK_TOKEN || callbackToken !== XENDIT_CALLBACK_TOKEN) {
+    if (!xenditCallbackToken || callbackToken !== xenditCallbackToken) {
       console.error('Xendit webhook rejected: callback token missing or mismatch');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     const { external_id, status } = body;
 
     // Idempotency guard — hindari proses ganda kalau Xendit retry webhook.
-    const eventId: string = body.id || `${external_id}-${status}`;
+    const eventId: string = `${body.id || external_id || 'unknown'}:${status || body.event || 'unknown'}`;
     const { data: existingEvent } = await supabaseAdmin
       .from('webhook_events')
       .select('id')
@@ -117,7 +118,12 @@ export async function POST(req: Request) {
       // 3. KIRIM KE BITESHIP (Hanya jika belum pernah dikirim)
       if (!order.shipping_metadata?.biteship_order_id) {
         try {
-          if (!BITESHIP_API_KEY) {
+          const biteshipApiKey = await getIntegrationSecret(
+            'biteship',
+            'api_key',
+            'BITESHIP_API_KEY',
+          );
+          if (!biteshipApiKey) {
             console.error(
               'Biteship Webhook Error: BITESHIP_API_KEY is not defined in environment variables',
             );
@@ -140,6 +146,17 @@ export async function POST(req: Request) {
           // Koordinat Penerima (Destination)
           const destLat = address.latitude ? Number(address.latitude) : undefined;
           const destLng = address.longitude ? Number(address.longitude) : undefined;
+          const originCoordinate =
+            Number.isFinite(originLat) && Number.isFinite(originLng)
+              ? { latitude: originLat, longitude: originLng }
+              : undefined;
+          const destinationCoordinate =
+            destLat !== undefined &&
+            destLng !== undefined &&
+            Number.isFinite(destLat) &&
+            Number.isFinite(destLng)
+              ? { latitude: destLat, longitude: destLng }
+              : undefined;
 
           // Ambil kode kurir & servis langsung dari DB (Step 4 Fix)
           // Jika tidak ada (order lama), fallback ke parsing string
@@ -162,21 +179,24 @@ export async function POST(req: Request) {
           const finalServiceCode =
             order.shipping_service_code || mapServiceType(serviceName || 'reg');
 
+          const storeName = storeSettings?.store_name || 'Bananasbindery';
+          const storePhone = storeSettings?.contact_phone || '089519541180';
+          const storeEmail = storeSettings?.contact_email || 'banastuff@gmail.com';
+
           const biteshipPayload = {
-            shipper_contact_name: 'Bananas Bindery',
-            shipper_contact_phone: '089519541180',
-            shipper_contact_email: 'banastuff@gmail.com',
-            shipper_organization: 'Bananas Bindery',
-            origin_contact_name: 'Bananas Bindery',
-            origin_contact_phone: '089519541180',
+            shipper_contact_name: storeName,
+            shipper_contact_phone: storePhone,
+            shipper_contact_email: storeEmail,
+            shipper_organization: storeName,
+            origin_contact_name: storeName,
+            origin_contact_phone: storePhone,
             origin_address:
               storeSettings?.origin_address ||
               'Taman Yasmin Sektor V Tahap II, Jl. Cijahe 1 No.60, Kel. Cilendek Timur, Kec. Bogor Barat, Kota Bogor 16112',
             origin_note: '',
-            origin_postal_code: 16112,
-            origin_area_id: storeSettings?.origin_area_id || BITESHIP_ORIGIN_AREA_ID,
-            origin_latitude: originLat,
-            origin_longitude: originLng,
+            origin_postal_code: Number(storeSettings?.origin_postal_code || 16112),
+            origin_area_id: storeSettings?.origin_area_id || 'IDNP6M3K2W1',
+            ...(originCoordinate ? { origin_coordinate: originCoordinate } : {}),
             destination_contact_name: address.recipient_name || profile?.name || 'Customer',
             destination_contact_phone: address.phone || profile?.phone || '',
             destination_contact_email: profile?.email || '',
@@ -184,8 +204,7 @@ export async function POST(req: Request) {
             destination_note: '',
             destination_postal_code: parseInt(address.postal_code || '0'),
             destination_area_id: address.biteship_area_id,
-            destination_latitude: destLat,
-            destination_longitude: destLng,
+            ...(destinationCoordinate ? { destination_coordinate: destinationCoordinate } : {}),
             courier_company: finalCourierCode,
             courier_type: finalServiceCode,
             delivery_type: 'now',
@@ -221,12 +240,18 @@ export async function POST(req: Request) {
           // dan `biteship/standard` tidak support pickup (40002031).
           // Untuk dev workflow, simulasi sukses lokal supaya alur UI/tracking bisa diuji.
           // Production (key non-test) tetap call real Biteship API.
-          const isSandbox = BITESHIP_API_KEY.startsWith('biteship_test');
+          const isSandbox = biteshipApiKey.startsWith('biteship_test');
           let biteshipRes: Response;
           let biteshipData: {
             id?: string;
             status?: string;
-            courier?: { tracking_id?: string };
+            courier?: {
+              tracking_id?: string;
+              waybill_id?: string;
+              company?: string;
+              type?: string;
+              link?: string | null;
+            };
             success?: boolean;
             error?: string;
             code?: number;
@@ -253,7 +278,7 @@ export async function POST(req: Request) {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${BITESHIP_API_KEY}`,
+                Authorization: biteshipAuthHeader(biteshipApiKey),
               },
               body: JSON.stringify(biteshipPayload),
             });
@@ -264,10 +289,17 @@ export async function POST(req: Request) {
             await supabaseAdmin
               .from('orders')
               .update({
+                shipping_status: biteshipData.status,
+                shipping_tracking:
+                  biteshipData.courier?.waybill_id || biteshipData.courier?.tracking_id || null,
                 shipping_metadata: {
                   ...(order.shipping_metadata as ShippingMetadata),
                   biteship_order_id: biteshipData.id,
                   courier_tracking_id: biteshipData.courier?.tracking_id,
+                  courier_waybill_id: biteshipData.courier?.waybill_id,
+                  courier_company: biteshipData.courier?.company,
+                  courier_type: biteshipData.courier?.type,
+                  courier_link: biteshipData.courier?.link,
                   biteship_status: biteshipData.status,
                 },
               })

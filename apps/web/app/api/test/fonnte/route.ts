@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { checkFonnteDevice, sendWhatsAppMessage } from '@bananasbindery/api-client/fonnte';
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
 import { createClient } from '@/lib/supabase/server';
+import { getIntegrationSecret } from '@/lib/integration-secrets';
 
 const ADMIN_ROLES = ['admin', 'owner', 'staff'];
 
@@ -44,7 +45,7 @@ export async function GET(): Promise<NextResponse> {
   const denied = await guardAdmin();
   if (denied) return denied;
 
-  const apiKey = process.env.FONNTE_API_TOKEN;
+  const apiKey = await getIntegrationSecret('fonnte', 'api_token', 'FONNTE_API_TOKEN');
   if (!apiKey) {
     return NextResponse.json(
       { success: false, error: 'FONNTE_API_TOKEN belum dikonfigurasi di environment.' },
@@ -76,7 +77,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   const denied = await guardAdmin();
   if (denied) return denied;
 
-  const apiKey = process.env.FONNTE_API_TOKEN;
+  const apiKey = await getIntegrationSecret('fonnte', 'api_token', 'FONNTE_API_TOKEN');
   if (!apiKey) {
     return NextResponse.json(
       { success: false, error: 'FONNTE_API_TOKEN belum dikonfigurasi di environment.' },

@@ -1,13 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { biteshipAuthHeader, getIntegrationSecret } from '@/lib/integration-secrets';
 
 /**
  * Fungsi untuk mencari Area ID Biteship secara otomatis berdasarkan
  * nama Kecamatan, Kota, dan Kode Pos.
  */
 async function resolveAreaId(district: string, city: string, postalCode: string) {
-  const apiKey = process.env.BITESHIP_API_KEY;
+  const apiKey = await getIntegrationSecret('biteship', 'api_key', 'BITESHIP_API_KEY');
   if (!apiKey) return null;
 
   const searchQuery = postalCode || `${district}, ${city}`;
@@ -16,7 +17,7 @@ async function resolveAreaId(district: string, city: string, postalCode: string)
     const response = await fetch(
       `https://api.biteship.com/v1/maps/areas?countries=ID&input=${encodeURIComponent(searchQuery)}`,
       {
-        headers: { Authorization: `Bearer ${apiKey}` },
+        headers: { Authorization: biteshipAuthHeader(apiKey) },
       },
     );
 
@@ -71,8 +72,7 @@ export async function POST(req: NextRequest) {
 
     // Origin diambil dari store_settings (sumber kebenaran, diatur via /admin/promos).
     // Fallback disamakan dengan default DB store_settings agar tidak ada origin "miss".
-    const originAreaId =
-      settings?.origin_area_id || process.env.BITESHIP_ORIGIN_AREA_ID || 'IDNP6M3K2W1';
+    const originAreaId = settings?.origin_area_id || 'IDNP6M3K2W1';
     // Fallback koordinat = Toko Bananas Bindery (Cilendek Timur, Bogor Barat 16112).
     const originLat = settings?.origin_latitude ? Number(settings.origin_latitude) : -6.570345;
     const originLng = settings?.origin_longitude ? Number(settings.origin_longitude) : 106.7767107;
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(cachedRate.rates_data);
     }
 
-    const apiKey = process.env.BITESHIP_API_KEY;
+    const apiKey = await getIntegrationSecret('biteship', 'api_key', 'BITESHIP_API_KEY');
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Biteship API Key belum terpasang di .env' },
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
     const response = await fetch('https://api.biteship.com/v1/rates/couriers', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: biteshipAuthHeader(apiKey),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(biteshipPayload),

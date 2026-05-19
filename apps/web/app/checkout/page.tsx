@@ -149,6 +149,12 @@ export default function CheckoutPage() {
   }, [addresses, selectedAddressId]);
 
   const activeAddress = guestAddress || addresses.find((a: Address) => a.id === selectedAddressId);
+  const activeAddressNeedsLocation =
+    Boolean(activeAddress) &&
+    (!activeAddress?.biteship_area_id ||
+      !activeAddress?.postal_code ||
+      activeAddress?.latitude == null ||
+      activeAddress?.longitude == null);
 
   useEffect(() => {
     setHydrated(true);
@@ -324,6 +330,12 @@ export default function CheckoutPage() {
 
   const continueFlow = () => {
     if (!activeAddress && step === 1) {
+      setIsAddressSheetOpen(true);
+      return;
+    }
+
+    if (step === 1 && activeAddressNeedsLocation) {
+      toast.error('Alamat ini perlu diperbarui agar ongkir dan kurir instant akurat.');
       setIsAddressSheetOpen(true);
       return;
     }

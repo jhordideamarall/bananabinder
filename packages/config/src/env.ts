@@ -14,13 +14,16 @@ const envSchema = z.object({
   // Storage
   NEXT_PUBLIC_STORAGE_URL: z.string().url().optional(),
 
-  // Payment (Midtrans) — Phase 5+
-  MIDTRANS_SERVER_KEY: z.string().min(1).optional(),
-  MIDTRANS_CLIENT_KEY: z.string().min(1).optional(),
-  MIDTRANS_IS_PRODUCTION: z.coerce.boolean().default(false),
+  // Payment (Xendit)
+  XENDIT_SECRET_KEY: z.string().min(1).optional(),
+  XENDIT_TEST_SECRET_KEY: z.string().min(1).optional(),
+  XENDIT_CALLBACK_TOKEN: z.string().min(1).optional(),
+  XENDIT_TEST_CALLBACK_TOKEN: z.string().min(1).optional(),
 
-  // Shipping (RajaOngkir) — Phase 5+
-  RAJAONGKIR_API_KEY: z.string().min(1).optional(),
+  // Shipping (Biteship)
+  BITESHIP_API_KEY: z.string().min(1).optional(),
+  BITESHIP_TEST_API_KEY: z.string().min(1).optional(),
+  BITESHIP_ORIGIN_AREA_ID: z.string().min(1).optional(),
 
   // Maps — Phase 5+
   NEXT_PUBLIC_GOOGLE_MAPS_KEY: z.string().min(1).optional(),

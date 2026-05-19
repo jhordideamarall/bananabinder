@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useActionState, useMemo, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   CheckCircle2,
@@ -13,7 +13,12 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { AdminCustomOrderCatalogConfig } from '@/lib/admin-data';
-import { saveCustomOrderCatalog } from '@/app/admin/actions';
+import { saveCustomOrderCatalogWithFeedback } from '@/app/admin/action-feedback';
+import {
+  AdminActionMessage,
+  initialAdminActionState,
+  useRefreshOnActionState,
+} from '@/components/admin/ActionFeedback';
 
 interface EditableVariant {
   id: string;
@@ -79,6 +84,12 @@ function SaveSetupButton() {
 
 export function CustomOrderSetupForm({ config }: { config: AdminCustomOrderCatalogConfig }) {
   const product = config.product;
+  const [saveState, saveAction] = useActionState(
+    saveCustomOrderCatalogWithFeedback,
+    initialAdminActionState,
+  );
+  useRefreshOnActionState(saveState);
+
   const [materials, setMaterials] = useState<string[]>(
     config.materials.length ? config.materials : [''],
   );
@@ -134,7 +145,7 @@ export function CustomOrderSetupForm({ config }: { config: AdminCustomOrderCatal
   };
 
   return (
-    <form action={saveCustomOrderCatalog} className="space-y-6 p-6">
+    <form action={saveAction} className="space-y-6 p-6">
       <input type="hidden" name="product_id" value={product.id} />
       <input type="hidden" name="variant_count" value={variants.length} />
       <input type="hidden" name="material_count" value={materials.length} />
@@ -409,9 +420,12 @@ export function CustomOrderSetupForm({ config }: { config: AdminCustomOrderCatal
       </section>
 
       <footer className="sticky bottom-0 z-[1] -mx-6 -mb-6 flex items-center justify-between gap-4 border-t border-black/[0.06] bg-white/95 px-6 py-4 backdrop-blur">
-        <div className="flex items-center gap-2 text-[13px] font-semibold text-[#86868B]">
-          <CheckCircle2 className="h-4 w-4 text-primary" />
-          {activeVariantCount} ukuran aktif, {materials.filter(Boolean).length} bahan
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-center gap-2 text-[13px] font-semibold text-[#86868B]">
+            <CheckCircle2 className="h-4 w-4 text-primary" />
+            {activeVariantCount} ukuran aktif, {materials.filter(Boolean).length} bahan
+          </div>
+          <AdminActionMessage state={saveState} />
         </div>
         <SaveSetupButton />
       </footer>

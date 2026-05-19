@@ -8,7 +8,7 @@ declare const Deno: {
   serve(handler: (req: Request) => Promise<Response>): void;
 };
 
-const FONNTE_TOKEN = Deno.env.get('FONNTE_TOKEN');
+const FONNTE_TOKEN = Deno.env.get('FONNTE_API_TOKEN') ?? Deno.env.get('FONNTE_TOKEN');
 
 Deno.serve(async (req: Request) => {
   try {
@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
     const message = `Halo Kak ${name}! 👋\n\nTerima kasih telah bergabung menjadi bagian dari Bananasbindery. Ini adalah kode verifikasi (OTP) Anda:\n\n*${otp}*\n\nJangan berikan kode ini kepada siapa pun ya. Selamat berbelanja binder dan photocard essentials favoritmu! 🍌\n\n— Tim Bananasbindery`;
 
     if (!FONNTE_TOKEN) {
-      console.error('FONNTE_TOKEN is missing!');
+      console.error('FONNTE_API_TOKEN is missing!');
       return new Response(JSON.stringify({ error: 'Server misconfiguration' }), {
         headers: { 'Content-Type': 'application/json' },
         status: 500,

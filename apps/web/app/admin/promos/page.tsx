@@ -74,10 +74,7 @@ export default async function AdminPromosPage({
               href={
                 tab.id === 'banner'
                   ? ('/admin/promos' as Route)
-                  : {
-                      pathname: '/admin/promos' as const,
-                      query: { tab: tab.id },
-                    }
+                  : (`/admin/promos?tab=${tab.id}` as Route)
               }
               aria-current={isActive ? 'page' : undefined}
               className={`rounded-full px-5 py-1.5 text-[13px] transition-colors ${

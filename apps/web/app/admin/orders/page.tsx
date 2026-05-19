@@ -100,10 +100,7 @@ export default async function AdminOrdersPage({
               href={
                 filter.value === 'all'
                   ? ('/admin/orders' as Route)
-                  : {
-                      pathname: '/admin/orders' as const,
-                      query: { status: filter.value },
-                    }
+                  : (`/admin/orders?status=${filter.value}` as Route)
               }
               aria-current={isActive ? 'page' : undefined}
               className={`rounded-full px-4 py-1.5 text-[13px] transition-colors ${
@@ -190,10 +187,7 @@ export default async function AdminOrdersPage({
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
-                        href={{
-                          pathname: '/admin/orders/[id]',
-                          query: { id: order.id },
-                        }}
+                        href={`/admin/orders/${order.id}` as Route}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#86868B] transition-colors hover:bg-black/[0.05] hover:text-[#1D1D1F]"
                         aria-label="Detail pesanan"
                       >

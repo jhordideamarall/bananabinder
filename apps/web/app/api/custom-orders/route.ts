@@ -4,6 +4,7 @@ import { sendWhatsAppMessage } from '@bananasbindery/api-client/fonnte';
 import type { Database, Json } from '@bananasbindery/types/supabase';
 import { generateOrderNumber } from '@bananasbindery/utils/order';
 import { createClient } from '@/lib/supabase/server';
+import { getIntegrationSecret } from '@/lib/integration-secrets';
 
 interface CustomOrderBody {
   productId?: string;
@@ -343,7 +344,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     const whatsappAttempt = await sendCustomRequestWhatsApp({
-      apiKey: process.env.FONNTE_API_TOKEN,
+      apiKey: await getIntegrationSecret('fonnte', 'api_token', 'FONNTE_API_TOKEN'),
       target: customerPhone,
       customerName,
       orderNumber,

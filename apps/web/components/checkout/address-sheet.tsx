@@ -202,6 +202,11 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
       if (areaRes.ok && areaData.areas?.length > 0) {
         // Pick the best match (usually the first one)
         setBiteshipAreaId(areaData.areas[0].id);
+      } else {
+        toast.error(
+          'Area pengiriman belum dikenali Biteship. Coba geser pin lebih dekat ke area kecamatan.',
+        );
+        return;
       }
 
       setStep('form');
@@ -215,6 +220,10 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
   const handleInitiateVerification = async () => {
     if (!recipient || !phone || !fullAddress) {
       toast.error('Mohon lengkapi data alamat');
+      return;
+    }
+    if (!postalCode || !biteshipAreaId) {
+      toast.error('Kode pos dan Area Biteship wajib terisi untuk menghitung ongkir.');
       return;
     }
 

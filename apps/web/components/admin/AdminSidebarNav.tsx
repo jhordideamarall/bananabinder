@@ -11,6 +11,7 @@ import {
   FolderTree as IconCategories,
   Megaphone as IconCampaign,
   Settings as IconSettings,
+  Cable as IconIntegrations,
   MessageSquare as IconMessageSquare,
   ClipboardList as IconClipboardList,
   type LucideIcon,
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Categories', icon: IconCategories, href: '/admin/categories' as Route },
   { label: 'Campaigns', icon: IconCampaign, href: '/admin/campaigns' as Route },
   { label: 'Promos', icon: IconTicket, href: '/admin/promos' as Route },
+  { label: 'Integrations', icon: IconIntegrations, href: '/admin/integrations' as Route },
   { label: 'Settings', icon: IconSettings, href: '/admin/settings' as Route },
 ];
 

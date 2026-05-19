@@ -15,13 +15,13 @@ interface TrackingHistory {
 
 interface TrackingData {
   waybill_id: string;
-  courier: {
-    company: string;
-    type: string;
+  courier?: {
+    company?: string;
+    type?: string;
   };
   history: TrackingHistory[];
-  destination: {
-    address: string;
+  destination?: {
+    address?: string;
   };
 }
 
@@ -83,6 +83,12 @@ export default function TrackingPage() {
   }
 
   const history = trackingData?.history || [];
+  const courierLabel = [
+    trackingData?.courier?.company?.toUpperCase(),
+    trackingData?.courier?.type?.toUpperCase(),
+  ]
+    .filter(Boolean)
+    .join(' - ');
 
   return (
     <div className="min-h-dvh bg-[#FDFCFB] pb-10">
@@ -115,8 +121,7 @@ export default function TrackingPage() {
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-ink-4">Kurir</p>
               <h3 className="font-heading text-[16px] font-extrabold text-ink">
-                {trackingData?.courier?.company?.toUpperCase()} -{' '}
-                {trackingData?.courier?.type?.toUpperCase()}
+                {courierLabel || 'Menunggu data kurir'}
               </h3>
             </div>
           </div>
@@ -236,7 +241,7 @@ export default function TrackingPage() {
               </div>
               <div>
                 <p className="text-[10px] font-bold text-white/40 uppercase">Pengirim</p>
-                <p className="text-[13px] font-bold">Bananasbindery Store - Tangerang</p>
+                <p className="text-[13px] font-bold">Bananasbindery Store - Bogor Barat</p>
               </div>
             </div>
             <div className="flex gap-4">

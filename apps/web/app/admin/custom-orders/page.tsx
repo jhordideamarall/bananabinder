@@ -155,10 +155,7 @@ export default async function AdminCustomOrdersPage({
               href={
                 filter.value === 'all'
                   ? ('/admin/custom-orders' as Route)
-                  : {
-                      pathname: '/admin/custom-orders' as const,
-                      query: { status: filter.value },
-                    }
+                  : (`/admin/custom-orders?status=${filter.value}` as Route)
               }
               aria-current={isActive ? 'page' : undefined}
               className={`rounded-full px-4 py-1.5 text-[13px] transition-colors ${

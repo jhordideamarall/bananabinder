@@ -362,10 +362,14 @@ export async function saveStoreSettings(formData: FormData): Promise<void> {
   // Origin pengiriman — origin_area_id dipakai Biteship untuk hitung ongkir
   // berbasis jarak dari toko. lat/lng wajib untuk kurir instant (Gojek/Grab).
   if (formData.has('origin_area_id')) {
+    payload.store_name = text(formData, 'store_name') || 'Bananasbindery';
+    payload.contact_phone = nullableText(formData, 'contact_phone');
+    payload.contact_email = nullableText(formData, 'contact_email');
     payload.origin_area_id = text(formData, 'origin_area_id') || 'IDNP6M3K2W1';
     payload.origin_address = nullableText(formData, 'origin_address');
     payload.origin_latitude = nullableNumber(formData, 'origin_latitude');
     payload.origin_longitude = nullableNumber(formData, 'origin_longitude');
+    payload.origin_postal_code = nullableText(formData, 'origin_postal_code');
   }
 
   // store_settings is a single-row table

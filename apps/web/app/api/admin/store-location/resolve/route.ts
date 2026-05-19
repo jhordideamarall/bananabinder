@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { Enums } from '@bananasbindery/types/supabase';
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
 import { createClient } from '@/lib/supabase/server';
+import { biteshipAuthHeader, getIntegrationSecret } from '@/lib/integration-secrets';
 
 const ADMIN_ROLES: Enums<'user_role'>[] = ['admin', 'owner', 'staff'];
 
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'latitude/longitude tidak valid' }, { status: 400 });
     }
 
-    const apiKey = process.env.BITESHIP_API_KEY;
+    const apiKey = await getIntegrationSecret('biteship', 'api_key', 'BITESHIP_API_KEY');
     if (!apiKey) {
       return NextResponse.json({ error: 'Biteship API key belum di-set' }, { status: 503 });
     }
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
     for (const input of searchInputs) {
       const biteshipRes = await fetch(
         `https://api.biteship.com/v1/maps/areas?countries=ID&input=${encodeURIComponent(input)}`,
-        { headers: { Authorization: `Bearer ${apiKey}` } },
+        { headers: { Authorization: biteshipAuthHeader(apiKey) } },
       );
       if (!biteshipRes.ok) continue;
       const data = (await biteshipRes.json()) as BiteshipAreasResponse;

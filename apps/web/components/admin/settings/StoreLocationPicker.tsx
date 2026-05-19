@@ -1,10 +1,16 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { Save, MapPin, Crosshair, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { Tables } from '@bananasbindery/types/supabase';
-import { saveStoreSettings } from '@/app/admin/actions';
+import { saveStoreSettingsWithFeedback } from '@/app/admin/action-feedback';
+import {
+  AdminActionMessage,
+  PendingAwareSubmitButton,
+  initialAdminActionState,
+  useRefreshOnActionState,
+} from '@/components/admin/ActionFeedback';
 
 type StoreSettingsRow = Tables<'store_settings'>;
 
@@ -38,6 +44,12 @@ interface StoreLocationPickerProps {
 }
 
 export function StoreLocationPicker({ settings }: StoreLocationPickerProps) {
+  const [saveState, saveAction] = useActionState(
+    saveStoreSettingsWithFeedback,
+    initialAdminActionState,
+  );
+  useRefreshOnActionState(saveState);
+
   const [lat, setLat] = useState<number>(
     settings?.origin_latitude != null ? Number(settings.origin_latitude) : DEFAULT_LAT,
   );
@@ -45,6 +57,7 @@ export function StoreLocationPicker({ settings }: StoreLocationPickerProps) {
     settings?.origin_longitude != null ? Number(settings.origin_longitude) : DEFAULT_LNG,
   );
   const [areaId, setAreaId] = useState<string>(settings?.origin_area_id ?? 'IDNP6M3K2W1');
+  const [postalCode, setPostalCode] = useState<string>(settings?.origin_postal_code ?? '');
   const [address, setAddress] = useState<string>(settings?.origin_address ?? '');
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; trigger: number } | null>(null);
 
@@ -73,6 +86,7 @@ export function StoreLocationPicker({ settings }: StoreLocationPickerProps) {
         return;
       }
       if (data.address) setAddress(data.address);
+      if (data.postalCode) setPostalCode(data.postalCode);
       if (data.biteshipAreaId) {
         setAreaId(data.biteshipAreaId);
         setAutoResolved(true);
@@ -118,7 +132,7 @@ export function StoreLocationPicker({ settings }: StoreLocationPickerProps) {
   };
 
   return (
-    <form action={saveStoreSettings} className="rounded-2xl border border-black/[0.06] bg-white">
+    <form action={saveAction} className="rounded-2xl border border-black/[0.06] bg-white">
       <div className="flex items-start gap-3 border-b border-black/[0.06] px-6 py-5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/20 text-[#1D1D1F]">
           <MapPin className="h-5 w-5" strokeWidth={1.75} />
@@ -175,6 +189,34 @@ export function StoreLocationPicker({ settings }: StoreLocationPickerProps) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-1.5">
+            <span className={labelClass}>Nama toko</span>
+            <input
+              name="store_name"
+              defaultValue={settings?.store_name ?? 'Bananasbindery'}
+              className={inputClass}
+              placeholder="Nama toko"
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className={labelClass}>Email toko</span>
+            <input
+              name="contact_email"
+              type="email"
+              defaultValue={settings?.contact_email ?? ''}
+              className={inputClass}
+              placeholder="admin@tokomu.com"
+            />
+          </label>
+          <label className="space-y-1.5 sm:col-span-2">
+            <span className={labelClass}>Nomor pickup / WhatsApp toko</span>
+            <input
+              name="contact_phone"
+              defaultValue={settings?.contact_phone ?? ''}
+              className={inputClass}
+              placeholder="08123456789"
+            />
+          </label>
+          <label className="space-y-1.5">
             <span className={labelClass}>Latitude</span>
             <input
               name="origin_latitude"
@@ -225,6 +267,16 @@ export function StoreLocationPicker({ settings }: StoreLocationPickerProps) {
               />
             </label>
           </div>
+          <label className="block space-y-1.5">
+            <span className={labelClass}>Kode pos origin</span>
+            <input
+              name="origin_postal_code"
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              className={inputClass}
+              placeholder="16112"
+            />
+          </label>
           {candidates.length > 0 ? (
             <div className="space-y-1.5">
               <p className="text-[11px] font-medium text-[#86868B]">
@@ -254,14 +306,17 @@ export function StoreLocationPicker({ settings }: StoreLocationPickerProps) {
         </div>
       </div>
 
-      <footer className="flex items-center justify-end border-t border-black/[0.06] bg-[#FAFAFA] px-6 py-4">
-        <button
-          type="submit"
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-[#1D1D1F] px-5 text-[14px] font-medium text-white transition-colors hover:bg-black"
+      <footer className="flex flex-col gap-3 border-t border-black/[0.06] bg-[#FAFAFA] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <AdminActionMessage state={saveState} />
+        </div>
+        <PendingAwareSubmitButton
+          pendingText="Menyimpan lokasi..."
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#1D1D1F] px-5 text-[14px] font-medium text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Save className="h-4 w-4" strokeWidth={2} />
           Simpan lokasi toko
-        </button>
+        </PendingAwareSubmitButton>
       </footer>
     </form>
   );

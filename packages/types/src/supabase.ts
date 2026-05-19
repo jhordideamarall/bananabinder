@@ -1711,6 +1711,8 @@ export type Database = {
       };
       store_settings: {
         Row: {
+          contact_email: string | null;
+          contact_phone: string | null;
           custom_order_materials: Json;
           custom_order_product_slug: string;
           home_banner_pilihan_label: string;
@@ -1720,10 +1722,13 @@ export type Database = {
           origin_area_id: string;
           origin_latitude: number | null;
           origin_longitude: number | null;
+          origin_postal_code: string | null;
           store_name: string;
           updated_at: string | null;
         };
         Insert: {
+          contact_email?: string | null;
+          contact_phone?: string | null;
           custom_order_materials?: Json;
           custom_order_product_slug?: string;
           home_banner_pilihan_label?: string;
@@ -1733,10 +1738,13 @@ export type Database = {
           origin_area_id?: string;
           origin_latitude?: number | null;
           origin_longitude?: number | null;
+          origin_postal_code?: string | null;
           store_name?: string;
           updated_at?: string | null;
         };
         Update: {
+          contact_email?: string | null;
+          contact_phone?: string | null;
           custom_order_materials?: Json;
           custom_order_product_slug?: string;
           home_banner_pilihan_label?: string;
@@ -1746,6 +1754,7 @@ export type Database = {
           origin_area_id?: string;
           origin_latitude?: number | null;
           origin_longitude?: number | null;
+          origin_postal_code?: string | null;
           store_name?: string;
           updated_at?: string | null;
         };

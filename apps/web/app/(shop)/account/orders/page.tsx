@@ -55,6 +55,18 @@ function isCustomRequestOrder(order: {
   );
 }
 
+function hasShippingTracking(order: {
+  shipping_tracking?: string | null;
+  shipping_metadata?: unknown;
+}): boolean {
+  if (order.shipping_tracking) return true;
+  if (typeof order.shipping_metadata !== 'object' || order.shipping_metadata === null) return false;
+  const metadata = order.shipping_metadata as Record<string, unknown>;
+  return Boolean(
+    metadata.biteship_order_id || metadata.courier_tracking_id || metadata.courier_waybill_id,
+  );
+}
+
 const TABS = [
   { id: 'all', label: 'Semua' },
   { id: 'pending', label: 'Belum Bayar' },
@@ -77,7 +89,8 @@ export default function OrdersPage() {
     if (activeTab === 'all') return true;
     if (activeTab === 'pending') return order.status === 'pending';
     if (activeTab === 'processing') return order.status === 'paid' || order.status === 'processing';
-    if (activeTab === 'shipped') return order.status === 'shipped';
+    if (activeTab === 'shipped')
+      return order.status === 'shipped' || order.shipping_status === 'shipped';
     if (activeTab === 'completed')
       return order.status === 'completed' || order.status === 'delivered';
     if (activeTab === 'cancelled')
@@ -189,6 +202,10 @@ export default function OrdersPage() {
                 isCustomRequest && order.status === 'pending'
                   ? 'Menunggu Konfirmasi'
                   : STATUS_LABEL[order.status];
+              const canTrack =
+                hasShippingTracking(order) ||
+                ['shipped', 'delivered', 'completed'].includes(order.status) ||
+                ['shipped', 'delivered'].includes(order.shipping_status ?? '');
 
               return (
                 <m.div
@@ -291,7 +308,7 @@ export default function OrdersPage() {
                         </div>
                       )}
 
-                      {order.status === 'shipped' && (
+                      {canTrack ? (
                         <button
                           onClick={() =>
                             router.push(`/account/orders/${order.id}/tracking` as Route)
@@ -300,7 +317,7 @@ export default function OrdersPage() {
                         >
                           Lacak Pengiriman
                         </button>
-                      )}
+                      ) : null}
 
                       {(order.status === 'completed' || order.status === 'delivered') && (
                         <button className="flex-1 rounded-xl border-2 border-stone-2 py-2.5 text-[13px] font-extrabold text-ink hover:bg-stone-1 active:scale-95 transition-all">

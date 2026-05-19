@@ -34,6 +34,9 @@ interface Order {
   id: string;
   order_number: string;
   status: string;
+  shipping_status?: string | null;
+  shipping_tracking?: string | null;
+  shipping_metadata?: unknown;
   payment_method?: string | null;
   payment_metadata?: unknown;
   payment_status?: string;
@@ -102,6 +105,15 @@ function metadataFlow(value: unknown): string | null {
   return typeof flow === 'string' ? flow : null;
 }
 
+function hasShippingTracking(order: Order): boolean {
+  if (order.shipping_tracking) return true;
+  if (typeof order.shipping_metadata !== 'object' || order.shipping_metadata === null) return false;
+  const metadata = order.shipping_metadata as Record<string, unknown>;
+  return Boolean(
+    metadata.biteship_order_id || metadata.courier_tracking_id || metadata.courier_waybill_id,
+  );
+}
+
 function isCustomRequestOrder(order: Order): boolean {
   return (
     order.payment_method === 'custom_request' ||
@@ -157,6 +169,10 @@ export default function OrderDetailPage() {
     customRequest && order.status === 'pending'
       ? 'Menunggu Konfirmasi'
       : STATUS_LABEL[order.status];
+  const canTrack =
+    hasShippingTracking(order) ||
+    ['shipped', 'delivered', 'completed'].includes(order.status) ||
+    ['shipped', 'delivered'].includes(order.shipping_status ?? '');
 
   return (
     <div className="min-h-dvh bg-[#FDFCFB] pb-24">
@@ -243,7 +259,7 @@ export default function OrderDetailPage() {
             )}
           </div>
 
-          {order.status === 'shipped' && (
+          {canTrack ? (
             <button
               onClick={() => router.push(`/account/orders/${order.id}/tracking` as Route)}
               className="mt-6 flex w-full items-center justify-between rounded-2xl bg-stone-1 px-5 py-4 border border-stone-2 hover:bg-stone-2 transition-colors"
@@ -254,7 +270,7 @@ export default function OrderDetailPage() {
               </div>
               <ChevronRight size={18} className="text-ink-4" />
             </button>
-          )}
+          ) : null}
         </div>
 
         {/* Order Items */}
