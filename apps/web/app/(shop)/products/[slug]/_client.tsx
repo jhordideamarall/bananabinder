@@ -220,10 +220,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         : [];
 
   const handleAddToCart = (directBuy = false) => {
-    if (product.variants?.length && !selectedVariant) {
-      setVariantError('Pilih varian dulu sebelum masuk keranjang.');
-      return;
-    }
     if (activePrice <= 0) {
       setVariantError('Harga produk belum valid. Hubungi admin sebelum checkout.');
       return;
@@ -482,8 +478,33 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {product.variants && product.variants.length > 0 && (
             <div style={{ marginBottom: 28 }}>
               <p className="t-label" style={{ marginBottom: 14 }}>
-                Pilih Varian
+                Varian opsional
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedVariant(null);
+                  setVariantError(null);
+                  setQuantity(1);
+                }}
+                style={{
+                  minHeight: 38,
+                  borderRadius: 12,
+                  border: selectedVariant
+                    ? '1.5px solid var(--color-stone-3)'
+                    : '2px solid var(--color-primary)',
+                  background: selectedVariant ? '#FFFFFF' : 'var(--color-primary-light)',
+                  color: selectedVariant ? 'var(--color-ink)' : 'var(--color-primary)',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  padding: '0 16px',
+                  marginBottom: 12,
+                  cursor: 'pointer',
+                }}
+              >
+                Produk utama
+              </button>
               <VariantSelector
                 variants={product.variants}
                 selectedId={selectedVariant?.id ?? null}
