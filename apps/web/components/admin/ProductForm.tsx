@@ -94,6 +94,10 @@ function emptyVariant(): Variant {
 function variantFromRow(variant: ProductVariantRow, basePrice: number): Variant {
   const [coverColor = 'Default', paperType = 'Standard', ringSize = 'A5'] =
     variant.name.split(' / ');
+  const variantPrice = Number(variant.price);
+  const hasValidOverride =
+    variantPrice > 0 && variantPrice !== basePrice && !(basePrice >= 1000 && variantPrice < 1000);
+
   return {
     id: variant.id ?? null,
     cover_color: coverColor,
@@ -101,7 +105,7 @@ function variantFromRow(variant: ProductVariantRow, basePrice: number): Variant 
     ring_size: ringSize,
     weight_grams: variant.weight_grams ?? 500,
     stock: variant.stock ?? 0,
-    price_override: variant.price === basePrice ? null : variant.price,
+    price_override: hasValidOverride ? variantPrice : null,
     image_url: variant.image_url,
   };
 }
@@ -222,7 +226,9 @@ export default function ProductForm({ initialData, categories = [], isEdit }: Pr
             price_override:
               variant.price_override === undefined || variant.price_override === null
                 ? null
-                : Number(variant.price_override),
+                : Number(variant.price_override) > 0
+                  ? Number(variant.price_override)
+                  : null,
             image_url: variant.image_url ?? null,
           })),
           images: images.map((url, idx) => ({ url, sort_order: idx })),

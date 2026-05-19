@@ -11,6 +11,30 @@ function getSmartFallbackImage(productName: string): string {
   return `https://images.unsplash.com/photo-${id}?w=800&q=80`;
 }
 
+function normalizePromoPrice(price: number, promoPrice: number | null | undefined): number | null {
+  const numericPromoPrice = Number(promoPrice);
+  return numericPromoPrice > 0 && numericPromoPrice < price ? numericPromoPrice : null;
+}
+
+function resolveVariantPrice(
+  productPrice: number,
+  variantPrice: number | null | undefined,
+): number {
+  const numericVariantPrice = Number(variantPrice);
+
+  if (!Number.isFinite(numericVariantPrice) || numericVariantPrice <= 0) {
+    return productPrice;
+  }
+
+  // Existing malformed rows can contain Rp 0/Rp 1 variant prices. For normal catalog
+  // products, keep storefront and checkout on the product price unless the override is reasonable.
+  if (productPrice >= 1000 && numericVariantPrice < 1000) {
+    return productPrice;
+  }
+
+  return numericVariantPrice;
+}
+
 export async function getActiveProducts(
   supabase: TypedSupabaseClient,
 ): Promise<ProductWithDetails[]> {
@@ -45,7 +69,7 @@ export async function getActiveProducts(
     name: p.name,
     slug: p.slug,
     price: Number(p.price),
-    promoPrice: p.promo_price ? Number(p.promo_price) : null,
+    promoPrice: normalizePromoPrice(Number(p.price), p.promo_price),
     imageUrl: p.product_images?.[0]?.url || getSmartFallbackImage(p.name),
     rating: Number(p.avg_rating) || 0,
     soldCount: Number(p.sold_count) || 0,
@@ -93,22 +117,35 @@ export async function getProductBySlug(supabase: TypedSupabaseClient, slug: stri
   };
 
   const product = data as unknown as Row;
+  const productPrice = Number(product.price);
+  const productPromoPrice = normalizePromoPrice(productPrice, product.promo_price);
   const mappedImages = product.product_images?.map((img) => img.url) || [];
   const imageUrl = mappedImages[0] || getSmartFallbackImage(product.name);
 
   return {
     ...product,
+    price: productPrice,
     imageUrl,
     images: mappedImages.length > 0 ? mappedImages : [imageUrl],
-    variants: (product.product_variants || []).map((variant) => ({
-      ...variant,
-      promoPrice: variant.promo_price,
-      weight_grams: variant.weight_grams ?? product.weight_grams ?? 500,
-    })),
+    variants: (product.product_variants || [])
+      .filter((variant) => variant.is_active !== false)
+      .map((variant) => {
+        const variantPrice = resolveVariantPrice(productPrice, variant.price);
+        const variantPromoPrice =
+          normalizePromoPrice(variantPrice, variant.promo_price) ??
+          (variantPrice === productPrice ? productPromoPrice : null);
+
+        return {
+          ...variant,
+          price: variantPrice,
+          promoPrice: variantPromoPrice,
+          weight_grams: variant.weight_grams ?? product.weight_grams ?? 500,
+        };
+      }),
     rating: Number(product.avg_rating) || 0,
     reviewCount: product.review_count || 0,
     soldCount: product.sold_count || 0,
-    promoPrice: product.promo_price,
+    promoPrice: productPromoPrice,
     description:
       product.description ||
       `*${product.name}* adalah produk binder premium untuk menunjang produktivitas dan kreativitasmu.`,

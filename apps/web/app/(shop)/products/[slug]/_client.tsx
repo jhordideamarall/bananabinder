@@ -127,6 +127,11 @@ function FormattedDescription({ text }: { text?: string }) {
 
 const fmt = (n: number) => n.toLocaleString('id-ID');
 
+const validPromoPrice = (price: number, promoPrice: number | null | undefined) => {
+  const numericPromoPrice = Number(promoPrice);
+  return numericPromoPrice > 0 && numericPromoPrice < price ? numericPromoPrice : null;
+};
+
 const DESIGN = {
   padding: '20px',
   radius: '14px',
@@ -145,9 +150,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
   const [hydrated, setHydrated] = useState(false);
   const [activeTab, setActiveTab] = useState<'desc' | 'reviews' | 'shipping'>('desc');
-  const [selectedVariant, setSelectedVariant] = useState<VariantOption | null>(
-    product.variants?.[0] ?? null,
-  );
+  const [selectedVariant, setSelectedVariant] = useState<VariantOption | null>(null);
+  const [variantError, setVariantError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -189,9 +193,19 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     setHydrated(true);
   }, []);
 
-  const activePrice =
-    selectedVariant?.promoPrice ?? selectedVariant?.price ?? product.promoPrice ?? product.price;
-  const activeOriginalPrice = selectedVariant ? selectedVariant.price : product.price;
+  const productBasePrice = Number(product.price) > 0 ? Number(product.price) : 0;
+  const productPromoPrice = validPromoPrice(productBasePrice, product.promoPrice);
+  const variantBasePrice =
+    selectedVariant && Number(selectedVariant.price) > 0
+      ? Number(selectedVariant.price)
+      : productBasePrice;
+  const variantPromoPrice = selectedVariant
+    ? validPromoPrice(variantBasePrice, selectedVariant.promoPrice)
+    : null;
+  const activeOriginalPrice = selectedVariant ? variantBasePrice : productBasePrice;
+  const activePrice = selectedVariant
+    ? (variantPromoPrice ?? variantBasePrice)
+    : (productPromoPrice ?? productBasePrice);
   const activeStock = selectedVariant?.stock ?? product.stock ?? 99;
 
   const images = selectedVariant?.image_url
@@ -206,6 +220,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         : [];
 
   const handleAddToCart = (directBuy = false) => {
+    if (product.variants?.length && !selectedVariant) {
+      setVariantError('Pilih varian dulu sebelum masuk keranjang.');
+      return;
+    }
+    if (activePrice <= 0) {
+      setVariantError('Harga produk belum valid. Hubungi admin sebelum checkout.');
+      return;
+    }
+
     const itemName = selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name;
     addItem({
       id: product.id,
@@ -466,9 +489,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 selectedId={selectedVariant?.id ?? null}
                 onSelect={(v) => {
                   setSelectedVariant(v);
+                  setVariantError(null);
                   setQuantity(1);
                 }}
               />
+              {variantError ? (
+                <p className="t-small" style={{ marginTop: 10, color: '#C0392B', fontWeight: 700 }}>
+                  {variantError}
+                </p>
+              ) : null}
             </div>
           )}
 

@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
+  AlertTriangle as IconAlertTriangle,
   Boxes as IconStack2,
   Image as IconPhoto,
   Pencil as IconEdit,
@@ -34,6 +35,26 @@ export function ProductCatalogClient({ products }: ProductCatalogClientProps) {
   const visibleProducts = normalizedQuery
     ? products.filter((product) => searchableText(product).includes(normalizedQuery))
     : products;
+  const totalStock = products.reduce(
+    (sum, product) =>
+      sum +
+      product.productVariants.reduce(
+        (variantSum, variant) => variantSum + Number(variant.stock ?? 0),
+        0,
+      ),
+    0,
+  );
+  const lowStockCount = products.filter((product) => {
+    const productStock = product.productVariants.reduce(
+      (sum, variant) => sum + Number(variant.stock ?? 0),
+      0,
+    );
+    return productStock > 0 && productStock < 10;
+  }).length;
+  const outOfStockCount = products.filter(
+    (product) =>
+      product.productVariants.reduce((sum, variant) => sum + Number(variant.stock ?? 0), 0) <= 0,
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -56,10 +77,37 @@ export function ProductCatalogClient({ products }: ProductCatalogClientProps) {
         </p>
       </div>
 
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-black/[0.06] bg-white px-4 py-3">
+          <p className="text-[12px] font-medium text-[#86868B]">Total stok</p>
+          <p className="mt-1 text-[22px] font-semibold tracking-tight text-[#1D1D1F]">
+            {totalStock.toLocaleString('id-ID')}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-black/[0.06] bg-white px-4 py-3">
+          <p className="text-[12px] font-medium text-[#86868B]">Stok menipis</p>
+          <p className="mt-1 text-[22px] font-semibold tracking-tight text-[#1D1D1F]">
+            {lowStockCount.toLocaleString('id-ID')}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-black/[0.06] bg-white px-4 py-3">
+          <p className="text-[12px] font-medium text-[#86868B]">Stok habis</p>
+          <p className="mt-1 text-[22px] font-semibold tracking-tight text-[#1D1D1F]">
+            {outOfStockCount.toLocaleString('id-ID')}
+          </p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {visibleProducts.map((product) => {
           const hasDiscount = Boolean(product.promo_price && product.promo_price < product.price);
           const displayPrice = product.promo_price ?? product.price;
+          const productStock = product.productVariants.reduce(
+            (sum, variant) => sum + Number(variant.stock ?? 0),
+            0,
+          );
+          const stockTone =
+            productStock <= 0 ? 'danger' : productStock < 10 ? 'warning' : 'success';
 
           return (
             <article
@@ -125,12 +173,36 @@ export function ProductCatalogClient({ products }: ProductCatalogClientProps) {
                   </div>
                 </div>
 
+                <div
+                  className={`mt-3 flex items-center justify-between rounded-xl px-3 py-2 text-[12px] font-medium ${
+                    stockTone === 'danger'
+                      ? 'bg-red-50 text-red-700'
+                      : stockTone === 'warning'
+                        ? 'bg-amber-50 text-amber-700'
+                        : 'bg-emerald-50 text-emerald-700'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    {stockTone === 'success' ? (
+                      <IconStack2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    ) : (
+                      <IconAlertTriangle className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    )}
+                    {productStock <= 0
+                      ? 'Stok habis'
+                      : productStock < 10
+                        ? 'Stok menipis'
+                        : 'Stok aman'}
+                  </span>
+                  <span>{productStock.toLocaleString('id-ID')} pcs</span>
+                </div>
+
                 <Link
                   href={`/admin/products/${product.id}` as Route}
                   className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-black/[0.04] text-[13px] font-medium text-[#1D1D1F] transition-colors hover:bg-black/[0.08]"
                 >
                   <IconEdit className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  Edit
+                  Edit stok & produk
                 </Link>
               </div>
             </article>

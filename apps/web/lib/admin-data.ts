@@ -302,13 +302,14 @@ async function replaceProductRelations(
       : null;
 
   const buildVariantFields = (variant: AdminProductPayload['variants'][number], index: number) => {
-    const price = variant.price_override ?? payload.base_price;
+    const priceOverride = Number(variant.price_override ?? 0);
+    const price = priceOverride > 0 ? priceOverride : payload.base_price;
     return {
       product_id: productId,
       name: variantName(variant),
       price,
       cost_price: payload.base_price,
-      promo_price: discountRatio ? Math.round(price * discountRatio) : null,
+      promo_price: discountRatio ? Math.max(1, Math.round(price * discountRatio)) : null,
       stock: variant.stock,
       image_url: variant.image_url ?? null,
       sort_order: index,
