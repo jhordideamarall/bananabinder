@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sendPhoneOtp } from '@/lib/phone-otp-server';
+import { isProtectedPhoneError, sendPhoneOtp } from '@/lib/phone-otp-server';
 
 export const runtime = 'nodejs';
 
@@ -37,6 +37,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     await sendPhoneOtp(phone, toPurpose(body.purpose), name);
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: getErrorMessage(error) },
+      { status: isProtectedPhoneError(error) ? 409 : 500 },
+    );
   }
 }

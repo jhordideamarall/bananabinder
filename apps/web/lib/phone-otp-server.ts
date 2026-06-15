@@ -27,6 +27,7 @@ interface ProfileLookupRow {
   email: string | null;
   phone: string | null;
   name: string | null;
+  role: string | null;
 }
 
 interface VerifiedPhoneSession {
@@ -45,6 +46,18 @@ interface VerifyPhoneOtpParams {
 
 const OTP_EXPIRY_MINUTES = 5;
 const OTP_LENGTH = 6;
+const PROTECTED_PROFILE_ROLES = new Set(['admin', 'owner', 'staff']);
+
+class ProtectedPhoneError extends Error {
+  constructor() {
+    super('Nomor HP ini terhubung ke akun admin. Gunakan nomor customer lain untuk checkout.');
+    this.name = 'ProtectedPhoneError';
+  }
+}
+
+export function isProtectedPhoneError(error: unknown): error is ProtectedPhoneError {
+  return error instanceof ProtectedPhoneError;
+}
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -125,6 +138,18 @@ function resolveDisplayName(name: string | undefined, fallbackName?: string | nu
   return 'Pelanggan';
 }
 
+function isProtectedProfile(profile: ProfileLookupRow): boolean {
+  return profile.role !== null && PROTECTED_PROFILE_ROLES.has(profile.role);
+}
+
+function assertCustomerProfile(profile: ProfileLookupRow): ProfileLookupRow {
+  if (isProtectedProfile(profile)) {
+    throw new ProtectedPhoneError();
+  }
+
+  return profile;
+}
+
 async function findProfileByPhone(phone: string): Promise<ProfileLookupRow | null> {
   const supabase = getSupabaseAdmin();
   const variants = phoneVariants(phone);
@@ -132,7 +157,7 @@ async function findProfileByPhone(phone: string): Promise<ProfileLookupRow | nul
 
   const { data: phoneProfile, error: phoneError } = await supabase
     .from('profiles')
-    .select('id, email, phone, name')
+    .select('id, email, phone, name, role')
     .in('phone', variants)
     .limit(1)
     .maybeSingle();
@@ -142,12 +167,12 @@ async function findProfileByPhone(phone: string): Promise<ProfileLookupRow | nul
   }
 
   if (phoneProfile) {
-    return phoneProfile as ProfileLookupRow;
+    return assertCustomerProfile(phoneProfile as ProfileLookupRow);
   }
 
   const { data: emailProfile, error: emailError } = await supabase
     .from('profiles')
-    .select('id, email, phone, name')
+    .select('id, email, phone, name, role')
     .eq('email', internalEmail)
     .limit(1)
     .maybeSingle();
@@ -156,7 +181,7 @@ async function findProfileByPhone(phone: string): Promise<ProfileLookupRow | nul
     throw new Error(`Gagal mengecek profil nomor HP: ${emailError.message}`);
   }
 
-  return emailProfile as ProfileLookupRow | null;
+  return emailProfile ? assertCustomerProfile(emailProfile as ProfileLookupRow) : null;
 }
 
 async function upsertProfilePhone(
@@ -169,6 +194,7 @@ async function upsertProfilePhone(
   const fallbackEmail = internalEmailForPhone(normalizedPhone);
   const profileEmail = existingProfile?.email?.trim();
   const profileName = existingProfile?.name?.trim();
+  const profileRole = existingProfile?.role?.trim();
 
   const { error } = await supabase.from('profiles').upsert(
     {
@@ -176,7 +202,7 @@ async function upsertProfilePhone(
       name: resolveDisplayName(params.name, profileName),
       phone: normalizedPhone,
       email: params.email?.trim() || profileEmail || fallbackEmail,
-      role: 'customer',
+      role: profileRole && !PROTECTED_PROFILE_ROLES.has(profileRole) ? profileRole : 'customer',
     },
     { onConflict: 'id' },
   );
@@ -266,6 +292,8 @@ export async function sendPhoneOtp(
   if (!apiKey) {
     throw new Error('Token Fonnte belum dikonfigurasi.');
   }
+
+  await findProfileByPhone(normalizedPhone);
 
   const device = await checkFonnteDevice(apiKey);
   if (!device.success) {

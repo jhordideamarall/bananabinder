@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { phoneAccountExists } from '@/lib/phone-otp-server';
+import { isProtectedPhoneError, phoneAccountExists } from '@/lib/phone-otp-server';
 
 export const runtime = 'nodejs';
 
@@ -38,6 +38,10 @@ export async function POST(request: Request): Promise<NextResponse<CheckPhoneRes
     const exists = await phoneAccountExists(phone);
     return NextResponse.json({ exists });
   } catch (error: unknown) {
+    if (isProtectedPhoneError(error)) {
+      return NextResponse.json({ exists: false, error: error.message }, { status: 409 });
+    }
+
     console.error('[auth/check-phone] RPC failed', {
       message: error instanceof Error ? error.message : 'Unknown error',
     });
