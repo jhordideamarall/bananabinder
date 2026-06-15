@@ -63,7 +63,7 @@ const CheckIcon = () => (
   </svg>
 );
 
-const MotionLink = m(Link);
+const MotionLink = m.create(Link);
 
 export function ProductCard({ product, onAddToCart, href, priority = false }: ProductCardProps) {
   const [justAdded, setJustAdded] = useState(false);

@@ -164,6 +164,11 @@ export function DesktopNav() {
 
       <m.div
         layout
+        initial={{
+          maxWidth: isProductPage && !searchOpen ? 1100 : 980,
+          scale: 1,
+          y: 0,
+        }}
         animate={{
           maxWidth: isProductPage && !searchOpen ? 1100 : 980,
           scale: scrolled && !searchOpen ? 0.94 : 1,
@@ -197,6 +202,7 @@ export function DesktopNav() {
                     src="/logo.png"
                     alt="Bananasbindery Logo"
                     fill
+                    sizes="32px"
                     className="object-contain"
                     priority
                   />
@@ -400,6 +406,7 @@ export function DesktopNav() {
                               src={product.imageUrl || getSmartFallbackImage(product.name)}
                               alt={product.name}
                               fill
+                              sizes="48px"
                               className="object-cover"
                               unoptimized
                             />

@@ -34,7 +34,13 @@ export function Footer() {
         }}
       >
         <div className="relative w-7 h-7 overflow-hidden rounded-md">
-          <Image src="/logo.png" alt="Bananasbindery Logo" fill className="object-contain" />
+          <Image
+            src="/logo.png"
+            alt="Bananasbindery Logo"
+            fill
+            sizes="28px"
+            className="object-contain"
+          />
         </div>
         <span
           style={{

@@ -7,6 +7,13 @@ import { ChevronLeft, Phone, ShieldCheck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { createClient } from '@/lib/supabase/client';
+import {
+  formatIndonesiaPhone,
+  getOtpSendErrorMessage,
+  getOtpVerifyErrorMessage,
+  requestPhoneOtp,
+  verifyPhoneOtpSession,
+} from '@/lib/auth-otp';
 import { toast } from 'sonner';
 import type { AuthError } from '@supabase/supabase-js';
 
@@ -33,18 +40,31 @@ function LoginContent() {
 
     setIsLoading(true);
     try {
-      const formattedPhone = phone.startsWith('0')
-        ? `+62${phone.slice(1)}`
-        : phone.startsWith('+')
-          ? phone
-          : `+62${phone}`;
+      const formattedPhone = formatIndonesiaPhone(phone);
 
       const checkRes = await fetch('/api/auth/check-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: formattedPhone }),
       });
-      const { exists } = await checkRes.json();
+      const checkResult: unknown = await checkRes.json();
+      const exists =
+        typeof checkResult === 'object' &&
+        checkResult !== null &&
+        'exists' in checkResult &&
+        checkResult.exists === true;
+
+      if (!checkRes.ok) {
+        const errorMessage =
+          typeof checkResult === 'object' &&
+          checkResult !== null &&
+          'error' in checkResult &&
+          typeof checkResult.error === 'string'
+            ? checkResult.error
+            : 'Tidak bisa memeriksa nomor HP saat ini';
+        throw new Error(errorMessage);
+      }
+
       if (!exists) {
         router.push(
           `/register?phone=${encodeURIComponent(phone)}&next=${encodeURIComponent(next)}`,
@@ -52,17 +72,16 @@ function LoginContent() {
         return;
       }
 
-      const { error } = await supabase.auth.signInWithOtp({
+      await requestPhoneOtp({
         phone: formattedPhone,
+        purpose: 'login',
       });
-
-      if (error) throw error;
 
       toast.success('Kode OTP telah dikirim');
       setStep('otp');
     } catch (err) {
-      const error = err as AuthError;
-      toast.error(error.message || 'Gagal mengirim OTP');
+      const error = err as AuthError | Error;
+      toast.error(getOtpSendErrorMessage(error.message));
     } finally {
       setIsLoading(false);
     }
@@ -77,16 +96,17 @@ function LoginContent() {
 
     setIsLoading(true);
     try {
-      const formattedPhone = phone.startsWith('0')
-        ? `+62${phone.slice(1)}`
-        : phone.startsWith('+')
-          ? phone
-          : `+62${phone}`;
+      const formattedPhone = formatIndonesiaPhone(phone);
 
-      const { error } = await supabase.auth.verifyOtp({
+      const session = await verifyPhoneOtpSession({
         phone: formattedPhone,
         token: otp,
-        type: 'sms',
+        shouldCreateUser: false,
+      });
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: session.email,
+        password: session.password,
       });
 
       if (error) throw error;
@@ -96,7 +116,7 @@ function LoginContent() {
       router.refresh();
     } catch (err) {
       const error = err as AuthError;
-      toast.error(error.message || 'Kode OTP salah atau kedaluwarsa');
+      toast.error(getOtpVerifyErrorMessage(error.message));
     } finally {
       setIsLoading(false);
     }

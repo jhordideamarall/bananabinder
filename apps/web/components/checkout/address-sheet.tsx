@@ -15,11 +15,17 @@ import {
 } from 'lucide-react';
 import { getDetailedAddress } from '@bananasbindery/core';
 import { createClient } from '@/lib/supabase/client';
+import {
+  formatIndonesiaPhone,
+  getOtpSendErrorMessage,
+  getOtpVerifyErrorMessage,
+  requestPhoneOtp,
+  verifyPhoneOtpSession,
+} from '@/lib/auth-otp';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
 import { useLocationStore } from '@/stores/location-store';
 import { JumpingDots } from '@/components/shared/jumping-dots';
-import type { AuthError } from '@supabase/supabase-js';
 import { type Address, getUserAddresses } from '@/lib/services/address-client';
 
 // Dynamically import the map component with SSR disabled
@@ -227,11 +233,7 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
       return;
     }
 
-    const formattedPhone = phone.startsWith('0')
-      ? `+62${phone.slice(1)}`
-      : phone.startsWith('+')
-        ? phone
-        : `+62${phone}`;
+    const formattedPhone = formatIndonesiaPhone(phone);
 
     if (user) {
       await saveAddress(user.id);
@@ -241,22 +243,17 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
     // Guest user: Send OTP to verify phone
     setIsVerifying(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      await requestPhoneOtp({
         phone: formattedPhone,
-        options: {
-          data: {
-            full_name: recipient,
-          },
-        },
+        purpose: 'checkout',
+        name: recipient,
       });
-
-      if (error) throw error;
 
       toast.success('Kode OTP telah dikirim ke nomor HP kamu');
       setStep('otp');
     } catch (err) {
-      const error = err as AuthError;
-      toast.error(error.message || 'Gagal mengirim kode OTP');
+      const error = err as Error;
+      toast.error(getOtpSendErrorMessage(error.message));
     } finally {
       setIsVerifying(false);
     }
@@ -268,18 +265,20 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
       return;
     }
 
-    const formattedPhone = phone.startsWith('0')
-      ? `+62${phone.slice(1)}`
-      : phone.startsWith('+')
-        ? phone
-        : `+62${phone}`;
+    const formattedPhone = formatIndonesiaPhone(phone);
 
     setIsSaving(true);
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
+      const session = await verifyPhoneOtpSession({
         phone: formattedPhone,
         token: otpToken,
-        type: 'sms',
+        name: recipient,
+        shouldCreateUser: true,
+      });
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: session.email,
+        password: session.password,
       });
 
       if (error) throw error;
@@ -287,8 +286,8 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
 
       await saveAddress(data.user.id);
     } catch (err) {
-      const error = err as AuthError;
-      toast.error(error.message || 'Kode OTP salah atau kedaluwarsa');
+      const error = err as Error;
+      toast.error(getOtpVerifyErrorMessage(error.message));
       setIsSaving(false);
     }
   };
@@ -678,9 +677,13 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
                   )}
                 </button>
                 <div className="flex flex-col gap-2 pt-2 text-center">
-                  <p className="text-[11px] text-ink-4 italic">
-                    Belum setup SMS? Gunakan kode <b>123456</b>
-                  </p>
+                  <button
+                    onClick={handleInitiateVerification}
+                    disabled={isVerifying}
+                    className="font-heading text-[13px] font-bold text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+                  >
+                    {isVerifying ? 'Mengirim ulang...' : 'Kirim ulang kode'}
+                  </button>
                   <button
                     onClick={() => setStep('form')}
                     className="font-heading text-[13px] font-bold text-ink-4 hover:text-ink transition-colors"

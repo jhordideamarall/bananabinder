@@ -15,6 +15,13 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import {
+  formatIndonesiaPhone,
+  getOtpSendErrorMessage,
+  getOtpVerifyErrorMessage,
+  requestPhoneOtp,
+  verifyPhoneOtpSession,
+} from '@/lib/auth-otp';
 import { toast } from 'sonner';
 import type { AuthError } from '@supabase/supabase-js';
 import type { Route } from 'next';
@@ -34,11 +41,7 @@ function RegisterContent() {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const formattedPhone = phone.startsWith('0')
-    ? `+62${phone.slice(1)}`
-    : phone.startsWith('+')
-      ? phone
-      : `+62${phone}`;
+  const formattedPhone = formatIndonesiaPhone(phone);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,23 +52,17 @@ function RegisterContent() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      await requestPhoneOtp({
         phone: formattedPhone,
-        options: {
-          data: {
-            full_name: name,
-            email: email || undefined,
-          },
-        },
+        purpose: 'register',
+        name,
       });
-
-      if (error) throw error;
 
       toast.success('Kode verifikasi dikirim ke HP kamu');
       setStep('otp');
     } catch (err) {
       const error = err as AuthError;
-      toast.error(error.message || 'Gagal mendaftar');
+      toast.error(getOtpSendErrorMessage(error.message));
     } finally {
       setIsLoading(false);
     }
@@ -80,10 +77,17 @@ function RegisterContent() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      const session = await verifyPhoneOtpSession({
         phone: formattedPhone,
         token: otp,
-        type: 'sms',
+        name,
+        email: email || undefined,
+        shouldCreateUser: true,
+      });
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: session.email,
+        password: session.password,
       });
 
       if (error) throw error;
@@ -93,7 +97,7 @@ function RegisterContent() {
       router.refresh();
     } catch (err) {
       const error = err as AuthError;
-      toast.error(error.message || 'Kode OTP salah atau kedaluwarsa');
+      toast.error(getOtpVerifyErrorMessage(error.message));
     } finally {
       setIsLoading(false);
     }

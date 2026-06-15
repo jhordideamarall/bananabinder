@@ -266,6 +266,7 @@ export function Header() {
                     src="/logo.png"
                     alt="Bananasbindery Logo"
                     fill
+                    sizes="44px"
                     className="object-contain"
                     priority
                   />
