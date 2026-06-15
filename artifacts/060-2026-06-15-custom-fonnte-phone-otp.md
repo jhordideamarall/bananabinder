@@ -26,6 +26,11 @@ Tanggal: 2026-06-15
   - Menambah service server-only untuk generate OTP, hash OTP, simpan challenge, kirim WhatsApp via Fonnte, verifikasi OTP, dan menyiapkan Supabase Auth user.
   - Membaca token Fonnte dari `getIntegrationSecret('fonnte', 'api_token', 'FONNTE_API_TOKEN')`.
   - Mempertahankan email profil yang sudah ada agar login via HP tidak menimpa email customer.
+  - Mengecek status device Fonnte sebelum membuat OTP challenge.
+  - Menghapus OTP challenge jika pengiriman Fonnte gagal setelah challenge dibuat.
+
+- `packages/api-client/src/fonnte.ts`
+  - Memperbaiki `checkFonnteDevice` agar status `disconnect` tidak lagi dianggap sukses hanya karena token valid dan device terdaftar.
 
 - `apps/web/app/api/auth/phone-otp/send/route.ts`
   - Endpoint server untuk mengirim OTP Fonnte.
@@ -46,6 +51,7 @@ Tanggal: 2026-06-15
 - `apps/web/components/checkout/address-sheet.tsx`
   - Mengganti checkout guest OTP ke custom OTP Fonnte.
   - Menghapus instruksi kode dummy `123456` dan menggantinya dengan tombol kirim ulang kode.
+  - Memindahkan guest checkout ke sheet OTP segera setelah `Simpan & Verifikasi` ditekan, sehingga kegagalan pengiriman Fonnte tidak membuat user stuck di form alamat.
 
 - `supabase/migrations/20260615030538_phone_otp_challenges.sql`
   - Menambah tabel `public.phone_otp_challenges` dengan RLS aktif.
@@ -66,6 +72,9 @@ Tanggal: 2026-06-15
   - `anon_can_insert = false`
   - `authenticated_can_insert = false`
   - `fonnte_token_configured = true`
+- Verifikasi device Fonnte:
+  - Token Fonnte valid dan quota terbaca.
+  - Status device saat dicek: `disconnect`, sehingga WhatsApp device perlu di-reconnect di dashboard Fonnte sebelum OTP bisa terkirim.
 
 ## Validasi
 
@@ -78,6 +87,10 @@ Tanggal: 2026-06-15
   - `GET http://localhost:4000/login` return `200`.
   - `POST /api/auth/check-phone` berjalan dan membaca jalur server baru.
   - `POST /api/auth/phone-otp/verify` dengan kode invalid return pesan aman: `Kode OTP tidak ditemukan atau sudah kedaluwarsa.`
+- Production smoke test setelah deploy:
+  - `POST https://bananasbindery.com/api/auth/phone-otp/verify` tersedia dan return JSON error OTP, bukan 404.
+  - `GET https://bananasbindery.com/terms` return `200`.
+  - `GET https://bananasbindery.com/privacy` return `200`.
 
 ## Cara Test Manual
 

@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import { sendWhatsAppMessage } from '@bananasbindery/api-client/fonnte';
+import { checkFonnteDevice, sendWhatsAppMessage } from '@bananasbindery/api-client/fonnte';
 import { getIntegrationSecret } from '@/lib/integration-secrets';
 import { formatIndonesiaPhone } from '@/lib/auth-otp';
 
@@ -16,6 +16,10 @@ interface OtpChallengeRow {
   max_attempts: number;
   expires_at: string;
   consumed_at: string | null;
+}
+
+interface CreatedOtpChallengeRow {
+  id: string;
 }
 
 interface ProfileLookupRow {
@@ -263,26 +267,42 @@ export async function sendPhoneOtp(
     throw new Error('Token Fonnte belum dikonfigurasi.');
   }
 
+  const device = await checkFonnteDevice(apiKey);
+  if (!device.success) {
+    throw new Error(device.reason || 'Device Fonnte belum connect. Reconnect WhatsApp di Fonnte.');
+  }
+
   const supabase = getSupabaseAdmin();
-  const { error } = await supabase.from('phone_otp_challenges').insert({
-    normalized_phone: normalizedPhone,
-    otp_hash: hashOtp(normalizedPhone, otp),
-    purpose,
-    expires_at: getExpiryDate().toISOString(),
-  });
+  const { data: createdChallenge, error } = await supabase
+    .from('phone_otp_challenges')
+    .insert({
+      normalized_phone: normalizedPhone,
+      otp_hash: hashOtp(normalizedPhone, otp),
+      purpose,
+      expires_at: getExpiryDate().toISOString(),
+    })
+    .select('id')
+    .single();
 
   if (error) {
     throw new Error(`Gagal membuat OTP: ${error.message}`);
   }
 
+  const challenge = createdChallenge as CreatedOtpChallengeRow;
   const message = `Halo Kak ${getDisplayName(name)}!\n\nKode verifikasi Bananasbindery kamu:\n\n*${otp}*\n\nKode berlaku ${OTP_EXPIRY_MINUTES} menit. Jangan berikan kode ini kepada siapa pun.`;
-  const result = await sendWhatsAppMessage(apiKey, {
-    target: normalizedPhone,
-    message,
-  });
 
-  if (!result.success) {
-    throw new Error(result.reason || 'Fonnte gagal mengirim OTP.');
+  try {
+    const result = await sendWhatsAppMessage(apiKey, {
+      target: normalizedPhone,
+      message,
+    });
+
+    if (!result.success) {
+      throw new Error(result.reason || 'Fonnte gagal mengirim OTP.');
+    }
+  } catch (error: unknown) {
+    await supabase.from('phone_otp_challenges').delete().eq('id', challenge.id);
+    throw error;
   }
 }
 

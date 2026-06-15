@@ -121,15 +121,19 @@ export async function checkFonnteDevice(apiKey: string): Promise<FonnteDeviceRes
   }
 
   const raw = await fonnteRequest('/device', apiKey);
-  const ok = raw.status === true || raw.status === 'true' || Boolean(raw.device);
+  const deviceStatus = raw.device_status || (typeof raw.status === 'string' ? raw.status : '');
+  const normalizedStatus = deviceStatus.toLowerCase();
+  const ok =
+    Boolean(raw.device) &&
+    (normalizedStatus === 'connect' ||
+      normalizedStatus === 'connected' ||
+      normalizedStatus === 'online');
 
   return {
     success: ok,
     device: raw.device,
-    status:
-      raw.device_status ||
-      (typeof raw.status === 'string' ? raw.status : ok ? 'connect' : 'unknown'),
+    status: deviceStatus || (ok ? 'connect' : 'unknown'),
     quota: typeof raw.quota === 'string' ? Number(raw.quota) : raw.quota,
-    reason: ok ? undefined : raw.reason || 'Device Fonnte tidak terhubung.',
+    reason: ok ? undefined : raw.reason || 'Device Fonnte belum connect.',
   };
 }

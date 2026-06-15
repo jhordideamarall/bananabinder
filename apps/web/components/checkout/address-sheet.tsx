@@ -242,6 +242,8 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
 
     // Guest user: Send OTP to verify phone
     setIsVerifying(true);
+    setOtpToken('');
+    setStep('otp');
     try {
       await requestPhoneOtp({
         phone: formattedPhone,
@@ -250,7 +252,6 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
       });
 
       toast.success('Kode OTP telah dikirim ke nomor HP kamu');
-      setStep('otp');
     } catch (err) {
       const error = err as Error;
       toast.error(getOtpSendErrorMessage(error.message));
