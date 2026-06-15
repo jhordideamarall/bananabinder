@@ -28,14 +28,6 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     redirect('/');
   }
 
-  async function logoutAdmin() {
-    'use server';
-
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-    redirect('/admin-login');
-  }
-
   const displayName = profile.name || user.email?.split('@')[0] || 'Admin';
   const initials = displayName
     .split(' ')
@@ -65,7 +57,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <IconArrowLeft className="h-[18px] w-[18px]" strokeWidth={1.75} />
             Kembali ke toko
           </Link>
-          <form action={logoutAdmin}>
+          <form action="/admin/logout" method="post">
             <button
               type="submit"
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium text-[#86868B] transition-colors hover:bg-black/[0.04] hover:text-[#1D1D1F]"
