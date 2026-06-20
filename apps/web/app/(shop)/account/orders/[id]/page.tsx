@@ -4,9 +4,26 @@ import React from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import type { Route } from 'next';
-import { ArrowLeft, MapPin, Package, CreditCard, ChevronRight, Loader2, Truck } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  MapPin,
+  Package,
+  CreditCard,
+  ChevronRight,
+  Loader2,
+  Truck,
+  Upload,
+  QrCode,
+  Landmark,
+} from 'lucide-react';
+import {
+  parseManualPaymentSettings,
+  type ManualPaymentDestination,
+} from '@bananasbindery/api-client/manual-payment';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
+import { getStoreSettings, type StoreSettings } from '@/lib/services/store-settings-client';
+import { toast } from 'sonner';
 
 interface CustomOrderDetails {
   size: string;
@@ -30,6 +47,19 @@ interface OrderItem {
   } | null;
 }
 
+interface PaymentProof {
+  id: string;
+  status: string;
+  payment_destination_type: string;
+  payment_destination_id: string | null;
+  payment_destination_label: string;
+  submitted_amount: number;
+  file_name: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
 interface Order {
   id: string;
   order_number: string;
@@ -39,7 +69,7 @@ interface Order {
   shipping_metadata?: unknown;
   payment_method?: string | null;
   payment_metadata?: unknown;
-  payment_status?: string;
+  payment_status?: string | null;
   total: number;
   shipping_cost: number | null;
   created_at: string;
@@ -51,6 +81,7 @@ interface Order {
     postal_code: string;
   } | null;
   order_items: OrderItem[];
+  payment_proofs?: PaymentProof[];
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -76,6 +107,24 @@ const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
 
 function formatPrice(v: number) {
   return `Rp ${v.toLocaleString('id-ID')}`;
+}
+
+function responseErrorMessage(value: unknown, fallback: string): string {
+  if (typeof value !== 'object' || value === null) return fallback;
+  const message = (value as Record<string, unknown>).error;
+  return typeof message === 'string' && message.trim().length > 0 ? message : fallback;
+}
+
+function latestProof(proofs: PaymentProof[] | undefined): PaymentProof | null {
+  if (!proofs || proofs.length === 0) return null;
+  return [...proofs].sort(
+    (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
+  )[0];
+}
+
+function destinationTitle(destination: ManualPaymentDestination): string {
+  if (destination.type === 'qris') return 'QR / QRIS statis';
+  return destination.account.label || destination.account.bankName;
 }
 
 function parseCustomDetails(value: unknown): CustomOrderDetails | null {
@@ -121,23 +170,96 @@ function isCustomRequestOrder(order: Order): boolean {
   );
 }
 
+function isManualTransferOrder(order: Order): boolean {
+  return order.payment_method === 'manual_transfer';
+}
+
 export default function OrderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const orderId = params.id as string;
   const supabase = createClient();
+  const [selectedPaymentDestinationId, setSelectedPaymentDestinationId] = React.useState('');
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
 
-  const { data: order, isLoading } = useQuery<Order>({
+  const {
+    data: order,
+    isLoading,
+    refetch,
+  } = useQuery<Order>({
     queryKey: ['order', orderId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, order_items(*, products(*, product_images(*))), addresses(*)')
+        .select(
+          '*, order_items(*, products(*, product_images(*))), addresses(*), payment_proofs(*)',
+        )
         .eq('id', orderId)
         .single();
 
       if (error) throw error;
       return data as unknown as Order;
+    },
+  });
+
+  const { data: storeSettings = null } = useQuery<StoreSettings | null>({
+    queryKey: ['store-settings'],
+    queryFn: getStoreSettings,
+    enabled: Boolean(order && order.status === 'pending'),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const manualPayment = React.useMemo(
+    () => parseManualPaymentSettings(storeSettings),
+    [storeSettings],
+  );
+  const paymentDestinations = manualPayment.destinations;
+  const latestPaymentProof = React.useMemo(
+    () => latestProof(order?.payment_proofs),
+    [order?.payment_proofs],
+  );
+
+  React.useEffect(() => {
+    if (paymentDestinations.length === 0) {
+      if (selectedPaymentDestinationId) setSelectedPaymentDestinationId('');
+      return;
+    }
+
+    if (
+      !paymentDestinations.some((destination) => destination.id === selectedPaymentDestinationId)
+    ) {
+      setSelectedPaymentDestinationId(paymentDestinations[0].id);
+    }
+  }, [paymentDestinations, selectedPaymentDestinationId]);
+
+  const { mutate: uploadProof, isPending: uploadingProof } = useMutation({
+    mutationFn: async () => {
+      if (!order) throw new Error('Pesanan tidak ditemukan.');
+      if (!proofFile) throw new Error('Upload bukti transfer terlebih dahulu.');
+      if (!selectedPaymentDestinationId) throw new Error('Pilih tujuan pembayaran.');
+
+      const formData = new FormData();
+      formData.set('orderId', order.id);
+      formData.set('destinationId', selectedPaymentDestinationId);
+      formData.set('submittedAmount', String(order.total));
+      formData.set('file', proofFile);
+
+      const response = await fetch('/api/payment/proof', {
+        method: 'POST',
+        body: formData,
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(responseErrorMessage(body, 'Gagal mengupload bukti transfer'));
+      }
+    },
+    onSuccess: () => {
+      toast.success('Bukti transfer terkirim. Admin akan verifikasi pembayaran.');
+      setProofFile(null);
+      void refetch();
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Gagal mengupload bukti transfer');
     },
   });
 
@@ -165,14 +287,22 @@ export default function OrderDetailPage() {
 
   const st = STATUS_COLOR[order.status] || STATUS_COLOR.pending;
   const customRequest = isCustomRequestOrder(order);
+  const manualTransfer = isManualTransferOrder(order) || Boolean(latestPaymentProof);
   const statusLabel =
     customRequest && order.status === 'pending'
       ? 'Menunggu Konfirmasi'
-      : STATUS_LABEL[order.status];
+      : manualTransfer && order.status === 'pending'
+        ? 'Menunggu Verifikasi Pembayaran'
+        : STATUS_LABEL[order.status];
   const canTrack =
     hasShippingTracking(order) ||
     ['shipped', 'delivered', 'completed'].includes(order.status) ||
     ['shipped', 'delivered'].includes(order.shipping_status ?? '');
+  const canUploadManualProof =
+    !customRequest &&
+    order.status === 'pending' &&
+    order.payment_status !== 'paid' &&
+    (!latestPaymentProof || latestPaymentProof.status === 'rejected');
 
   return (
     <div className="min-h-dvh bg-[#FDFCFB] pb-24">
@@ -227,6 +357,169 @@ export default function OrderDetailPage() {
               Detail custom sudah masuk. Admin akan konfirmasi desain dan pembayaran final lewat
               WhatsApp sebelum produksi.
             </p>
+          </div>
+        ) : null}
+
+        {!customRequest && order.status === 'pending' ? (
+          <div className="rounded-[28px] border border-primary/20 bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <CreditCard size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="font-heading text-[15px] font-extrabold text-ink">
+                  Instruksi Transfer
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-ink-3">
+                  Transfer sesuai total pembayaran, lalu upload bukti. Admin akan verifikasi sebelum
+                  pesanan dikirim.
+                </p>
+                {manualPayment.instructions ? (
+                  <p className="mt-3 rounded-xl bg-stone-1 px-3 py-2 text-[12px] leading-relaxed text-ink-3">
+                    {manualPayment.instructions}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            {latestPaymentProof ? (
+              <div className="mt-4 rounded-2xl border border-stone-2 bg-stone-1 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-heading text-[13px] font-extrabold text-ink">Bukti terakhir</p>
+                  <span
+                    className="rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase"
+                    style={{
+                      background: latestPaymentProof.status === 'rejected' ? '#FFF0F0' : '#FFF3E8',
+                      color: latestPaymentProof.status === 'rejected' ? '#E53935' : '#E07B39',
+                    }}
+                  >
+                    {latestPaymentProof.status === 'rejected' ? 'Ditolak' : 'Menunggu Verifikasi'}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-1 text-[12px] font-medium text-ink-3">
+                  <p>Tujuan: {latestPaymentProof.payment_destination_label}</p>
+                  <p>Nominal: {formatPrice(latestPaymentProof.submitted_amount)}</p>
+                  <p>
+                    Upload:{' '}
+                    {new Intl.DateTimeFormat('id-ID', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }).format(new Date(latestPaymentProof.created_at))}
+                  </p>
+                  {latestPaymentProof.rejection_reason ? (
+                    <p className="mt-2 rounded-xl bg-white px-3 py-2 font-bold text-[#E53935]">
+                      Alasan ditolak: {latestPaymentProof.rejection_reason}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {canUploadManualProof ? (
+              <div className="mt-4 space-y-4">
+                {paymentDestinations.length > 0 ? (
+                  <div className="space-y-3">
+                    {paymentDestinations.map((destination) => {
+                      const selected = destination.id === selectedPaymentDestinationId;
+                      return (
+                        <button
+                          key={destination.id}
+                          type="button"
+                          onClick={() => setSelectedPaymentDestinationId(destination.id)}
+                          className="w-full rounded-2xl border-2 bg-white p-4 text-left transition-colors active:bg-stone-1"
+                          style={{
+                            borderColor: selected ? 'var(--color-primary)' : 'var(--color-stone-2)',
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span
+                              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2"
+                              style={{
+                                borderColor: selected
+                                  ? 'var(--color-primary)'
+                                  : 'var(--color-stone-3)',
+                              }}
+                            >
+                              {selected ? (
+                                <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                              ) : null}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                {destination.type === 'qris' ? (
+                                  <QrCode size={16} className="text-primary" />
+                                ) : (
+                                  <Landmark size={16} className="text-primary" />
+                                )}
+                                <p className="font-heading text-[13px] font-extrabold text-ink">
+                                  {destinationTitle(destination)}
+                                </p>
+                              </div>
+                              {destination.type === 'qris' ? (
+                                <div className="mt-3 overflow-hidden rounded-xl border border-stone-2 bg-white p-3">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={destination.qrImageUrl}
+                                    alt="QR pembayaran manual"
+                                    className="mx-auto aspect-square w-full max-w-[220px] object-contain"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="mt-2 space-y-1 text-[13px] font-medium text-ink-3">
+                                  <p className="font-heading text-[15px] font-extrabold text-[#E53935]">
+                                    {destination.account.accountNumber}
+                                  </p>
+                                  <p>{destination.account.bankName}</p>
+                                  <p>a.n. {destination.account.accountHolder}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="rounded-2xl bg-stone-1 px-4 py-3 text-[12px] font-bold text-ink-3">
+                    Admin belum mengaktifkan QR atau rekening transfer.
+                  </p>
+                )}
+
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-[18px] border-2 border-dashed border-stone-3 bg-stone-1 px-4 py-5 text-center active:bg-stone-2">
+                  <Upload size={24} className="text-primary" />
+                  <span className="mt-2 font-heading text-[13px] font-extrabold text-ink">
+                    {proofFile ? proofFile.name : 'Pilih foto atau PDF bukti transfer'}
+                  </span>
+                  <span className="mt-1 text-[11px] font-bold text-ink-4">
+                    Maks 5MB, JPG/PNG/WEBP/HEIC/PDF
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf"
+                    className="hidden"
+                    onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => uploadProof()}
+                  disabled={uploadingProof || !proofFile || !selectedPaymentDestinationId}
+                  className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary font-heading text-[13px] font-extrabold text-white shadow-[0_4px_12px_rgba(224,123,57,0.28)] active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {uploadingProof ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : latestPaymentProof?.status === 'rejected' ? (
+                    'Upload Ulang Bukti'
+                  ) : (
+                    'Upload Bukti Transfer'
+                  )}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -343,7 +636,7 @@ export default function OrderDetailPage() {
             <div className="flex justify-between text-[13px]">
               <span className="font-bold text-ink-4">Metode Pembayaran</span>
               <span className="font-extrabold text-ink">
-                {customRequest ? 'Konfirmasi admin' : 'Virtual Account / QRIS'}
+                {customRequest ? 'Konfirmasi admin' : 'Transfer manual'}
               </span>
             </div>
             <div className="flex justify-between text-[13px]">

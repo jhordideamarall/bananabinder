@@ -5,22 +5,31 @@ import { useRouter } from 'next/navigation';
 import {
   Check,
   ChevronLeft,
+  CreditCard,
+  FileCheck2,
+  Landmark,
   MapPin,
   Package,
   Loader2,
   Plus,
+  QrCode,
   Truck,
   ChevronDown,
-  ShieldCheck,
+  Upload,
 } from 'lucide-react';
 import { m, AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  parseManualPaymentSettings,
+  type ManualPaymentDestination,
+} from '@bananasbindery/api-client/manual-payment';
 import { useCartStore, type CartItem } from '@/stores/cart-store';
 import { useAuth } from '@/components/providers/auth-provider';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getUserAddresses, type Address } from '@/lib/services/address-client';
 import { createOrder } from '@/lib/services/order-client';
 import { getShippingRates, type ShippingOption } from '@/lib/services/shipping-client';
+import { getStoreSettings, type StoreSettings } from '@/lib/services/store-settings-client';
 import { previewCampaigns, type CampaignPreviewResponse } from '@/lib/services/campaign-client';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
@@ -34,6 +43,22 @@ const AddressSheet = dynamic(
 const fmt = (n: number) => n.toLocaleString('id-ID');
 
 const steps = ['Alamat', 'Pengiriman', 'Bayar'];
+
+const validateUUID = (id: string) => {
+  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return regex.test(id);
+};
+
+function responseErrorMessage(value: unknown, fallback: string): string {
+  if (typeof value !== 'object' || value === null) return fallback;
+  const message = (value as Record<string, unknown>).error;
+  return typeof message === 'string' && message.trim().length > 0 ? message : fallback;
+}
+
+function destinationTitle(destination: ManualPaymentDestination): string {
+  if (destination.type === 'qris') return 'QR / QRIS statis';
+  return destination.account.label || destination.account.bankName;
+}
 
 const customSignature = (details: CartItem['customDetails']): string =>
   details
@@ -95,6 +120,9 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [shippingId, setShippingId] = useState<string | null>(null);
   const [expandedCourier, setExpandedCourier] = useState<string | null>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [selectedPaymentDestinationId, setSelectedPaymentDestinationId] = useState('');
+  const [proofFile, setProofFile] = useState<File | null>(null);
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
   const voucherCode = useCartStore((state) => state.voucherCode);
@@ -120,6 +148,29 @@ export default function CheckoutPage() {
     enabled: !!selectedAddressId && items.length > 0 && step >= 2,
     staleTime: 1000 * 60 * 5, // 5 menit
   });
+
+  const { data: storeSettings = null, isLoading: isLoadingStoreSettings } =
+    useQuery<StoreSettings | null>({
+      queryKey: ['store-settings'],
+      queryFn: getStoreSettings,
+      staleTime: 1000 * 60 * 5,
+    });
+
+  const manualPayment = useMemo(() => parseManualPaymentSettings(storeSettings), [storeSettings]);
+  const paymentDestinations = manualPayment.destinations;
+
+  useEffect(() => {
+    if (paymentDestinations.length === 0) {
+      if (selectedPaymentDestinationId) setSelectedPaymentDestinationId('');
+      return;
+    }
+
+    if (
+      !paymentDestinations.some((destination) => destination.id === selectedPaymentDestinationId)
+    ) {
+      setSelectedPaymentDestinationId(paymentDestinations[0].id);
+    }
+  }, [paymentDestinations, selectedPaymentDestinationId]);
 
   const groupedOptions = useMemo(() => {
     const groups: Record<string, ShippingOption[]> = {};
@@ -219,108 +270,118 @@ export default function CheckoutPage() {
   // Total = Subtotal - Diskon + Ongkir (after free shipping subsidy)
   const total = Math.max(subtotal - discount, 0) + effectiveShippingPrice;
 
-  const { mutate: handleCheckout, isPending: submitting } = useMutation({
+  const buildOrderPayload = () => {
+    if (!activeAddress || !selectedAddressId || !selectedShipping) {
+      throw new Error('Pilih alamat dan pengiriman');
+    }
+
+    if (!validateUUID(selectedAddressId)) {
+      throw new Error('ID Alamat tidak valid (bukan UUID). Silakan pilih/tambah ulang alamat.');
+    }
+
+    const totalWeight = items.reduce((sum, item) => sum + (item.weight || 500) * item.quantity, 0);
+
+    const payloadItems = items.map((item) => ({
+      product_id: String(item.id),
+      variant_id: item.variantId || null,
+      quantity: item.quantity,
+      price: item.price,
+      product_name: item.name,
+      variant_name: item.variantName || null,
+      custom_details: item.customDetails ?? null,
+    }));
+
+    // Validate all product IDs
+    for (const item of payloadItems) {
+      if (!validateUUID(item.product_id)) {
+        throw new Error(
+          `Produk "${item.product_name}" memiliki ID tidak valid (${item.product_id}). Mohon gunakan produk asli dari database.`,
+        );
+      }
+      if (item.variant_id && !validateUUID(item.variant_id)) {
+        throw new Error(`Varian produk "${item.product_name}" memiliki ID tidak valid.`);
+      }
+    }
+
+    return {
+      addressId: selectedAddressId,
+      items: payloadItems,
+      total,
+      subtotal,
+      shippingCost: selectedShipping.price,
+      shippingCourier: selectedShipping.name,
+      shippingCourierCode: selectedShipping.courier_code,
+      shippingServiceCode: selectedShipping.service_code,
+      totalWeight,
+      tax: taxAmount,
+      serviceFee,
+      discount,
+      voucherCode: voucherCode ?? null,
+      campaignIds,
+    };
+  };
+
+  const { mutateAsync: createPendingOrder, isPending: creatingOrder } = useMutation({
     mutationFn: async () => {
-      const validateUUID = (id: string) => {
-        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        return regex.test(id);
-      };
-
-      if (!activeAddress || !selectedAddressId || !selectedShipping) {
-        throw new Error('Pilih alamat dan pengiriman');
+      if (pendingOrderId) return pendingOrderId;
+      if (!manualPayment.enabled || paymentDestinations.length === 0) {
+        throw new Error('Payment manual belum aktif. Hubungi admin toko.');
       }
 
-      if (!validateUUID(selectedAddressId)) {
-        throw new Error('ID Alamat tidak valid (bukan UUID). Silakan pilih/tambah ulang alamat.');
-      }
-
-      const totalWeight = items.reduce(
-        (sum, item) => sum + (item.weight || 500) * item.quantity,
-        0,
-      );
-
-      const payloadItems = items.map((item) => ({
-        product_id: String(item.id),
-        variant_id: item.variantId || null,
-        quantity: item.quantity,
-        price: item.price,
-        product_name: item.name,
-        variant_name: item.variantName || null,
-        custom_details: item.customDetails ?? null,
-      }));
-
-      // Validate all product IDs
-      for (const item of payloadItems) {
-        if (!validateUUID(item.product_id)) {
-          throw new Error(
-            `Produk "${item.product_name}" memiliki ID tidak valid (${item.product_id}). Mohon gunakan produk asli dari database.`,
-          );
-        }
-        if (item.variant_id && !validateUUID(item.variant_id)) {
-          throw new Error(`Varian produk "${item.product_name}" memiliki ID tidak valid.`);
-        }
-      }
-
-      console.log('CREATE_ORDER_PAYLOAD:', {
-        addressId: selectedAddressId,
-        items: payloadItems,
-        total,
-        subtotal,
-        shippingCost: selectedShipping.price,
-        shippingCourier: selectedShipping.name,
-        totalWeight,
-      });
-
-      const orderId = await createOrder({
-        addressId: selectedAddressId,
-        items: payloadItems,
-        total,
-        subtotal,
-        shippingCost: selectedShipping.price,
-        shippingCourier: selectedShipping.name,
-        shippingCourierCode: selectedShipping.courier_code,
-        shippingServiceCode: selectedShipping.service_code,
-        totalWeight,
-        tax: taxAmount,
-        serviceFee,
-        discount,
-        voucherCode: voucherCode ?? null,
-        campaignIds,
-      });
-
-      // Panggil API untuk membuat transaksi Midtrans
-      const payRes = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
-      });
-
-      const payData = await payRes.json();
-      if (!payRes.ok) {
-        console.error('PAYMENT_INIT_ERROR:', payData);
-        throw new Error(payData.error || 'Gagal menyiapkan pembayaran');
-      }
-
-      return { orderId, ...payData };
+      return createOrder(buildOrderPayload());
     },
-    onSuccess: (data: { orderId: string; invoice_url?: string }) => {
-      toast.success('Pesanan berhasil dibuat!');
-      clearCart();
-
-      if (data.invoice_url) {
-        window.location.href = data.invoice_url;
-      } else {
-        router.push('/checkout/success');
-      }
+    onSuccess: (orderId) => {
+      setPendingOrderId(orderId);
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Gagal membuat pesanan');
     },
   });
 
+  const { mutate: uploadProof, isPending: uploadingProof } = useMutation({
+    mutationFn: async () => {
+      const orderId = pendingOrderId ?? (await createPendingOrder());
+      if (!proofFile) throw new Error('Upload bukti transfer terlebih dahulu.');
+      if (!selectedPaymentDestinationId) throw new Error('Pilih tujuan pembayaran.');
+
+      const formData = new FormData();
+      formData.set('orderId', orderId);
+      formData.set('destinationId', selectedPaymentDestinationId);
+      formData.set('submittedAmount', String(total));
+      formData.set('file', proofFile);
+
+      const response = await fetch('/api/payment/proof', {
+        method: 'POST',
+        body: formData,
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(responseErrorMessage(body, 'Gagal mengupload bukti transfer'));
+      }
+
+      return { orderId };
+    },
+    onSuccess: ({ orderId }) => {
+      toast.success('Bukti transfer terkirim. Admin akan verifikasi pembayaran.');
+      clearCart();
+      router.push(`/account/orders/${orderId}`);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Gagal mengupload bukti transfer');
+    },
+  });
+
+  const submitting = creatingOrder || uploadingProof;
+
   const hasItems = hydrated && (items.length > 0 || submitting);
 
   const goBack = () => {
+    if (step === 3 && pendingOrderId) {
+      toast.info('Pesanan sudah dibuat. Lanjutkan upload bukti atau buka detail pesanan.');
+      router.push(`/account/orders/${pendingOrderId}`);
+      return;
+    }
+
     if (step > 1) {
       setStep((current) => current - 1);
       return;
@@ -340,12 +401,24 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (step < 3) {
-      setStep((current) => current + 1);
+    if (step === 1) {
+      setStep(2);
       return;
     }
 
-    handleCheckout();
+    if (step === 2) {
+      if (!selectedShipping) {
+        toast.error('Pilih pengiriman terlebih dahulu.');
+        return;
+      }
+
+      void createPendingOrder()
+        .then(() => setStep(3))
+        .catch(() => undefined);
+      return;
+    }
+
+    uploadProof();
   };
 
   return (
@@ -692,86 +765,234 @@ export default function CheckoutPage() {
                 transition={{ duration: 0.18 }}
               >
                 <h2 className="mb-4 font-heading text-[15px] font-extrabold text-ink">
-                  Metode Pembayaran
+                  Transfer & Upload Bukti
                 </h2>
-                <div className="rounded-[22px] bg-white p-6 border-2 border-primary/10 shadow-sm">
-                  <div className="flex flex-col items-center text-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <ShieldCheck size={32} />
-                    </div>
-                    <div>
-                      <h3 className="font-heading text-[17px] font-extrabold text-ink">
-                        Pembayaran Aman
-                      </h3>
-                      <p className="mt-2 text-sm font-medium text-ink-3 leading-relaxed">
-                        Anda akan diarahkan ke gerbang pembayaran aman Xendit untuk memilih metode
-                        pembayaran (QRIS, VA, atau E-Wallet).
-                      </p>
-                    </div>
-                  </div>
-                </div>
 
-                <section className="mt-4 rounded-[18px] bg-white p-4">
-                  <h3 className="mb-4 font-heading text-[14px] font-extrabold text-ink">
-                    Ringkasan
-                  </h3>
-                  <div className="flex justify-between text-sm text-ink-3">
-                    <span>Subtotal</span>
-                    <span className="font-heading font-extrabold text-[#E53935]">
-                      Rp {fmt(subtotal)}
-                    </span>
+                {isLoadingStoreSettings ? (
+                  <div className="flex flex-col items-center justify-center gap-3 rounded-[22px] bg-white p-8 text-ink-3">
+                    <Loader2 className="animate-spin text-primary" size={28} />
+                    <p className="text-sm font-bold">Memuat instruksi pembayaran...</p>
                   </div>
-                  {voucherDiscount > 0 && (
-                    <div className="mt-4 flex justify-between text-sm text-ink-3">
-                      <span>Voucher{voucherCode ? ` (${voucherCode})` : ''}</span>
-                      <span className="font-heading font-extrabold text-success">
-                        - Rp {fmt(Math.min(voucherDiscount, subtotal))}
-                      </span>
+                ) : paymentDestinations.length === 0 ? (
+                  <div className="rounded-[22px] border-2 border-primary/10 bg-white p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
+                        <CreditCard size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-heading text-[15px] font-extrabold text-ink">
+                          Payment manual belum tersedia
+                        </h3>
+                        <p className="mt-1 text-[13px] font-medium leading-relaxed text-ink-3">
+                          Admin perlu mengaktifkan QR atau rekening sebelum checkout bisa
+                          dilanjutkan.
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  {(campaignPreview?.applied ?? [])
-                    .filter((c) => c.itemDiscounts.length > 0)
-                    .map((c) => {
-                      const sum = c.itemDiscounts.reduce((s, d) => s + d.amount, 0);
-                      return (
-                        <div
-                          key={c.campaignId}
-                          className="mt-4 flex justify-between text-sm text-ink-3"
-                        >
-                          <span>Campaign · {c.name}</span>
-                          <span className="font-heading font-extrabold text-success">
-                            - Rp {fmt(sum)}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <section className="rounded-[22px] border-2 border-primary/10 bg-white p-5 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
+                          <FileCheck2 size={20} />
+                        </div>
+                        <div>
+                          <h3 className="font-heading text-[15px] font-extrabold text-ink">
+                            Total transfer Rp {fmt(total)}
+                          </h3>
+                          <p className="mt-1 text-[13px] font-medium leading-relaxed text-ink-3">
+                            Transfer sesuai nominal akhir, lalu upload bukti. Pesanan dikirim
+                            setelah admin menyetujui pembayaran.
+                          </p>
+                          {manualPayment.instructions ? (
+                            <p className="mt-3 rounded-[14px] bg-stone px-3 py-2 text-[12px] font-medium leading-relaxed text-ink-3">
+                              {manualPayment.instructions}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="rounded-[18px] bg-white p-4">
+                      <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
+                        Pilih Tujuan Pembayaran
+                      </h3>
+                      <div className="space-y-3">
+                        {paymentDestinations.map((destination) => {
+                          const selected = destination.id === selectedPaymentDestinationId;
+                          return (
+                            <button
+                              key={destination.id}
+                              type="button"
+                              onClick={() => setSelectedPaymentDestinationId(destination.id)}
+                              className="flex w-full items-start gap-3 rounded-[16px] border-2 p-4 text-left transition-colors active:bg-stone"
+                              style={{
+                                borderColor: selected
+                                  ? 'var(--color-primary)'
+                                  : 'var(--color-stone-2)',
+                                background: selected ? 'var(--color-primary-light)' : '#FFFFFF',
+                              }}
+                            >
+                              <RadioMark selected={selected} />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  {destination.type === 'qris' ? (
+                                    <QrCode size={17} className="text-primary" />
+                                  ) : (
+                                    <Landmark size={17} className="text-primary" />
+                                  )}
+                                  <p className="font-heading text-[13px] font-extrabold text-ink">
+                                    {destinationTitle(destination)}
+                                  </p>
+                                </div>
+                                {destination.type === 'qris' ? (
+                                  <div className="mt-3 overflow-hidden rounded-[14px] border border-stone-2 bg-white p-3">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={destination.qrImageUrl}
+                                      alt="QR pembayaran manual"
+                                      className="mx-auto aspect-square w-full max-w-[220px] object-contain"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="mt-2 space-y-1 text-[13px] font-medium text-ink-3">
+                                    <p className="font-heading text-[15px] font-extrabold text-[#E53935]">
+                                      {destination.account.accountNumber}
+                                    </p>
+                                    <p>{destination.account.bankName}</p>
+                                    <p>a.n. {destination.account.accountHolder}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+
+                    <section className="rounded-[18px] bg-white p-4">
+                      <h3 className="mb-4 font-heading text-[14px] font-extrabold text-ink">
+                        Ringkasan Final
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm text-ink-3">
+                          <span>Subtotal</span>
+                          <span className="font-heading font-extrabold text-[#E53935]">
+                            Rp {fmt(subtotal)}
                           </span>
                         </div>
-                      );
-                    })}
-                  {selectedShipping && (
-                    <div className="mt-4 flex justify-between text-sm text-ink-3">
-                      <span>Ongkir</span>
-                      <span className="font-heading font-extrabold text-[#E53935]">
-                        Rp {fmt(selectedShipping.price)}
-                      </span>
-                    </div>
-                  )}
-                  {campaignShippingDiscount > 0 && (
-                    <div className="mt-4 flex justify-between text-sm text-ink-3">
-                      <span>
-                        Gratis Ongkir ·{' '}
-                        {(campaignPreview?.applied ?? []).find((a) => a.shippingDiscount > 0)?.name}
-                      </span>
-                      <span className="font-heading font-extrabold text-success">
-                        - Rp {fmt(campaignShippingDiscount)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="my-4 h-px bg-stone-2" />
-                  <div className="flex justify-between">
-                    <span className="font-heading text-[14px] font-extrabold text-ink">Total</span>
-                    <span className="font-heading text-[18px] font-extrabold text-[#E53935]">
-                      Rp {fmt(total)}
-                    </span>
+                        {voucherDiscount > 0 && (
+                          <div className="flex justify-between text-sm text-ink-3">
+                            <span>Voucher{voucherCode ? ` (${voucherCode})` : ''}</span>
+                            <span className="font-heading font-extrabold text-success">
+                              - Rp {fmt(Math.min(voucherDiscount, subtotal))}
+                            </span>
+                          </div>
+                        )}
+                        {(campaignPreview?.applied ?? [])
+                          .filter((c) => c.itemDiscounts.length > 0)
+                          .map((c) => {
+                            const sum = c.itemDiscounts.reduce((s, d) => s + d.amount, 0);
+                            return (
+                              <div
+                                key={c.campaignId}
+                                className="flex justify-between gap-3 text-sm text-ink-3"
+                              >
+                                <span className="min-w-0">Campaign · {c.name}</span>
+                                <span className="shrink-0 font-heading font-extrabold text-success">
+                                  - Rp {fmt(sum)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        {selectedShipping && (
+                          <div className="flex justify-between text-sm text-ink-3">
+                            <span>
+                              {selectedShipping.courier_name} · {selectedShipping.service_name}
+                            </span>
+                            <span className="font-heading font-extrabold text-[#E53935]">
+                              Rp {fmt(selectedShipping.price)}
+                            </span>
+                          </div>
+                        )}
+                        {campaignShippingDiscount > 0 && (
+                          <div className="flex justify-between gap-3 text-sm text-ink-3">
+                            <span className="min-w-0">
+                              Gratis Ongkir ·{' '}
+                              {
+                                (campaignPreview?.applied ?? []).find((a) => a.shippingDiscount > 0)
+                                  ?.name
+                              }
+                            </span>
+                            <span className="shrink-0 font-heading font-extrabold text-success">
+                              - Rp {fmt(campaignShippingDiscount)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="my-4 h-px bg-stone-2" />
+                      <div className="flex justify-between">
+                        <span className="font-heading text-[14px] font-extrabold text-ink">
+                          Total
+                        </span>
+                        <span className="font-heading text-[18px] font-extrabold text-[#E53935]">
+                          Rp {fmt(total)}
+                        </span>
+                      </div>
+                    </section>
+
+                    <section className="rounded-[18px] bg-white p-4">
+                      <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
+                        Detail Pengiriman
+                      </h3>
+                      <div className="space-y-3 text-[13px] font-medium leading-relaxed text-ink-3">
+                        {activeAddress ? (
+                          <div className="rounded-[14px] bg-stone p-3">
+                            <p className="font-heading font-extrabold text-ink">
+                              {activeAddress.recipient_name}
+                            </p>
+                            <p>{activeAddress.phone}</p>
+                            <p>
+                              {activeAddress.full_address}
+                              <br />
+                              {activeAddress.city}, {activeAddress.postal_code}
+                            </p>
+                          </div>
+                        ) : null}
+                        {selectedShipping ? (
+                          <div className="rounded-[14px] bg-stone p-3">
+                            <p className="font-heading font-extrabold text-ink">
+                              {selectedShipping.courier_name} · {selectedShipping.service_name}
+                            </p>
+                            <p>Estimasi {selectedShipping.etd}</p>
+                          </div>
+                        ) : null}
+                      </div>
+                    </section>
+
+                    <section className="rounded-[18px] bg-white p-4">
+                      <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
+                        Upload Bukti Transfer
+                      </h3>
+                      <label className="flex cursor-pointer flex-col items-center justify-center rounded-[18px] border-2 border-dashed border-stone-3 bg-stone px-4 py-6 text-center active:bg-stone-2">
+                        <Upload size={26} className="text-primary" />
+                        <span className="mt-2 font-heading text-[13px] font-extrabold text-ink">
+                          {proofFile ? proofFile.name : 'Pilih foto atau PDF bukti transfer'}
+                        </span>
+                        <span className="mt-1 text-[11px] font-bold text-ink-4">
+                          Maks 5MB, JPG/PNG/WEBP/HEIC/PDF
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf"
+                          className="hidden"
+                          onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+                        />
+                      </label>
+                    </section>
                   </div>
-                </section>
+                )}
               </m.div>
             )}
           </AnimatePresence>
@@ -782,7 +1003,14 @@ export default function CheckoutPage() {
         <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-stone-2 bg-white px-[clamp(16px,5vw,20px)] py-4">
           <button
             onClick={continueFlow}
-            disabled={submitting || (step === 1 && !activeAddress)}
+            disabled={
+              submitting ||
+              (step >= 2 && isLoadingStoreSettings) ||
+              (step === 1 && !activeAddress) ||
+              (step === 2 && !selectedShipping) ||
+              (step === 3 &&
+                (!proofFile || !selectedPaymentDestinationId || paymentDestinations.length === 0))
+            }
             className="flex h-14 w-full items-center justify-center rounded-[18px] bg-primary font-heading text-[15px] font-extrabold text-white shadow-md active:scale-[0.98] transition-transform disabled:opacity-50"
           >
             {submitting ? (
@@ -790,7 +1018,7 @@ export default function CheckoutPage() {
             ) : step < 3 ? (
               'Lanjutkan'
             ) : (
-              `Bayar Rp ${fmt(total)}`
+              'Kirim Bukti Transfer'
             )}
           </button>
           <div className="safe-bottom" />

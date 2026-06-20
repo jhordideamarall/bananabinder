@@ -13,6 +13,8 @@
     "./banners": "./src/banners.ts",
     "./store-settings": "./src/store-settings.ts",
     "./fonnte": "./src/fonnte.ts",
+    "./manual-payment": "./src/manual-payment.ts",
+    "./biteship": "./src/biteship.ts",
     "./types": "./src/types.ts",
     "./campaigns": "./src/campaigns.ts",
     "./chat": "./src/chat.ts"
@@ -45,6 +47,12 @@
       ],
       "fonnte": [
         "./src/fonnte.ts"
+      ],
+      "manual-payment": [
+        "./src/manual-payment.ts"
+      ],
+      "biteship": [
+        "./src/biteship.ts"
       ],
       "types": [
         "./src/types.ts"

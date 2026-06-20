@@ -6,9 +6,8 @@ import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
 import { m } from 'framer-motion';
 import { ArrowLeft, Package, Loader2 } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getUserOrders } from '@/lib/services/order-client';
-import { toast } from 'sonner';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Menunggu Pembayaran',
@@ -55,6 +54,10 @@ function isCustomRequestOrder(order: {
   );
 }
 
+function isManualTransferOrder(order: { payment_method?: string | null }): boolean {
+  return order.payment_method === 'manual_transfer';
+}
+
 function hasShippingTracking(order: {
   shipping_tracking?: string | null;
   shipping_metadata?: unknown;
@@ -96,27 +99,6 @@ export default function OrdersPage() {
     if (activeTab === 'cancelled')
       return order.status === 'cancelled' || order.status === 'expired';
     return true;
-  });
-
-  const { mutate: handlePay, isPending: isPaying } = useMutation({
-    mutationFn: async (orderId: string) => {
-      const res = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal menyiapkan pembayaran');
-      return data.invoice_url;
-    },
-    onSuccess: (url) => {
-      if (url) {
-        window.location.href = url;
-      }
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
   });
 
   return (
@@ -198,10 +180,13 @@ export default function OrdersPage() {
               const firstItem = order.order_items?.[0];
               const hasCustomItem = order.order_items?.some((item) => item.custom_details) ?? false;
               const isCustomRequest = isCustomRequestOrder(order);
+              const isManualTransfer = isManualTransferOrder(order);
               const statusLabel =
                 isCustomRequest && order.status === 'pending'
                   ? 'Menunggu Konfirmasi'
-                  : STATUS_LABEL[order.status];
+                  : isManualTransfer && order.status === 'pending'
+                    ? 'Menunggu Verifikasi Pembayaran'
+                    : STATUS_LABEL[order.status];
               const canTrack =
                 hasShippingTracking(order) ||
                 ['shipped', 'delivered', 'completed'].includes(order.status) ||
@@ -290,15 +275,10 @@ export default function OrdersPage() {
                     <div className="mt-5 flex gap-2">
                       {order.status === 'pending' && !isCustomRequest && (
                         <button
-                          onClick={() => handlePay(order.id)}
-                          disabled={isPaying}
+                          onClick={() => router.push(`/account/orders/${order.id}` as Route)}
                           className="flex-1 rounded-xl bg-primary py-3 text-[13px] font-extrabold text-white shadow-[0_4px_12px_rgba(224,123,57,0.3)] active:scale-95 transition-all disabled:opacity-50"
                         >
-                          {isPaying ? (
-                            <Loader2 className="mx-auto animate-spin" size={18} />
-                          ) : (
-                            'Bayar Sekarang'
-                          )}
+                          Upload Bukti
                         </button>
                       )}
 

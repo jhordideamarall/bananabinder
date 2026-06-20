@@ -13,7 +13,7 @@ Arsitektur monorepo dengan shared core agar business logic dan API client bisa d
 | Language              | TypeScript strict                |
 | Web                   | Next.js App Router               |
 | Database/Auth/Storage | Supabase                         |
-| Payment               | Xendit                           |
+| Payment               | Manual transfer                  |
 | Shipping              | Biteship                         |
 | State                 | Zustand                          |
 | UI                    | Tailwind CSS + shared UI package |
@@ -24,7 +24,7 @@ Arsitektur monorepo dengan shared core agar business logic dan API client bisa d
 
 - Binder/photo-product storefront
 - Product catalog, variants, stock, cart, checkout
-- Xendit payment lifecycle
+- Manual transfer lifecycle with static QR, multi-rekening, and proof review
 - Biteship shipping lifecycle
 - Admin products/orders/promos
 - Owner metrics and stock visibility
@@ -87,15 +87,15 @@ bananabinder/
 
 ## Shared Package Responsibilities
 
-| Package                      | Responsibility                                                   |
-| ---------------------------- | ---------------------------------------------------------------- |
-| `@bananasbindery/types`      | Domain types and generated Supabase DB types                     |
-| `@bananasbindery/core`       | Pricing, discount, tax, cart, shipping, inventory, voucher logic |
-| `@bananasbindery/api-client` | Xendit, Biteship, Supabase RPC and app API wrappers              |
-| `@bananasbindery/store`      | Cart/UI/auth state usable by web/future mobile                   |
-| `@bananasbindery/utils`      | Formatting, slug, validation, order number helpers               |
-| `@bananasbindery/ui`         | Button, Card, Badge, PriceTag, inputs, primitives                |
-| `@bananasbindery/config`     | Shared constants and env schema                                  |
+| Package                      | Responsibility                                                      |
+| ---------------------------- | ------------------------------------------------------------------- |
+| `@bananasbindery/types`      | Domain types and generated Supabase DB types                        |
+| `@bananasbindery/core`       | Pricing, discount, tax, cart, shipping, inventory, voucher logic    |
+| `@bananasbindery/api-client` | Biteship, manual-payment parsers, Supabase RPC and app API wrappers |
+| `@bananasbindery/store`      | Cart/UI/auth state usable by web/future mobile                      |
+| `@bananasbindery/utils`      | Formatting, slug, validation, order number helpers                  |
+| `@bananasbindery/ui`         | Button, Card, Badge, PriceTag, inputs, primitives                   |
+| `@bananasbindery/config`     | Shared constants and env schema                                     |
 
 ---
 
@@ -125,19 +125,19 @@ Rules:
 ### Checkout
 
 ```txt
-cart -> address -> shipping quote -> voucher/pricing -> create order RPC -> Xendit invoice -> payment redirect
+cart -> address -> shipping quote -> voucher/pricing -> create pending order RPC -> QR/rekening instructions -> proof upload
 ```
 
-### Payment Webhook
+### Manual Payment Approval
 
 ```txt
-Xendit webhook -> verify token -> record webhook_events -> idempotent status transition -> transaction record -> inventory/payment/order update -> optional shipment creation
+customer proof -> private storage -> admin review -> transaction record -> order paid -> idempotent Biteship fulfillment
 ```
 
 ### Shipping
 
 ```txt
-destination area -> Biteship rates -> customer selects courier -> paid order -> Biteship order/fulfillment -> tracking update
+destination area -> Biteship rates -> customer selects courier -> admin-approved paid order -> Biteship order/fulfillment -> tracking update
 ```
 
 ### Admin Product/Order
@@ -157,6 +157,7 @@ Active DB domains:
 - categories/products/product_variants/product_images
 - carts/cart_items
 - orders/order_items/transactions
+- payment_proofs
 - shipping/shipments
 - vouchers/promos/loyalty
 - reviews/wishlists

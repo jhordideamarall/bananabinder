@@ -3,6 +3,7 @@ import type { Tables } from '@bananasbindery/types/supabase';
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
 import { createClient } from '@/lib/supabase/server';
 import { HomeBannerLabelsForm } from '@/components/admin/settings/HomeBannerLabelsForm';
+import { ManualPaymentSettingsForm } from '@/components/admin/settings/ManualPaymentSettingsForm';
 import { StoreLocationPicker } from '@/components/admin/settings/StoreLocationPicker';
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default async function AdminSettingsPage() {
       </header>
 
       <div className="space-y-6">
+        <ManualPaymentSettingsForm settings={settings} />
         <StoreLocationPicker settings={settings} />
         <HomeBannerLabelsForm settings={settings} />
       </div>

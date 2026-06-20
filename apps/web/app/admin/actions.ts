@@ -2,9 +2,18 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import type { Enums, Json, TablesInsert, TablesUpdate } from '@bananasbindery/types/supabase';
+import { createClient as createAdminSupabaseClient } from '@supabase/supabase-js';
+import type {
+  Database,
+  Enums,
+  Json,
+  TablesInsert,
+  TablesUpdate,
+} from '@bananasbindery/types/supabase';
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
+import { parseManualPaymentAccounts } from '@bananasbindery/api-client/manual-payment';
 import { createClient } from '@/lib/supabase/server';
+import { ensureBiteshipFulfillment } from '@/lib/server/biteship-fulfillment';
 
 const ADMIN_ROLES: Enums<'user_role'>[] = ['admin', 'owner', 'staff'];
 
@@ -26,6 +35,8 @@ type StoreSettingsInsert = TablesInsert<'store_settings'>;
 type OrderUpdate = TablesUpdate<'orders'>;
 type ProductVariantUpdate = TablesUpdate<'product_variants'>;
 type ProductVariantInsert = TablesInsert<'product_variants'>;
+type PaymentProofUpdate = TablesUpdate<'payment_proofs'>;
+type TransactionInsert = TablesInsert<'transactions'>;
 
 function text(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -103,7 +114,7 @@ async function getSupabase(): Promise<TypedSupabaseClient> {
   return (await createClient()) as TypedSupabaseClient;
 }
 
-async function requireAdmin(supabase: TypedSupabaseClient): Promise<void> {
+async function requireAdmin(supabase: TypedSupabaseClient): Promise<string> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -120,6 +131,30 @@ async function requireAdmin(supabase: TypedSupabaseClient): Promise<void> {
 
   if (!profile || !ADMIN_ROLES.includes(profile.role)) {
     redirect('/');
+  }
+
+  return user.id;
+}
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createAdminSupabaseClient<Database>(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+function jsonRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+}
+
+function parseJsonValue(value: string): unknown {
+  if (!value.trim()) return null;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
   }
 }
 
@@ -372,6 +407,27 @@ export async function saveStoreSettings(formData: FormData): Promise<void> {
     payload.origin_postal_code = nullableText(formData, 'origin_postal_code');
   }
 
+  if (formData.has('manual_payment_form')) {
+    const accounts = parseManualPaymentAccounts(
+      parseJsonValue(text(formData, 'manual_payment_accounts')),
+    );
+    const qrImageUrl = nullableText(formData, 'manual_payment_qr_image_url');
+    const enabled = checkbox(formData, 'manual_payment_enabled');
+
+    if (enabled && !qrImageUrl && !accounts.some((account) => account.isActive)) {
+      throw new Error('Aktifkan minimal QR atau satu rekening untuk payment manual.');
+    }
+
+    payload.manual_payment_enabled = enabled;
+    payload.manual_payment_qr_image_url = qrImageUrl;
+    payload.manual_payment_instructions = nullableText(formData, 'manual_payment_instructions');
+    payload.manual_payment_expires_hours = Math.max(
+      1,
+      Math.round(numberValue(formData, 'manual_payment_expires_hours', 24)),
+    );
+    payload.manual_payment_accounts = accounts as unknown as Json;
+  }
+
   // store_settings is a single-row table
   const { data: existing } = await supabase
     .from('store_settings')
@@ -421,6 +477,231 @@ export async function updateOrderStatus(formData: FormData): Promise<void> {
   revalidatePath('/admin/orders');
   revalidatePath('/admin/custom-orders');
   revalidatePath(`/admin/orders/${orderId}`);
+}
+
+async function getReviewProof(
+  admin: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
+  orderId: string,
+  proofId: string | null,
+) {
+  let query = admin
+    .from('payment_proofs')
+    .select('*')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (proofId) {
+    query = admin.from('payment_proofs').select('*').eq('id', proofId).eq('order_id', orderId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function approveManualPayment(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  const reviewerId = await requireAdmin(supabase);
+  const admin = getSupabaseAdmin();
+  if (!admin) throw new Error('Supabase admin belum dikonfigurasi.');
+
+  const orderId = text(formData, 'order_id');
+  const proofId = nullableText(formData, 'proof_id');
+  if (!orderId) throw new Error('Order id tidak valid.');
+
+  const { data: order, error: orderError } = await admin
+    .from('orders')
+    .select('id, order_number, total, status, payment_status, payment_metadata')
+    .eq('id', orderId)
+    .single();
+  if (orderError || !order) throw new Error('Order tidak ditemukan.');
+
+  const proof = await getReviewProof(admin, orderId, proofId);
+  if (!proof) throw new Error('Bukti transfer belum ada.');
+  if (proof.status === 'rejected') {
+    throw new Error('Bukti transfer sudah ditolak. Minta customer upload ulang.');
+  }
+
+  const now = new Date().toISOString();
+  const proofUpdate: PaymentProofUpdate = {
+    status: 'approved',
+    reviewed_by: reviewerId,
+    reviewed_at: now,
+    rejection_reason: null,
+    updated_at: now,
+  };
+  const { error: proofError } = await admin
+    .from('payment_proofs')
+    .update(proofUpdate)
+    .eq('id', proof.id);
+  if (proofError) throw new Error(proofError.message);
+
+  const rawResponse: Json = {
+    provider: 'manual_transfer',
+    proof_id: proof.id,
+    payment_destination_type: proof.payment_destination_type,
+    payment_destination_id: proof.payment_destination_id,
+    payment_destination_label: proof.payment_destination_label,
+    submitted_amount: proof.submitted_amount,
+    approved_at: now,
+    approved_by: reviewerId,
+  };
+
+  const { data: existingTransaction } = await admin
+    .from('transactions')
+    .select('id')
+    .eq('order_id', order.id)
+    .eq('provider', 'manual_transfer')
+    .maybeSingle();
+
+  if (existingTransaction) {
+    const { error } = await admin
+      .from('transactions')
+      .update({
+        amount: Number(order.total),
+        status: 'paid',
+        paid_at: now,
+        raw_response: rawResponse,
+        updated_at: now,
+      })
+      .eq('id', existingTransaction.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const transactionPayload: TransactionInsert = {
+      order_id: order.id,
+      amount: Number(order.total),
+      provider: 'manual_transfer',
+      payment_method: 'manual_transfer',
+      external_id: `manual:${order.order_number}`,
+      status: 'paid',
+      paid_at: now,
+      raw_response: rawResponse,
+    };
+    const { error } = await admin.from('transactions').insert(transactionPayload);
+    if (error) throw new Error(error.message);
+  }
+
+  const { error: orderUpdateError } = await admin
+    .from('orders')
+    .update({
+      status: 'paid',
+      payment_status: 'paid',
+      payment_method: 'manual_transfer',
+      paid_at: now,
+      payment_metadata: {
+        ...jsonRecord(order.payment_metadata),
+        manual_payment: {
+          proof_id: proof.id,
+          proof_status: 'approved',
+          reviewed_at: now,
+          reviewed_by: reviewerId,
+          destination: {
+            type: proof.payment_destination_type,
+            id: proof.payment_destination_id,
+            label: proof.payment_destination_label,
+          },
+        },
+      } as Json,
+      updated_at: now,
+    })
+    .eq('id', order.id);
+  if (orderUpdateError) throw new Error(orderUpdateError.message);
+
+  const fulfillment = await ensureBiteshipFulfillment(order.id, {
+    trigger: 'manual_payment_approved',
+  });
+  if (fulfillment.error) {
+    console.warn('MANUAL_PAYMENT_BITESHIP_WARN:', fulfillment.error);
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${order.id}`);
+  revalidatePath('/account/orders');
+  revalidatePath(`/account/orders/${order.id}`);
+}
+
+export async function rejectManualPayment(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  const reviewerId = await requireAdmin(supabase);
+  const admin = getSupabaseAdmin();
+  if (!admin) throw new Error('Supabase admin belum dikonfigurasi.');
+
+  const orderId = text(formData, 'order_id');
+  const proofId = nullableText(formData, 'proof_id');
+  const reason = text(formData, 'rejection_reason') || 'Bukti transfer belum valid.';
+  if (!orderId) throw new Error('Order id tidak valid.');
+
+  const proof = await getReviewProof(admin, orderId, proofId);
+  if (!proof) throw new Error('Bukti transfer belum ada.');
+  if (proof.status === 'approved') throw new Error('Bukti transfer sudah disetujui.');
+
+  const now = new Date().toISOString();
+  const { error: proofError } = await admin
+    .from('payment_proofs')
+    .update({
+      status: 'rejected',
+      reviewed_by: reviewerId,
+      reviewed_at: now,
+      rejection_reason: reason,
+      updated_at: now,
+    })
+    .eq('id', proof.id);
+  if (proofError) throw new Error(proofError.message);
+
+  const { data: order } = await admin
+    .from('orders')
+    .select('payment_metadata')
+    .eq('id', orderId)
+    .single();
+
+  const { error: orderError } = await admin
+    .from('orders')
+    .update({
+      payment_method: 'manual_transfer',
+      payment_status: 'unpaid',
+      payment_metadata: {
+        ...jsonRecord(order?.payment_metadata),
+        manual_payment: {
+          proof_id: proof.id,
+          proof_status: 'rejected',
+          rejection_reason: reason,
+          reviewed_at: now,
+          reviewed_by: reviewerId,
+        },
+      } as Json,
+      updated_at: now,
+    })
+    .eq('id', orderId);
+  if (orderError) throw new Error(orderError.message);
+
+  revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath('/account/orders');
+  revalidatePath(`/account/orders/${orderId}`);
+}
+
+export async function expireManualOrder(formData: FormData): Promise<void> {
+  const supabase = await getSupabase();
+  await requireAdmin(supabase);
+  const admin = getSupabaseAdmin();
+  if (!admin) throw new Error('Supabase admin belum dikonfigurasi.');
+
+  const orderId = text(formData, 'order_id');
+  const reason = text(formData, 'reason') || 'manual_payment_expired';
+  if (!orderId) throw new Error('Order id tidak valid.');
+
+  const { error } = await admin.rpc('expire_manual_order_v1', {
+    p_order_id: orderId,
+    p_reason: reason,
+  });
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath('/account/orders');
+  revalidatePath(`/account/orders/${orderId}`);
 }
 
 export async function updateCustomOrderControl(formData: FormData): Promise<void> {

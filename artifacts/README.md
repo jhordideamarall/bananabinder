@@ -4,7 +4,7 @@ Folder ini sekarang hanya menyimpan artifact yang relevan dengan scope aktif pro
 
 - Binder/photo-product e-commerce
 - Catalog, variants, stock, cart, checkout
-- Xendit payment lifecycle
+- Manual transfer payment lifecycle
 - Biteship shipping lifecycle
 - Admin products/orders/promos
 - Supabase/order hardening
@@ -13,6 +13,7 @@ Folder ini sekarang hanya menyimpan artifact yang relevan dengan scope aktif pro
 
 | Artifact                                                         | Fokus                                                                          |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `065-2026-06-20-manual-transfer-payment-flow.md`                 | Manual transfer payment + multi-rekening + proof review + Biteship approval    |
 | `032-2026-05-14-binder-alignment-and-pricing-core.md`            | Pivot binder + pricing core                                                    |
 | `033-2026-05-14-supabase-binder-mcp-and-order-rpc-hardening.md`  | Supabase Binder MCP + order RPC hardening                                      |
 | `034-2026-05-14-admin-dashboard-products-promos.md`              | Admin dashboard/orders/products/promos                                         |

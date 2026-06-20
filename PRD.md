@@ -13,7 +13,7 @@ Scope aktif project:
 - Katalog produk binder/photo-product dari asset aktual di folder `assets/`
 - Variant produk: cover color, paper type, ring size, size A5/A6/mini, custom text
 - Cart, checkout, shipping, payment, order history, wishlist
-- Payment via Xendit
+- Payment via manual transfer: static QR, multi-rekening, upload bukti transfer
 - Shipping via Biteship
 - Admin untuk products, orders, promos, stock, dan visibility financial
 - Loyalty/reorder untuk repeat purchase refill/binder
@@ -74,25 +74,27 @@ Required variant dimensions:
 - Address selection/creation
 - Biteship shipping rates
 - Voucher/promo application
-- Xendit invoice creation
+- Manual transfer instructions, selected QR/rekening, and proof upload
 - Internal absorbed-tax accounting without changing UX total unexpectedly
 
 ### 4.4 Payment
 
-Provider: Xendit.
+Provider utama: manual transfer.
 
 Supported methods:
 
-- QRIS
-- E-wallet
-- Virtual Account
-- Cards where enabled by Xendit
+- Static QR / QRIS image configured by admin
+- Multiple active bank/e-wallet accounts configured by admin
+- Customer upload bukti transfer after final total is shown
+- Admin approve/reject proof from order detail
 
 Rules:
 
-- Payment webhook is source of truth for paid/expired state.
-- Webhook events must be idempotent.
-- Unpaid orders auto-expire and release inventory.
+- Admin approval is source of truth for paid state on new checkout orders.
+- Approval creates a manual-transfer transaction, marks order paid, then creates Biteship fulfillment once.
+- Rejected proof keeps order pending and allows customer re-upload.
+- Unpaid manual orders can be expired to release inventory and reverse promo usage.
+- Legacy Xendit routes remain readable/usable for older orders only.
 
 ### 4.5 Shipping & Fulfillment
 
@@ -152,8 +154,8 @@ Owner metrics:
 
 ```txt
 browse/search -> product detail -> choose variant/custom note -> add to cart -> checkout
--> select address -> select shipping -> apply voucher -> Xendit payment
--> payment webhook -> admin process -> shipped -> delivered -> review
+-> select address -> select shipping -> apply voucher -> manual transfer instructions
+-> upload bukti -> admin approves payment -> Biteship fulfillment -> shipped -> delivered -> review
 ```
 
 ### Reorder / Refill
@@ -215,7 +217,7 @@ Historical source-project tables should not be used by active app code. If live 
 - Web: Next.js App Router + TypeScript
 - Styling: Tailwind CSS + Framer Motion
 - Backend/Data: Supabase PostgreSQL + Auth + Storage + Edge Functions where needed
-- Payment: Xendit
+- Payment: Manual transfer with static QR, multi-rekening, and proof verification
 - Shipping: Biteship
 - Shared packages: `types`, `core`, `api-client`, `store`, `utils`, `ui`, `config`
 
@@ -232,14 +234,14 @@ Historical source-project tables should not be used by active app code. If live 
 
 ## 10. Success Metrics
 
-| Metric                             | Target                                                     |
-| ---------------------------------- | ---------------------------------------------------------- |
-| Checkout success rate              | > 90% after payment provider redirects                     |
-| Stock overselling                  | 0 critical incidents                                       |
-| Payment webhook duplicate handling | idempotent, no duplicate order transition                  |
-| Repeat order rate                  | 30%+ long term                                             |
-| AOV                                | Rp 150.000+ target after bundle strategy                   |
-| Admin order processing visibility  | order status, payment, shipping, resi visible in dashboard |
+| Metric                              | Target                                                     |
+| ----------------------------------- | ---------------------------------------------------------- |
+| Checkout success rate               | > 90% through proof upload and order detail redirect       |
+| Stock overselling                   | 0 critical incidents                                       |
+| Manual payment approval idempotency | no duplicate paid transition or Biteship fulfillment       |
+| Repeat order rate                   | 30%+ long term                                             |
+| AOV                                 | Rp 150.000+ target after bundle strategy                   |
+| Admin order processing visibility   | order status, payment, shipping, resi visible in dashboard |
 
 ---
 
@@ -247,7 +249,7 @@ Historical source-project tables should not be used by active app code. If live 
 
 | Risk                                           | Severity | Mitigation                                                         |
 | ---------------------------------------------- | -------- | ------------------------------------------------------------------ |
-| Payment webhook duplicate/missing event        | High     | idempotent webhook_events + reconciliation logs                    |
+| Manual proof approved twice                    | High     | idempotent Biteship metadata check + transaction upsert            |
 | Stock overselling                              | High     | database RPC lock and inventory release on expiry                  |
 | Biteship env missing in development            | Medium   | fail gracefully with clear error, no hard crash                    |
 | Deprecated source-project modules reintroduced | Medium   | artifact/docs cleanup, active scan, generated DB types regen later |
@@ -257,4 +259,4 @@ Historical source-project tables should not be used by active app code. If live 
 
 ## 12. Final Scope Statement
 
-Bananasbindery is a binder/photo-product commerce platform. All future work should prioritize product catalog, variants, cart, checkout, Xendit payment, Biteship shipping, stock, promo, admin, and owner visibility.
+Bananasbindery is a binder/photo-product commerce platform. All future work should prioritize product catalog, variants, cart, checkout, manual transfer payment, Biteship shipping, stock, promo, admin, and owner visibility.

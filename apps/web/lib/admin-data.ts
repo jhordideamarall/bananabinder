@@ -490,6 +490,23 @@ export interface AdminCustomOrderWhatsApp {
   sent_at: string;
 }
 
+export interface AdminPaymentProof {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+  signed_url: string | null;
+  submitted_amount: number | null;
+  payment_destination_type: string;
+  payment_destination_id: string | null;
+  payment_destination_label: string | null;
+  status: string;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+}
+
 export interface AdminOrderDetail {
   id: string;
   order_number: string;
@@ -511,6 +528,7 @@ export interface AdminOrderDetail {
   shipped_at: string | null;
   delivered_at: string | null;
   custom_order_whatsapp: AdminCustomOrderWhatsApp | null;
+  latest_payment_proof: AdminPaymentProof | null;
   customer: { name: string | null; phone: string | null; email: string | null } | null;
   address: {
     recipient_name: string | null;
@@ -615,6 +633,21 @@ async function withSignedReferenceImage(
   };
 }
 
+async function withSignedPaymentProof(
+  supabaseInput: TypedSupabaseClient,
+  proof: Omit<AdminPaymentProof, 'signed_url'> | null,
+): Promise<AdminPaymentProof | null> {
+  if (!proof) return null;
+  const { data } = await supabaseInput.storage
+    .from('payment-proofs')
+    .createSignedUrl(proof.file_path, 60 * 60);
+
+  return {
+    ...proof,
+    signed_url: data?.signedUrl ?? null,
+  };
+}
+
 function parseStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
@@ -659,7 +692,7 @@ export async function getAdminOrderDetail(
   const { data, error } = await supabase
     .from('orders')
     .select(
-      '*, profiles:user_id(name, phone, email), addresses:address_id(recipient_name, phone, full_address, city, district, postal_code), order_items(id, product_name, variant_name, quantity, price, subtotal, custom_details, products(product_images(url)))',
+      '*, profiles:user_id(name, phone, email), addresses:address_id(recipient_name, phone, full_address, city, district, postal_code), order_items(id, product_name, variant_name, quantity, price, subtotal, custom_details, products(product_images(url))), payment_proofs(id, file_name, file_path, file_type, file_size, submitted_amount, payment_destination_type, payment_destination_id, payment_destination_label, status, reviewed_at, rejection_reason, created_at)',
     )
     .eq('id', id)
     .single();
@@ -686,6 +719,21 @@ export async function getAdminOrderDetail(
       custom_details: unknown;
       products: { product_images: { url: string }[] | null } | null;
     }[];
+    payment_proofs: Array<{
+      id: string;
+      file_name: string;
+      file_path: string;
+      file_type: string;
+      file_size: number;
+      submitted_amount: number | null;
+      payment_destination_type: string;
+      payment_destination_id: string | null;
+      payment_destination_label: string | null;
+      status: string;
+      reviewed_at: string | null;
+      rejection_reason: string | null;
+      created_at: string;
+    }> | null;
   };
 
   const order = data as unknown as DetailRow;
@@ -705,6 +753,10 @@ export async function getAdminOrderDetail(
       ),
     })),
   );
+
+  const latestProof =
+    (order.payment_proofs ?? []).sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ??
+    null;
 
   return {
     id: order.id,
@@ -727,6 +779,7 @@ export async function getAdminOrderDetail(
     shipped_at: order.shipped_at,
     delivered_at: order.delivered_at,
     custom_order_whatsapp: parseCustomOrderWhatsApp(order.payment_metadata),
+    latest_payment_proof: await withSignedPaymentProof(supabase, latestProof),
     customer: order.profiles,
     address: order.addresses,
     items,

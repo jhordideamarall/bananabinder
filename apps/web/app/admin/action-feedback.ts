@@ -1,6 +1,9 @@
 'use server';
 
 import {
+  approveManualPayment,
+  expireManualOrder,
+  rejectManualPayment,
   saveCategory,
   saveCustomOrderCatalog,
   saveStoreSettings,
@@ -56,6 +59,42 @@ export async function updateOrderStatusWithFeedback(
     return ok('Status order tersimpan. Timeline dan data order sudah diperbarui.');
   } catch (error) {
     return fail(error, 'Gagal menyimpan status order.');
+  }
+}
+
+export async function approveManualPaymentWithFeedback(
+  _previousState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  try {
+    await approveManualPayment(formData);
+    return ok('Pembayaran disetujui. Order ditandai paid dan fulfillment Biteship diproses.');
+  } catch (error) {
+    return fail(error, 'Gagal menyetujui pembayaran.');
+  }
+}
+
+export async function rejectManualPaymentWithFeedback(
+  _previousState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  try {
+    await rejectManualPayment(formData);
+    return ok('Bukti transfer ditolak. Customer bisa upload ulang dari detail order.');
+  } catch (error) {
+    return fail(error, 'Gagal menolak bukti transfer.');
+  }
+}
+
+export async function expireManualOrderWithFeedback(
+  _previousState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  try {
+    await expireManualOrder(formData);
+    return ok('Order manual payment diexpire dan stok dikembalikan jika belum pernah dirilis.');
+  } catch (error) {
+    return fail(error, 'Gagal meng-expire order.');
   }
 }
 

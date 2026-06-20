@@ -1049,6 +1049,91 @@ export type Database = {
           },
         ];
       };
+      payment_proofs: {
+        Row: {
+          created_at: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          file_type: string;
+          id: string;
+          metadata: Json;
+          order_id: string;
+          payment_destination_id: string | null;
+          payment_destination_label: string | null;
+          payment_destination_type: string;
+          rejection_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: string;
+          submitted_amount: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          file_type: string;
+          id?: string;
+          metadata?: Json;
+          order_id: string;
+          payment_destination_id?: string | null;
+          payment_destination_label?: string | null;
+          payment_destination_type?: string;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          submitted_amount?: number | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number;
+          file_type?: string;
+          id?: string;
+          metadata?: Json;
+          order_id?: string;
+          payment_destination_id?: string | null;
+          payment_destination_label?: string | null;
+          payment_destination_type?: string;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          submitted_amount?: number | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'payment_proofs_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'payment_proofs_reviewed_by_fkey';
+            columns: ['reviewed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'payment_proofs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       orders: {
         Row: {
           address_id: string | null;
@@ -1718,6 +1803,11 @@ export type Database = {
           home_banner_pilihan_label: string;
           home_banner_promo_label: string;
           id: string;
+          manual_payment_accounts: Json;
+          manual_payment_enabled: boolean;
+          manual_payment_expires_hours: number;
+          manual_payment_instructions: string | null;
+          manual_payment_qr_image_url: string | null;
           origin_address: string | null;
           origin_area_id: string;
           origin_latitude: number | null;
@@ -1734,6 +1824,11 @@ export type Database = {
           home_banner_pilihan_label?: string;
           home_banner_promo_label?: string;
           id?: string;
+          manual_payment_accounts?: Json;
+          manual_payment_enabled?: boolean;
+          manual_payment_expires_hours?: number;
+          manual_payment_instructions?: string | null;
+          manual_payment_qr_image_url?: string | null;
           origin_address?: string | null;
           origin_area_id?: string;
           origin_latitude?: number | null;
@@ -1750,6 +1845,11 @@ export type Database = {
           home_banner_pilihan_label?: string;
           home_banner_promo_label?: string;
           id?: string;
+          manual_payment_accounts?: Json;
+          manual_payment_enabled?: boolean;
+          manual_payment_expires_hours?: number;
+          manual_payment_instructions?: string | null;
+          manual_payment_qr_image_url?: string | null;
           origin_address?: string | null;
           origin_area_id?: string;
           origin_latitude?: number | null;
@@ -2008,6 +2108,10 @@ export type Database = {
           p_voucher_code?: string;
         };
         Returns: string;
+      };
+      expire_manual_order_v1: {
+        Args: { p_order_id: string; p_reason?: string };
+        Returns: boolean;
       };
       haversine_km: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number };

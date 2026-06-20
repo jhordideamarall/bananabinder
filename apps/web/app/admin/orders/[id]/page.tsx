@@ -17,6 +17,7 @@ import {
 import { Card, CardContent } from '@bananasbindery/ui/components/card';
 import { db } from '@/lib/db';
 import { getAdminOrderDetail } from '@/lib/admin-data';
+import { ManualPaymentReview } from '@/components/admin/orders/ManualPaymentReview';
 import { OrderStatusForm } from '@/components/admin/orders/OrderStatusForm';
 
 const fmt = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
@@ -285,6 +286,15 @@ export default async function AdminOrderDetailPage({
                   notes: order.notes,
                 }}
               />
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-xl shadow-gray-100/50">
+            <CardContent className="p-6">
+              <h2 className="mb-4 font-heading text-base font-black text-gray-900">
+                Review Bukti Transfer
+              </h2>
+              <ManualPaymentReview orderId={order.id} proof={order.latest_payment_proof} />
             </CardContent>
           </Card>
 
