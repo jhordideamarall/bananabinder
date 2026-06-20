@@ -13,6 +13,7 @@ Folder ini sekarang hanya menyimpan artifact yang relevan dengan scope aktif pro
 
 | Artifact                                                         | Fokus                                                                          |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `066-2026-06-20-qr-payment-ratio-tuning.md`                      | QR payment 4:3 display tuning di mobile checkout                               |
 | `065-2026-06-20-manual-transfer-payment-flow.md`                 | Manual transfer payment + multi-rekening + proof review + Biteship approval    |
 | `032-2026-05-14-binder-alignment-and-pricing-core.md`            | Pivot binder + pricing core                                                    |
 | `033-2026-05-14-supabase-binder-mcp-and-order-rpc-hardening.md`  | Supabase Binder MCP + order RPC hardening                                      |

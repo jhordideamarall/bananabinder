@@ -459,12 +459,12 @@ export default function OrderDetailPage() {
                                 </p>
                               </div>
                               {destination.type === 'qris' ? (
-                                <div className="mt-3 overflow-hidden rounded-xl border border-stone-2 bg-white p-3">
+                                <div className="mt-3 overflow-hidden rounded-xl border border-stone-2 bg-white p-1.5">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src={destination.qrImageUrl}
                                     alt="QR pembayaran manual"
-                                    className="mx-auto aspect-square w-full max-w-[220px] object-contain"
+                                    className="mx-auto max-h-[260px] w-full max-w-[320px] object-contain"
                                   />
                                 </div>
                               ) : (
