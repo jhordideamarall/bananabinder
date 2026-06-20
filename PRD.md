@@ -13,8 +13,8 @@ Scope aktif project:
 - Katalog produk binder/photo-product dari asset aktual di folder `assets/`
 - Variant produk: cover color, paper type, ring size, size A5/A6/mini, custom text
 - Cart, checkout, shipping, payment, order history, wishlist
-- Payment via manual transfer: static QR, multi-rekening, upload bukti transfer
-- Shipping via Biteship
+- Payment via COD and manual transfer: static QR, multi-rekening, upload bukti transfer
+- Shipping rates via Biteship
 - Admin untuk products, orders, promos, stock, dan visibility financial
 - Loyalty/reorder untuk repeat purchase refill/binder
 
@@ -74,12 +74,13 @@ Required variant dimensions:
 - Address selection/creation
 - Biteship shipping rates
 - Voucher/promo application
+- COD payment choice
 - Manual transfer instructions, selected QR/rekening, and proof upload
 - Internal absorbed-tax accounting without changing UX total unexpectedly
 
 ### 4.4 Payment
 
-Provider utama: manual transfer.
+Provider utama: COD dan manual transfer.
 
 Supported methods:
 
@@ -87,23 +88,25 @@ Supported methods:
 - Multiple active bank/e-wallet accounts configured by admin
 - Customer upload bukti transfer after final total is shown
 - Admin approve/reject proof from order detail
+- COD / bayar di tempat
 
 Rules:
 
+- COD orders stay pending/unpaid until admin receives payment and updates the order.
 - Admin approval is source of truth for paid state on new checkout orders.
-- Approval creates a manual-transfer transaction, marks order paid, then creates Biteship fulfillment once.
+- Approval creates a manual-transfer transaction and marks order paid.
 - Rejected proof keeps order pending and allows customer re-upload.
 - Unpaid manual orders can be expired to release inventory and reverse promo usage.
 - Legacy Xendit routes remain readable/usable for older orders only.
 
 ### 4.5 Shipping & Fulfillment
 
-Provider: Biteship.
+Provider: Biteship rates.
 
 Rules:
 
 - Rate calculation uses weight/dimensions and destination area/coordinates.
-- Order can create Biteship fulfillment after payment success.
+- New checkout uses Biteship only to quote shipping rates; fulfillment is handled operationally by admin.
 - Admin can update shipping status, tracking number, and internal notes.
 - Fallback item copy must always refer to binder/photo-product, not pet products.
 
@@ -154,8 +157,8 @@ Owner metrics:
 
 ```txt
 browse/search -> product detail -> choose variant/custom note -> add to cart -> checkout
--> select address -> select shipping -> apply voucher -> manual transfer instructions
--> upload bukti -> admin approves payment -> Biteship fulfillment -> shipped -> delivered -> review
+-> select address -> select shipping -> apply voucher -> choose COD or manual transfer
+-> COD order pending or upload bukti -> admin processes order -> shipped -> delivered -> review
 ```
 
 ### Reorder / Refill
@@ -217,8 +220,8 @@ Historical source-project tables should not be used by active app code. If live 
 - Web: Next.js App Router + TypeScript
 - Styling: Tailwind CSS + Framer Motion
 - Backend/Data: Supabase PostgreSQL + Auth + Storage + Edge Functions where needed
-- Payment: Manual transfer with static QR, multi-rekening, and proof verification
-- Shipping: Biteship
+- Payment: COD and manual transfer with static QR, multi-rekening, and proof verification
+- Shipping: Biteship rates
 - Shared packages: `types`, `core`, `api-client`, `store`, `utils`, `ui`, `config`
 
 ---
@@ -234,14 +237,14 @@ Historical source-project tables should not be used by active app code. If live 
 
 ## 10. Success Metrics
 
-| Metric                              | Target                                                     |
-| ----------------------------------- | ---------------------------------------------------------- |
-| Checkout success rate               | > 90% through proof upload and order detail redirect       |
-| Stock overselling                   | 0 critical incidents                                       |
-| Manual payment approval idempotency | no duplicate paid transition or Biteship fulfillment       |
-| Repeat order rate                   | 30%+ long term                                             |
-| AOV                                 | Rp 150.000+ target after bundle strategy                   |
-| Admin order processing visibility   | order status, payment, shipping, resi visible in dashboard |
+| Metric                              | Target                                                      |
+| ----------------------------------- | ----------------------------------------------------------- |
+| Checkout success rate               | > 90% through COD or proof upload and order detail redirect |
+| Stock overselling                   | 0 critical incidents                                        |
+| Manual payment approval idempotency | no duplicate paid transition or transaction                 |
+| Repeat order rate                   | 30%+ long term                                              |
+| AOV                                 | Rp 150.000+ target after bundle strategy                    |
+| Admin order processing visibility   | order status, payment, shipping, resi visible in dashboard  |
 
 ---
 

@@ -174,6 +174,17 @@ function isManualTransferOrder(order: Order): boolean {
   return order.payment_method === 'manual_transfer';
 }
 
+function isCodOrder(order: Order): boolean {
+  return order.payment_method === 'cod';
+}
+
+function paymentMethodLabel(order: Order, customRequest: boolean): string {
+  if (customRequest) return 'Konfirmasi admin';
+  if (isCodOrder(order)) return 'COD / Bayar di tempat';
+  if (isManualTransferOrder(order)) return 'Transfer manual';
+  return 'Menunggu pembayaran';
+}
+
 export default function OrderDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -287,19 +298,24 @@ export default function OrderDetailPage() {
 
   const st = STATUS_COLOR[order.status] || STATUS_COLOR.pending;
   const customRequest = isCustomRequestOrder(order);
+  const codOrder = isCodOrder(order);
   const manualTransfer = isManualTransferOrder(order) || Boolean(latestPaymentProof);
   const statusLabel =
     customRequest && order.status === 'pending'
       ? 'Menunggu Konfirmasi'
-      : manualTransfer && order.status === 'pending'
-        ? 'Menunggu Verifikasi Pembayaran'
-        : STATUS_LABEL[order.status];
+      : codOrder && order.status === 'pending'
+        ? 'COD - Bayar Saat Terima'
+        : manualTransfer && order.status === 'pending'
+          ? 'Menunggu Verifikasi Pembayaran'
+          : STATUS_LABEL[order.status];
   const canTrack =
     hasShippingTracking(order) ||
     ['shipped', 'delivered', 'completed'].includes(order.status) ||
     ['shipped', 'delivered'].includes(order.shipping_status ?? '');
   const canUploadManualProof =
+    manualTransfer &&
     !customRequest &&
+    !codOrder &&
     order.status === 'pending' &&
     order.payment_status !== 'paid' &&
     (!latestPaymentProof || latestPaymentProof.status === 'rejected');
@@ -360,7 +376,25 @@ export default function OrderDetailPage() {
           </div>
         ) : null}
 
-        {!customRequest && order.status === 'pending' ? (
+        {!customRequest && codOrder && order.status === 'pending' ? (
+          <div className="rounded-[28px] border border-primary/20 bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <CreditCard size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="font-heading text-[15px] font-extrabold text-ink">
+                  Bayar Saat Pesanan Diterima
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-ink-3">
+                  Siapkan pembayaran sesuai total order saat paket diterima.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {!customRequest && manualTransfer && !codOrder && order.status === 'pending' ? (
           <div className="rounded-[28px] border border-primary/20 bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
             <div className="flex items-start gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -636,7 +670,7 @@ export default function OrderDetailPage() {
             <div className="flex justify-between text-[13px]">
               <span className="font-bold text-ink-4">Metode Pembayaran</span>
               <span className="font-extrabold text-ink">
-                {customRequest ? 'Konfirmasi admin' : 'Transfer manual'}
+                {paymentMethodLabel(order, customRequest)}
               </span>
             </div>
             <div className="flex justify-between text-[13px]">

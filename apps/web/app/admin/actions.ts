@@ -13,7 +13,6 @@ import type {
 import type { TypedSupabaseClient } from '@bananasbindery/api-client/types';
 import { parseManualPaymentAccounts } from '@bananasbindery/api-client/manual-payment';
 import { createClient } from '@/lib/supabase/server';
-import { ensureBiteshipFulfillment } from '@/lib/server/biteship-fulfillment';
 
 const ADMIN_ROLES: Enums<'user_role'>[] = ['admin', 'owner', 'staff'];
 
@@ -607,13 +606,6 @@ export async function approveManualPayment(formData: FormData): Promise<void> {
     })
     .eq('id', order.id);
   if (orderUpdateError) throw new Error(orderUpdateError.message);
-
-  const fulfillment = await ensureBiteshipFulfillment(order.id, {
-    trigger: 'manual_payment_approved',
-  });
-  if (fulfillment.error) {
-    console.warn('MANUAL_PAYMENT_BITESHIP_WARN:', fulfillment.error);
-  }
 
   revalidatePath('/admin');
   revalidatePath('/admin/orders');

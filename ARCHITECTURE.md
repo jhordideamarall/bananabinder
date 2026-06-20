@@ -13,8 +13,8 @@ Arsitektur monorepo dengan shared core agar business logic dan API client bisa d
 | Language              | TypeScript strict                |
 | Web                   | Next.js App Router               |
 | Database/Auth/Storage | Supabase                         |
-| Payment               | Manual transfer                  |
-| Shipping              | Biteship                         |
+| Payment               | COD + manual transfer            |
+| Shipping              | Biteship rates                   |
 | State                 | Zustand                          |
 | UI                    | Tailwind CSS + shared UI package |
 
@@ -24,8 +24,8 @@ Arsitektur monorepo dengan shared core agar business logic dan API client bisa d
 
 - Binder/photo-product storefront
 - Product catalog, variants, stock, cart, checkout
-- Manual transfer lifecycle with static QR, multi-rekening, and proof review
-- Biteship shipping lifecycle
+- COD and manual transfer lifecycle with static QR, multi-rekening, and proof review
+- Biteship rate quote lifecycle
 - Admin products/orders/promos
 - Owner metrics and stock visibility
 
@@ -87,15 +87,15 @@ bananabinder/
 
 ## Shared Package Responsibilities
 
-| Package                      | Responsibility                                                      |
-| ---------------------------- | ------------------------------------------------------------------- |
-| `@bananasbindery/types`      | Domain types and generated Supabase DB types                        |
-| `@bananasbindery/core`       | Pricing, discount, tax, cart, shipping, inventory, voucher logic    |
-| `@bananasbindery/api-client` | Biteship, manual-payment parsers, Supabase RPC and app API wrappers |
-| `@bananasbindery/store`      | Cart/UI/auth state usable by web/future mobile                      |
-| `@bananasbindery/utils`      | Formatting, slug, validation, order number helpers                  |
-| `@bananasbindery/ui`         | Button, Card, Badge, PriceTag, inputs, primitives                   |
-| `@bananasbindery/config`     | Shared constants and env schema                                     |
+| Package                      | Responsibility                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| `@bananasbindery/types`      | Domain types and generated Supabase DB types                                     |
+| `@bananasbindery/core`       | Pricing, discount, tax, cart, shipping, inventory, voucher logic                 |
+| `@bananasbindery/api-client` | Biteship rate helpers, manual-payment parsers, Supabase RPC and app API wrappers |
+| `@bananasbindery/store`      | Cart/UI/auth state usable by web/future mobile                                   |
+| `@bananasbindery/utils`      | Formatting, slug, validation, order number helpers                               |
+| `@bananasbindery/ui`         | Button, Card, Badge, PriceTag, inputs, primitives                                |
+| `@bananasbindery/config`     | Shared constants and env schema                                                  |
 
 ---
 
@@ -125,19 +125,19 @@ Rules:
 ### Checkout
 
 ```txt
-cart -> address -> shipping quote -> voucher/pricing -> create pending order RPC -> QR/rekening instructions -> proof upload
+cart -> address -> shipping quote -> voucher/pricing -> create pending order RPC -> COD confirmation or QR/rekening instructions -> proof upload
 ```
 
 ### Manual Payment Approval
 
 ```txt
-customer proof -> private storage -> admin review -> transaction record -> order paid -> idempotent Biteship fulfillment
+customer proof -> private storage -> admin review -> transaction record -> order paid
 ```
 
 ### Shipping
 
 ```txt
-destination area -> Biteship rates -> customer selects courier -> admin-approved paid order -> Biteship order/fulfillment -> tracking update
+destination area -> Biteship rates -> customer selects courier -> admin handles fulfillment/status manually
 ```
 
 ### Admin Product/Order

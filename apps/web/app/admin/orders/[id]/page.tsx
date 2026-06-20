@@ -59,6 +59,8 @@ export default async function AdminOrderDetailPage({
     (shippingMeta.courier_tracking_id as string | undefined) ?? order.shipping_tracking ?? null;
   const biteshipStatus = shippingMeta.biteship_status as string | undefined;
   const hasCustomItems = order.items.some((item) => item.custom_details);
+  const isManualTransfer = order.payment_method === 'manual_transfer' || order.latest_payment_proof;
+  const isCod = order.payment_method === 'cod';
 
   return (
     <div className="space-y-6">
@@ -289,14 +291,32 @@ export default async function AdminOrderDetailPage({
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl shadow-gray-100/50">
-            <CardContent className="p-6">
-              <h2 className="mb-4 font-heading text-base font-black text-gray-900">
-                Review Bukti Transfer
-              </h2>
-              <ManualPaymentReview orderId={order.id} proof={order.latest_payment_proof} />
-            </CardContent>
-          </Card>
+          {isManualTransfer ? (
+            <Card className="border-none shadow-xl shadow-gray-100/50">
+              <CardContent className="p-6">
+                <h2 className="mb-4 font-heading text-base font-black text-gray-900">
+                  Review Bukti Transfer
+                </h2>
+                <ManualPaymentReview orderId={order.id} proof={order.latest_payment_proof} />
+              </CardContent>
+            </Card>
+          ) : isCod ? (
+            <Card className="border-none shadow-xl shadow-gray-100/50">
+              <CardContent className="p-6">
+                <h2 className="mb-4 font-heading text-base font-black text-gray-900">
+                  Pembayaran COD
+                </h2>
+                <div className="space-y-2 text-sm">
+                  <Row label="Metode" value="Bayar di tempat" />
+                  <Row label="Status bayar" value={order.payment_status} />
+                  <Row label="Tagihan" value={fmt(order.total)} />
+                </div>
+                <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-800">
+                  Tandai status pembayaran menjadi paid setelah pembayaran diterima.
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card className="border-none shadow-xl shadow-gray-100/50">
             <CardContent className="p-6">

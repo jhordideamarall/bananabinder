@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Check,
   ChevronLeft,
+  Banknote,
   CreditCard,
   FileCheck2,
   Landmark,
@@ -43,6 +44,8 @@ const AddressSheet = dynamic(
 const fmt = (n: number) => n.toLocaleString('id-ID');
 
 const steps = ['Alamat', 'Pengiriman', 'Bayar'];
+
+type CheckoutPaymentMethod = 'cod' | 'manual_transfer';
 
 const validateUUID = (id: string) => {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -121,6 +124,7 @@ export default function CheckoutPage() {
   const [shippingId, setShippingId] = useState<string | null>(null);
   const [expandedCourier, setExpandedCourier] = useState<string | null>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>('cod');
   const [selectedPaymentDestinationId, setSelectedPaymentDestinationId] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const items = useCartStore((state) => state.items);
@@ -158,6 +162,8 @@ export default function CheckoutPage() {
 
   const manualPayment = useMemo(() => parseManualPaymentSettings(storeSettings), [storeSettings]);
   const paymentDestinations = manualPayment.destinations;
+  const manualTransferAvailable = manualPayment.enabled && paymentDestinations.length > 0;
+  const manualTransferSelected = selectedPaymentMethod === 'manual_transfer';
 
   useEffect(() => {
     if (paymentDestinations.length === 0) {
@@ -171,6 +177,12 @@ export default function CheckoutPage() {
       setSelectedPaymentDestinationId(paymentDestinations[0].id);
     }
   }, [paymentDestinations, selectedPaymentDestinationId]);
+
+  useEffect(() => {
+    if (!manualTransferAvailable && selectedPaymentMethod === 'manual_transfer') {
+      setSelectedPaymentMethod('cod');
+    }
+  }, [manualTransferAvailable, selectedPaymentMethod]);
 
   const groupedOptions = useMemo(() => {
     const groups: Record<string, ShippingOption[]> = {};
@@ -324,10 +336,6 @@ export default function CheckoutPage() {
   const { mutateAsync: createPendingOrder, isPending: creatingOrder } = useMutation({
     mutationFn: async () => {
       if (pendingOrderId) return pendingOrderId;
-      if (!manualPayment.enabled || paymentDestinations.length === 0) {
-        throw new Error('Payment manual belum aktif. Hubungi admin toko.');
-      }
-
       return createOrder(buildOrderPayload());
     },
     onSuccess: (orderId) => {
@@ -335,6 +343,31 @@ export default function CheckoutPage() {
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Gagal membuat pesanan');
+    },
+  });
+
+  const { mutate: confirmCodPayment, isPending: confirmingCodPayment } = useMutation({
+    mutationFn: async () => {
+      const orderId = pendingOrderId ?? (await createPendingOrder());
+      const response = await fetch('/api/payment/cod', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(responseErrorMessage(body, 'Gagal memilih pembayaran COD'));
+      }
+
+      return { orderId };
+    },
+    onSuccess: ({ orderId }) => {
+      toast.success('Pesanan COD dibuat. Siapkan pembayaran saat pesanan diterima.');
+      clearCart();
+      router.push(`/account/orders/${orderId}`);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Gagal memilih pembayaran COD');
     },
   });
 
@@ -371,7 +404,7 @@ export default function CheckoutPage() {
     },
   });
 
-  const submitting = creatingOrder || uploadingProof;
+  const submitting = creatingOrder || uploadingProof || confirmingCodPayment;
 
   const hasItems = hydrated && (items.length > 0 || submitting);
 
@@ -415,6 +448,16 @@ export default function CheckoutPage() {
       void createPendingOrder()
         .then(() => setStep(3))
         .catch(() => undefined);
+      return;
+    }
+
+    if (selectedPaymentMethod === 'cod') {
+      confirmCodPayment();
+      return;
+    }
+
+    if (!manualTransferAvailable) {
+      toast.error('Transfer manual belum aktif. Pilih COD atau hubungi admin toko.');
       return;
     }
 
@@ -765,55 +808,104 @@ export default function CheckoutPage() {
                 transition={{ duration: 0.18 }}
               >
                 <h2 className="mb-4 font-heading text-[15px] font-extrabold text-ink">
-                  Transfer & Upload Bukti
+                  Pilih Metode Pembayaran
                 </h2>
 
-                {isLoadingStoreSettings ? (
-                  <div className="flex flex-col items-center justify-center gap-3 rounded-[22px] bg-white p-8 text-ink-3">
-                    <Loader2 className="animate-spin text-primary" size={28} />
-                    <p className="text-sm font-bold">Memuat instruksi pembayaran...</p>
-                  </div>
-                ) : paymentDestinations.length === 0 ? (
-                  <div className="rounded-[22px] border-2 border-primary/10 bg-white p-5">
+                <div className="space-y-4">
+                  <section className="rounded-[22px] border-2 border-primary/10 bg-white p-5 shadow-sm">
                     <div className="flex items-start gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-                        <CreditCard size={20} />
+                        {manualTransferSelected ? <FileCheck2 size={20} /> : <Banknote size={20} />}
                       </div>
                       <div>
                         <h3 className="font-heading text-[15px] font-extrabold text-ink">
-                          Payment manual belum tersedia
+                          {manualTransferSelected ? 'Total transfer' : 'Total COD'} Rp {fmt(total)}
                         </h3>
                         <p className="mt-1 text-[13px] font-medium leading-relaxed text-ink-3">
-                          Admin perlu mengaktifkan QR atau rekening sebelum checkout bisa
-                          dilanjutkan.
+                          {manualTransferSelected
+                            ? 'Transfer sesuai nominal akhir, lalu upload bukti untuk diverifikasi admin.'
+                            : 'Bayar tunai saat pesanan diterima. Ongkir mengikuti kurir yang kamu pilih.'}
                         </p>
+                        {manualTransferSelected && manualPayment.instructions ? (
+                          <p className="mt-3 rounded-[14px] bg-stone px-3 py-2 text-[12px] font-medium leading-relaxed text-ink-3">
+                            {manualPayment.instructions}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <section className="rounded-[22px] border-2 border-primary/10 bg-white p-5 shadow-sm">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 text-primary">
-                          <FileCheck2 size={20} />
-                        </div>
-                        <div>
-                          <h3 className="font-heading text-[15px] font-extrabold text-ink">
-                            Total transfer Rp {fmt(total)}
-                          </h3>
-                          <p className="mt-1 text-[13px] font-medium leading-relaxed text-ink-3">
-                            Transfer sesuai nominal akhir, lalu upload bukti. Pesanan dikirim
-                            setelah admin menyetujui pembayaran.
-                          </p>
-                          {manualPayment.instructions ? (
-                            <p className="mt-3 rounded-[14px] bg-stone px-3 py-2 text-[12px] font-medium leading-relaxed text-ink-3">
-                              {manualPayment.instructions}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                    </section>
+                  </section>
 
+                  <section className="rounded-[18px] bg-white p-4">
+                    <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
+                      Metode Pembayaran
+                    </h3>
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPaymentMethod('cod')}
+                        className="flex w-full items-start gap-3 rounded-[16px] border-2 p-4 text-left transition-colors active:bg-stone"
+                        style={{
+                          borderColor:
+                            selectedPaymentMethod === 'cod'
+                              ? 'var(--color-primary)'
+                              : 'var(--color-stone-2)',
+                          background:
+                            selectedPaymentMethod === 'cod'
+                              ? 'var(--color-primary-light)'
+                              : '#FFFFFF',
+                        }}
+                      >
+                        <RadioMark selected={selectedPaymentMethod === 'cod'} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Banknote size={17} className="text-primary" />
+                            <p className="font-heading text-[13px] font-extrabold text-ink">
+                              COD / Bayar di tempat
+                            </p>
+                          </div>
+                          <p className="mt-1 text-[12px] font-medium leading-relaxed text-ink-3">
+                            Siapkan pembayaran saat paket diterima.
+                          </p>
+                        </div>
+                      </button>
+
+                      {isLoadingStoreSettings ? (
+                        <div className="flex items-center gap-2 rounded-[16px] border border-stone-2 bg-stone px-4 py-3 text-[12px] font-bold text-ink-3">
+                          <Loader2 className="animate-spin text-primary" size={16} />
+                          Memuat opsi transfer...
+                        </div>
+                      ) : manualTransferAvailable ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPaymentMethod('manual_transfer')}
+                          className="flex w-full items-start gap-3 rounded-[16px] border-2 p-4 text-left transition-colors active:bg-stone"
+                          style={{
+                            borderColor: manualTransferSelected
+                              ? 'var(--color-primary)'
+                              : 'var(--color-stone-2)',
+                            background: manualTransferSelected
+                              ? 'var(--color-primary-light)'
+                              : '#FFFFFF',
+                          }}
+                        >
+                          <RadioMark selected={manualTransferSelected} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <CreditCard size={17} className="text-primary" />
+                              <p className="font-heading text-[13px] font-extrabold text-ink">
+                                Transfer manual
+                              </p>
+                            </div>
+                            <p className="mt-1 text-[12px] font-medium leading-relaxed text-ink-3">
+                              QR/rekening dan upload bukti transfer.
+                            </p>
+                          </div>
+                        </button>
+                      ) : null}
+                    </div>
+                  </section>
+
+                  {manualTransferSelected ? (
                     <section className="rounded-[18px] bg-white p-4">
                       <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
                         Pilih Tujuan Pembayaran
@@ -870,107 +962,125 @@ export default function CheckoutPage() {
                         })}
                       </div>
                     </section>
-
+                  ) : (
                     <section className="rounded-[18px] bg-white p-4">
-                      <h3 className="mb-4 font-heading text-[14px] font-extrabold text-ink">
-                        Ringkasan Final
+                      <h3 className="mb-2 font-heading text-[14px] font-extrabold text-ink">
+                        Bayar Saat Terima
                       </h3>
-                      <div className="space-y-3">
+                      <p className="text-[13px] font-medium leading-relaxed text-ink-3">
+                        Pesanan akan masuk ke admin untuk diproses. Pembayaran dilakukan saat paket
+                        diterima.
+                      </p>
+                      {selectedShipping ? (
+                        <div className="mt-3 rounded-[14px] bg-stone p-3 text-[12px] font-bold leading-relaxed text-ink-3">
+                          {selectedShipping.courier_name} · {selectedShipping.service_name} · Rp{' '}
+                          {fmt(effectiveShippingPrice)}
+                        </div>
+                      ) : null}
+                    </section>
+                  )}
+
+                  <section className="rounded-[18px] bg-white p-4">
+                    <h3 className="mb-4 font-heading text-[14px] font-extrabold text-ink">
+                      Ringkasan Final
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm text-ink-3">
+                        <span>Subtotal</span>
+                        <span className="font-heading font-extrabold text-[#E53935]">
+                          Rp {fmt(subtotal)}
+                        </span>
+                      </div>
+                      {voucherDiscount > 0 && (
                         <div className="flex justify-between text-sm text-ink-3">
-                          <span>Subtotal</span>
-                          <span className="font-heading font-extrabold text-[#E53935]">
-                            Rp {fmt(subtotal)}
+                          <span>Voucher{voucherCode ? ` (${voucherCode})` : ''}</span>
+                          <span className="font-heading font-extrabold text-success">
+                            - Rp {fmt(Math.min(voucherDiscount, subtotal))}
                           </span>
                         </div>
-                        {voucherDiscount > 0 && (
-                          <div className="flex justify-between text-sm text-ink-3">
-                            <span>Voucher{voucherCode ? ` (${voucherCode})` : ''}</span>
-                            <span className="font-heading font-extrabold text-success">
-                              - Rp {fmt(Math.min(voucherDiscount, subtotal))}
-                            </span>
-                          </div>
-                        )}
-                        {(campaignPreview?.applied ?? [])
-                          .filter((c) => c.itemDiscounts.length > 0)
-                          .map((c) => {
-                            const sum = c.itemDiscounts.reduce((s, d) => s + d.amount, 0);
-                            return (
-                              <div
-                                key={c.campaignId}
-                                className="flex justify-between gap-3 text-sm text-ink-3"
-                              >
-                                <span className="min-w-0">Campaign · {c.name}</span>
-                                <span className="shrink-0 font-heading font-extrabold text-success">
-                                  - Rp {fmt(sum)}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        {selectedShipping && (
-                          <div className="flex justify-between text-sm text-ink-3">
-                            <span>
-                              {selectedShipping.courier_name} · {selectedShipping.service_name}
-                            </span>
-                            <span className="font-heading font-extrabold text-[#E53935]">
-                              Rp {fmt(selectedShipping.price)}
-                            </span>
-                          </div>
-                        )}
-                        {campaignShippingDiscount > 0 && (
-                          <div className="flex justify-between gap-3 text-sm text-ink-3">
-                            <span className="min-w-0">
-                              Gratis Ongkir ·{' '}
-                              {
-                                (campaignPreview?.applied ?? []).find((a) => a.shippingDiscount > 0)
-                                  ?.name
-                              }
-                            </span>
-                            <span className="shrink-0 font-heading font-extrabold text-success">
-                              - Rp {fmt(campaignShippingDiscount)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="my-4 h-px bg-stone-2" />
-                      <div className="flex justify-between">
-                        <span className="font-heading text-[14px] font-extrabold text-ink">
-                          Total
-                        </span>
-                        <span className="font-heading text-[18px] font-extrabold text-[#E53935]">
-                          Rp {fmt(total)}
-                        </span>
-                      </div>
-                    </section>
+                      )}
+                      {(campaignPreview?.applied ?? [])
+                        .filter((c) => c.itemDiscounts.length > 0)
+                        .map((c) => {
+                          const sum = c.itemDiscounts.reduce((s, d) => s + d.amount, 0);
+                          return (
+                            <div
+                              key={c.campaignId}
+                              className="flex justify-between gap-3 text-sm text-ink-3"
+                            >
+                              <span className="min-w-0">Campaign · {c.name}</span>
+                              <span className="shrink-0 font-heading font-extrabold text-success">
+                                - Rp {fmt(sum)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      {selectedShipping && (
+                        <div className="flex justify-between text-sm text-ink-3">
+                          <span>
+                            {selectedShipping.courier_name} · {selectedShipping.service_name}
+                          </span>
+                          <span className="font-heading font-extrabold text-[#E53935]">
+                            Rp {fmt(selectedShipping.price)}
+                          </span>
+                        </div>
+                      )}
+                      {campaignShippingDiscount > 0 && (
+                        <div className="flex justify-between gap-3 text-sm text-ink-3">
+                          <span className="min-w-0">
+                            Gratis Ongkir ·{' '}
+                            {
+                              (campaignPreview?.applied ?? []).find((a) => a.shippingDiscount > 0)
+                                ?.name
+                            }
+                          </span>
+                          <span className="shrink-0 font-heading font-extrabold text-success">
+                            - Rp {fmt(campaignShippingDiscount)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="my-4 h-px bg-stone-2" />
+                    <div className="flex justify-between">
+                      <span className="font-heading text-[14px] font-extrabold text-ink">
+                        Total
+                      </span>
+                      <span className="font-heading text-[18px] font-extrabold text-[#E53935]">
+                        Rp {fmt(total)}
+                      </span>
+                    </div>
+                  </section>
 
-                    <section className="rounded-[18px] bg-white p-4">
-                      <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
-                        Detail Pengiriman
-                      </h3>
-                      <div className="space-y-3 text-[13px] font-medium leading-relaxed text-ink-3">
-                        {activeAddress ? (
-                          <div className="rounded-[14px] bg-stone p-3">
-                            <p className="font-heading font-extrabold text-ink">
-                              {activeAddress.recipient_name}
-                            </p>
-                            <p>{activeAddress.phone}</p>
-                            <p>
-                              {activeAddress.full_address}
-                              <br />
-                              {activeAddress.city}, {activeAddress.postal_code}
-                            </p>
-                          </div>
-                        ) : null}
-                        {selectedShipping ? (
-                          <div className="rounded-[14px] bg-stone p-3">
-                            <p className="font-heading font-extrabold text-ink">
-                              {selectedShipping.courier_name} · {selectedShipping.service_name}
-                            </p>
-                            <p>Estimasi {selectedShipping.etd}</p>
-                          </div>
-                        ) : null}
-                      </div>
-                    </section>
+                  <section className="rounded-[18px] bg-white p-4">
+                    <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
+                      Detail Pengiriman
+                    </h3>
+                    <div className="space-y-3 text-[13px] font-medium leading-relaxed text-ink-3">
+                      {activeAddress ? (
+                        <div className="rounded-[14px] bg-stone p-3">
+                          <p className="font-heading font-extrabold text-ink">
+                            {activeAddress.recipient_name}
+                          </p>
+                          <p>{activeAddress.phone}</p>
+                          <p>
+                            {activeAddress.full_address}
+                            <br />
+                            {activeAddress.city}, {activeAddress.postal_code}
+                          </p>
+                        </div>
+                      ) : null}
+                      {selectedShipping ? (
+                        <div className="rounded-[14px] bg-stone p-3">
+                          <p className="font-heading font-extrabold text-ink">
+                            {selectedShipping.courier_name} · {selectedShipping.service_name}
+                          </p>
+                          <p>Estimasi {selectedShipping.etd}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </section>
 
+                  {manualTransferSelected ? (
                     <section className="rounded-[18px] bg-white p-4">
                       <h3 className="mb-3 font-heading text-[14px] font-extrabold text-ink">
                         Upload Bukti Transfer
@@ -991,8 +1101,8 @@ export default function CheckoutPage() {
                         />
                       </label>
                     </section>
-                  </div>
-                )}
+                  ) : null}
+                </div>
               </m.div>
             )}
           </AnimatePresence>
@@ -1005,11 +1115,12 @@ export default function CheckoutPage() {
             onClick={continueFlow}
             disabled={
               submitting ||
-              (step >= 2 && isLoadingStoreSettings) ||
+              (step === 3 && manualTransferSelected && isLoadingStoreSettings) ||
               (step === 1 && !activeAddress) ||
               (step === 2 && !selectedShipping) ||
               (step === 3 &&
-                (!proofFile || !selectedPaymentDestinationId || paymentDestinations.length === 0))
+                manualTransferSelected &&
+                (!proofFile || !selectedPaymentDestinationId || !manualTransferAvailable))
             }
             className="flex h-14 w-full items-center justify-center rounded-[18px] bg-primary font-heading text-[15px] font-extrabold text-white shadow-md active:scale-[0.98] transition-transform disabled:opacity-50"
           >
@@ -1017,6 +1128,8 @@ export default function CheckoutPage() {
               <Loader2 className="animate-spin" size={20} />
             ) : step < 3 ? (
               'Lanjutkan'
+            ) : selectedPaymentMethod === 'cod' ? (
+              'Buat Pesanan COD'
             ) : (
               'Kirim Bukti Transfer'
             )}

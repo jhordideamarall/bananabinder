@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getIntegrationSecret } from '@/lib/integration-secrets';
-import { ensureBiteshipFulfillment } from '@/lib/server/biteship-fulfillment';
 
 // Inisialisasi admin client secara lazy/aman untuk build
 const getSupabaseAdmin = () => {
@@ -101,10 +100,7 @@ export async function POST(req: Request) {
         })
         .eq('external_id', external_id);
 
-      const fulfillment = await ensureBiteshipFulfillment(order.id, { trigger: 'xendit_webhook' });
-      if (fulfillment.error) {
-        console.error('Biteship fulfillment error for Xendit order:', fulfillment.error);
-      }
+      console.log('Xendit payment marked paid without Biteship fulfillment:', order.id);
     } else if (status === 'EXPIRED') {
       // Ambil order dulu untuk dapat id (dipakai RPC release inventory).
       const { data: expiredOrder } = await supabaseAdmin

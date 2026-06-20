@@ -68,7 +68,7 @@ export async function approveManualPaymentWithFeedback(
 ): Promise<AdminActionState> {
   try {
     await approveManualPayment(formData);
-    return ok('Pembayaran disetujui. Order ditandai paid dan fulfillment Biteship diproses.');
+    return ok('Pembayaran disetujui. Order ditandai paid.');
   } catch (error) {
     return fail(error, 'Gagal menyetujui pembayaran.');
   }

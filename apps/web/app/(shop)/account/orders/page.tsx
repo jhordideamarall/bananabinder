@@ -58,6 +58,10 @@ function isManualTransferOrder(order: { payment_method?: string | null }): boole
   return order.payment_method === 'manual_transfer';
 }
 
+function isCodOrder(order: { payment_method?: string | null }): boolean {
+  return order.payment_method === 'cod';
+}
+
 function hasShippingTracking(order: {
   shipping_tracking?: string | null;
   shipping_metadata?: unknown;
@@ -181,12 +185,15 @@ export default function OrdersPage() {
               const hasCustomItem = order.order_items?.some((item) => item.custom_details) ?? false;
               const isCustomRequest = isCustomRequestOrder(order);
               const isManualTransfer = isManualTransferOrder(order);
+              const isCod = isCodOrder(order);
               const statusLabel =
                 isCustomRequest && order.status === 'pending'
                   ? 'Menunggu Konfirmasi'
-                  : isManualTransfer && order.status === 'pending'
-                    ? 'Menunggu Verifikasi Pembayaran'
-                    : STATUS_LABEL[order.status];
+                  : isCod && order.status === 'pending'
+                    ? 'COD - Bayar Saat Terima'
+                    : isManualTransfer && order.status === 'pending'
+                      ? 'Menunggu Verifikasi Pembayaran'
+                      : STATUS_LABEL[order.status];
               const canTrack =
                 hasShippingTracking(order) ||
                 ['shipped', 'delivered', 'completed'].includes(order.status) ||
@@ -273,13 +280,19 @@ export default function OrdersPage() {
 
                     {/* Action Buttons */}
                     <div className="mt-5 flex gap-2">
-                      {order.status === 'pending' && !isCustomRequest && (
+                      {order.status === 'pending' && isManualTransfer && !isCustomRequest && (
                         <button
                           onClick={() => router.push(`/account/orders/${order.id}` as Route)}
                           className="flex-1 rounded-xl bg-primary py-3 text-[13px] font-extrabold text-white shadow-[0_4px_12px_rgba(224,123,57,0.3)] active:scale-95 transition-all disabled:opacity-50"
                         >
                           Upload Bukti
                         </button>
+                      )}
+
+                      {order.status === 'pending' && isCod && !isCustomRequest && (
+                        <div className="flex-1 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3 text-center text-[12px] font-extrabold text-primary">
+                          Bayar Saat Terima
+                        </div>
                       )}
 
                       {order.status === 'pending' && isCustomRequest && (
