@@ -80,6 +80,14 @@ Tanggal: 2026-08-16
 5. Smoke test halaman live dan Anonymous Auth.
 6. Setelah stabil, drop tabel challenge OTP lama secara eksplisit.
 
+## Hasil Rollout Production
+
+- Commit aplikasi `a0baa80` berhasil dipush ke `main` dan deployment Vercel berstatus `READY`.
+- Domain production aktif di `https://bananasbindery.com`; deployment immutable tersedia di `https://bananabinder-roac7bd8z-jhordideamarall-4318s-projects.vercel.app`.
+- Output deployment tidak lagi memuat route `phone-otp` atau `check-phone`.
+- Migration `20260816053721` diterapkan setelah deployment siap. Tabel `public.phone_otp_challenges` beserta 6 challenge kedaluwarsa (0 aktif) sudah dihapus permanen.
+- Verifikasi pasca-migration: 2 profil admin dan 12 order tetap ada; `expire_manual_order_v1` tetap hanya executable oleh `service_role`.
+
 ## Cara Revert
 
 - Revert commit code dan pulihkan helper/route/Edge Function phone OTP.
