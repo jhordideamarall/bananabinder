@@ -1,7 +1,7 @@
 # 070 — Mobile Cart Variant Checkout Recovery
 
 Tanggal: 2026-08-16
-Status: migration production diterapkan; frontend menunggu deployment commit
+Status: production live dan terverifikasi
 
 ## Masalah
 
@@ -49,6 +49,9 @@ Perbaikan dilakukan di dua lapisan: halaman produk mencegah cart baru yang ambig
   - sentuhan `Keranjang` mengenai button yang benar;
   - localStorage berisi produk dan varian SECRET BLOOM yang benar;
   - sentuhan `Beli Sekarang` berpindah ke `/checkout` dengan quantity `1`.
+- Commit frontend `f74df6c` berhasil dipush ke `origin/main`.
+- Vercel production deployment `bananabinder-mw3vg3wik-jhordideamarall-4318s-projects.vercel.app` berstatus `Ready` dan memiliki alias `https://bananasbindery.com`.
+- Touch test ulang pada domain production menyimpan varian `Strawberry Cheesecake / Lined / A5` dengan `variantId` yang benar.
 
 ## Revert
 
