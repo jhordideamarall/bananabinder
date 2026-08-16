@@ -145,9 +145,22 @@ export default function CheckoutPage() {
   });
 
   const count = useMemo(() => items.reduce((total, item) => total + item.quantity, 0), [items]);
+  const shippingItemsKey = useMemo(
+    () =>
+      JSON.stringify(
+        items.map((item) => ({
+          id: item.id,
+          variantId: item.variantId ?? null,
+          price: item.price,
+          quantity: item.quantity,
+          weight: item.weight ?? null,
+        })),
+      ),
+    [items],
+  );
 
   const { data: shippingOptions = [], isLoading: isLoadingShipping } = useQuery({
-    queryKey: ['shipping-rates', selectedAddressId, count],
+    queryKey: ['shipping-rates', selectedAddressId, shippingItemsKey],
     queryFn: () => (selectedAddressId ? getShippingRates(selectedAddressId, items) : []),
     enabled: !!selectedAddressId && items.length > 0 && step >= 2,
     staleTime: 1000 * 60 * 5, // 5 menit
@@ -163,6 +176,7 @@ export default function CheckoutPage() {
   const manualPayment = useMemo(() => parseManualPaymentSettings(storeSettings), [storeSettings]);
   const paymentDestinations = manualPayment.destinations;
   const manualTransferAvailable = manualPayment.enabled && paymentDestinations.length > 0;
+  const codAvailable = storeSettings?.cod_enabled ?? true;
   const manualTransferSelected = selectedPaymentMethod === 'manual_transfer';
 
   useEffect(() => {
@@ -180,9 +194,13 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!manualTransferAvailable && selectedPaymentMethod === 'manual_transfer') {
-      setSelectedPaymentMethod('cod');
+      if (codAvailable) setSelectedPaymentMethod('cod');
+      return;
     }
-  }, [manualTransferAvailable, selectedPaymentMethod]);
+    if (!codAvailable && selectedPaymentMethod === 'cod' && manualTransferAvailable) {
+      setSelectedPaymentMethod('manual_transfer');
+    }
+  }, [codAvailable, manualTransferAvailable, selectedPaymentMethod]);
 
   const groupedOptions = useMemo(() => {
     const groups: Record<string, ShippingOption[]> = {};
@@ -194,7 +212,13 @@ export default function CheckoutPage() {
   }, [shippingOptions]);
 
   useEffect(() => {
-    if (shippingOptions.length > 0 && !shippingId) {
+    setShippingId(null);
+    setExpandedCourier(null);
+  }, [selectedAddressId, shippingItemsKey]);
+
+  useEffect(() => {
+    const selectedOptionExists = shippingOptions.some((option) => option.id === shippingId);
+    if (shippingOptions.length > 0 && !selectedOptionExists) {
       setShippingId(shippingOptions[0].id);
       // Auto expand the first one if selected
       setExpandedCourier(shippingOptions[0].courier_code);
@@ -452,6 +476,10 @@ export default function CheckoutPage() {
     }
 
     if (selectedPaymentMethod === 'cod') {
+      if (!codAvailable) {
+        toast.error('COD sedang dinonaktifkan. Pilih pembayaran QR/transfer.');
+        return;
+      }
       confirmCodPayment();
       return;
     }
@@ -843,7 +871,11 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedPaymentMethod('cod')}
-                        className="flex w-full items-start gap-3 rounded-[16px] border-2 p-4 text-left transition-colors active:bg-stone"
+                        className={
+                          codAvailable
+                            ? 'flex w-full items-start gap-3 rounded-[16px] border-2 p-4 text-left transition-colors active:bg-stone'
+                            : 'hidden'
+                        }
                         style={{
                           borderColor:
                             selectedPaymentMethod === 'cod'

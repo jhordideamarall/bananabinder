@@ -412,11 +412,16 @@ export async function saveStoreSettings(formData: FormData): Promise<void> {
     );
     const qrImageUrl = nullableText(formData, 'manual_payment_qr_image_url');
     const enabled = checkbox(formData, 'manual_payment_enabled');
+    const codEnabled = checkbox(formData, 'cod_enabled');
 
     if (enabled && !qrImageUrl && !accounts.some((account) => account.isActive)) {
       throw new Error('Aktifkan minimal QR atau satu rekening untuk payment manual.');
     }
+    if (!enabled && !codEnabled) {
+      throw new Error('Aktifkan minimal satu metode pembayaran: COD atau payment manual.');
+    }
 
+    payload.cod_enabled = codEnabled;
     payload.manual_payment_enabled = enabled;
     payload.manual_payment_qr_image_url = qrImageUrl;
     payload.manual_payment_instructions = nullableText(formData, 'manual_payment_instructions');
@@ -445,6 +450,7 @@ export async function saveStoreSettings(formData: FormData): Promise<void> {
 
   revalidatePath('/admin/promos');
   revalidatePath('/admin/settings');
+  revalidatePath('/checkout');
   revalidatePath('/');
 }
 

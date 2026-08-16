@@ -3,6 +3,57 @@ export interface ShippingValidationResult {
   reason?: string;
 }
 
+export const DEFAULT_SHIPPING_WEIGHT_GRAMS = 500;
+
+export interface ShippingWeightItem {
+  weight?: number | null;
+  quantity?: number | null;
+}
+
+export interface PricedShippingOption {
+  price: number;
+}
+
+/**
+ * Normalizes a catalog/cart weight before it is sent to a courier API.
+ * Biteship expects a positive integer measured in grams.
+ */
+export function normalizeShippingWeight(weight: number | null | undefined): number {
+  if (!Number.isFinite(weight) || !weight || weight <= 0) {
+    return DEFAULT_SHIPPING_WEIGHT_GRAMS;
+  }
+
+  return Math.max(1, Math.round(weight));
+}
+
+export function normalizeShippingQuantity(quantity: number | null | undefined): number {
+  if (!Number.isFinite(quantity) || !quantity || quantity <= 0) return 1;
+  return Math.max(1, Math.floor(quantity));
+}
+
+/**
+ * Calculates the same total weight used by the courier payload and its cache key.
+ */
+export function calculateTotalShippingWeight(items: readonly ShippingWeightItem[]): number {
+  return items.reduce((total, item) => {
+    return total + normalizeShippingWeight(item.weight) * normalizeShippingQuantity(item.quantity);
+  }, 0);
+}
+
+/**
+ * Biteship does not guarantee that pricing is returned cheapest-first.
+ * Keep all valid courier choices while making the lowest final price the default.
+ */
+export function sortShippingOptionsByPrice<T extends PricedShippingOption>(
+  options: readonly T[],
+): T[] {
+  return [...options].sort((left, right) => {
+    const leftPrice = Number.isFinite(left.price) ? left.price : Number.MAX_SAFE_INTEGER;
+    const rightPrice = Number.isFinite(right.price) ? right.price : Number.MAX_SAFE_INTEGER;
+    return leftPrice - rightPrice;
+  });
+}
+
 /**
  * Validate product type is compatible with courier.
  * Parcel/bundle products can require supported courier dimensions and distance rules.

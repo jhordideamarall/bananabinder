@@ -56,6 +56,21 @@ export async function POST(req: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Order ID wajib ada.' }, { status: 400 });
     }
 
+    const { data: paymentSettings, error: settingsError } = await supabaseAdmin
+      .from('store_settings')
+      .select('cod_enabled')
+      .limit(1)
+      .maybeSingle();
+    if (settingsError) {
+      return NextResponse.json({ error: settingsError.message }, { status: 500 });
+    }
+    if (paymentSettings?.cod_enabled === false) {
+      return NextResponse.json(
+        { error: 'COD sedang dinonaktifkan oleh admin toko.' },
+        { status: 409 },
+      );
+    }
+
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select(

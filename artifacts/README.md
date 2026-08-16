@@ -13,6 +13,7 @@ Folder ini sekarang hanya menyimpan artifact yang relevan dengan scope aktif pro
 
 | Artifact                                                         | Fokus                                                                          |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `069-2026-08-16-shipping-rate-accuracy-and-cod-toggle.md`        | Canonical Biteship weights, cheapest default, and admin COD toggle             |
 | `068-2026-08-16-remove-customer-otp-auth.md`                     | Hapus OTP; guest auth, legacy-account rollout, dan RPC hardening               |
 | `067-2026-06-20-cod-payment-and-biteship-rate-only.md`           | COD checkout + Biteship rate-only behavior                                     |
 | `066-2026-06-20-qr-payment-ratio-tuning.md`                      | QR payment 4:3 display tuning di mobile checkout                               |

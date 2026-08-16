@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useActionState } from 'react';
-import { CreditCard, Plus, Save, Trash2 } from 'lucide-react';
+import { Banknote, CreditCard, Plus, Save, Trash2 } from 'lucide-react';
 import type { Tables } from '@bananasbindery/types/supabase';
 import {
   parseManualPaymentAccounts,
@@ -47,6 +47,7 @@ export function ManualPaymentSettingsForm({
   useRefreshOnActionState(saveState);
 
   const [enabled, setEnabled] = useState(Boolean(settings?.manual_payment_enabled));
+  const [codEnabled, setCodEnabled] = useState(settings?.cod_enabled ?? true);
   const [qrUrl, setQrUrl] = useState(settings?.manual_payment_qr_image_url ?? '');
   const [instructions, setInstructions] = useState(settings?.manual_payment_instructions ?? '');
   const [expiresHours, setExpiresHours] = useState(
@@ -92,15 +93,34 @@ export function ManualPaymentSettingsForm({
         </div>
         <div className="min-w-0">
           <h3 className="text-[17px] font-semibold tracking-tight text-[#1D1D1F]">
-            Payment manual
+            Metode pembayaran
           </h3>
           <p className="mt-0.5 text-[13px] leading-relaxed text-[#86868B]">
-            QR statis dan rekening transfer yang tampil di checkout setelah customer memilih ongkir.
+            Atur COD, QR statis, dan rekening transfer yang tersedia di checkout.
           </p>
         </div>
       </div>
 
       <div className="space-y-5 p-6">
+        <label className="flex items-center justify-between rounded-xl border border-black/[0.06] bg-[#FAFAFA] px-4 py-3">
+          <span className="flex items-start gap-3">
+            <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+            <span>
+              <span className="block text-[14px] font-semibold text-[#1D1D1F]">Aktifkan COD</span>
+              <span className="text-[12px] font-medium text-[#86868B]">
+                Customer dapat membayar saat pesanan diterima.
+              </span>
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            name="cod_enabled"
+            checked={codEnabled}
+            onChange={(event) => setCodEnabled(event.target.checked)}
+            className="h-5 w-5 accent-primary"
+          />
+        </label>
+
         <label className="flex items-center justify-between rounded-xl border border-black/[0.06] bg-[#FAFAFA] px-4 py-3">
           <span>
             <span className="block text-[14px] font-semibold text-[#1D1D1F]">

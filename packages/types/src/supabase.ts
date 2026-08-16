@@ -1796,6 +1796,7 @@ export type Database = {
       };
       store_settings: {
         Row: {
+          cod_enabled: boolean;
           contact_email: string | null;
           contact_phone: string | null;
           custom_order_materials: Json;
@@ -1817,6 +1818,7 @@ export type Database = {
           updated_at: string | null;
         };
         Insert: {
+          cod_enabled?: boolean;
           contact_email?: string | null;
           contact_phone?: string | null;
           custom_order_materials?: Json;
@@ -1838,6 +1840,7 @@ export type Database = {
           updated_at?: string | null;
         };
         Update: {
+          cod_enabled?: boolean;
           contact_email?: string | null;
           contact_phone?: string | null;
           custom_order_materials?: Json;

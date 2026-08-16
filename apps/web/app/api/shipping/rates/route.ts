@@ -1,6 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import type { Json } from '@bananasbindery/types/supabase';
+import {
+  calculateTotalShippingWeight,
+  normalizeShippingQuantity,
+  normalizeShippingWeight,
+  sortShippingOptionsByPrice,
+} from '@bananasbindery/core';
 import { createClient } from '@/lib/supabase/server';
 import { biteshipAuthHeader, getIntegrationSecret } from '@/lib/integration-secrets';
 
@@ -38,7 +45,7 @@ async function resolveAreaId(
       },
     );
 
-    const data = await response.json();
+    const data = (await response.json()) as BiteshipAreaResponse;
     if (data.areas && data.areas.length > 0) {
       return data.areas[0].id;
     }
@@ -54,6 +61,7 @@ async function resolveAreaId(
  */
 interface ShippingCartItem {
   id: string | number;
+  variantId?: string | null;
   name: string;
   price: number;
   quantity: number;
@@ -61,10 +69,91 @@ interface ShippingCartItem {
   description?: string;
 }
 
+interface CanonicalShippingItem extends ShippingCartItem {
+  weight: number;
+}
+
+interface ShippingOption {
+  id: string;
+  courier_code: string;
+  courier_name: string;
+  service_code: string;
+  service_name: string;
+  name: string;
+  price: number;
+  etd: string;
+  description: string;
+}
+
+interface BiteshipAreaResponse {
+  areas?: Array<{ id: string }>;
+}
+
+interface BiteshipRatesResponse {
+  success?: boolean;
+  message?: string;
+  code?: string;
+  errors?: unknown;
+  pricing?: Array<{
+    courier_code: string;
+    courier_service_code: string;
+    courier_name: string;
+    courier_service_name: string;
+    price: number;
+    duration: string;
+  }>;
+}
+
+function isShippingCartItem(value: unknown): value is ShippingCartItem {
+  if (typeof value !== 'object' || value === null) return false;
+  const item = value as Record<string, unknown>;
+
+  return (
+    (typeof item.id === 'string' || typeof item.id === 'number') &&
+    typeof item.name === 'string' &&
+    typeof item.price === 'number' &&
+    typeof item.quantity === 'number' &&
+    (item.variantId === undefined ||
+      item.variantId === null ||
+      typeof item.variantId === 'string') &&
+    (item.weight === undefined || typeof item.weight === 'number') &&
+    (item.description === undefined || typeof item.description === 'string')
+  );
+}
+
+function isShippingOption(value: unknown): value is ShippingOption {
+  if (typeof value !== 'object' || value === null) return false;
+  const option = value as Record<string, unknown>;
+
+  return (
+    typeof option.id === 'string' &&
+    typeof option.courier_code === 'string' &&
+    typeof option.courier_name === 'string' &&
+    typeof option.service_code === 'string' &&
+    typeof option.service_name === 'string' &&
+    typeof option.name === 'string' &&
+    typeof option.price === 'number' &&
+    typeof option.etd === 'string' &&
+    typeof option.description === 'string'
+  );
+}
+
+function readCachedShippingOptions(value: unknown): ShippingOption[] | null {
+  if (!Array.isArray(value) || !value.every(isShippingOption)) return null;
+  return sortShippingOptionsByPrice(value);
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { addressId, items: rawItems } = await req.json();
-    const items = (Array.isArray(rawItems) ? rawItems : []) as ShippingCartItem[];
+    const requestBody = (await req.json()) as { addressId?: unknown; items?: unknown };
+    const addressId = typeof requestBody.addressId === 'string' ? requestBody.addressId : null;
+    const rawItems = Array.isArray(requestBody.items) ? requestBody.items : [];
+    const items = rawItems.filter(isShippingCartItem);
+
+    if (!addressId || items.length === 0 || items.length !== rawItems.length) {
+      return NextResponse.json({ error: 'Data alamat atau produk tidak valid' }, { status: 400 });
+    }
+
     const supabase = await createClient();
 
     // 1. Ambil Detail Alamat
@@ -78,11 +167,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Alamat tidak ditemukan' }, { status: 404 });
     }
 
-    // 2. Hitung Berat Total (gram, untuk key cache) — baca weight top-level
-    const totalWeight = items.reduce(
-      (sum: number, item) => sum + (item.weight || 1000) * (item.quantity || 1),
-      0,
-    );
+    // 2. Ambil berat terbaru dari katalog server. Berat browser hanya menjadi
+    // fallback defensif agar keranjang lama tidak membuat tarif meleset.
+    const productIds = Array.from(new Set(items.map((item) => String(item.id))));
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, weight_grams, product_variants(id, product_id, weight_grams)')
+      .in('id', productIds);
+
+    if (productsError) {
+      console.error('SHIPPING_PRODUCT_WEIGHT_ERROR:', productsError.message);
+      return NextResponse.json({ error: 'Berat produk belum dapat diperiksa' }, { status: 500 });
+    }
+
+    const productById = new Map((products ?? []).map((product) => [product.id, product]));
+    const canonicalItems: CanonicalShippingItem[] = [];
+
+    for (const item of items) {
+      const product = productById.get(String(item.id));
+      if (!product) {
+        return NextResponse.json(
+          { error: `Produk "${item.name}" sudah tidak tersedia` },
+          { status: 400 },
+        );
+      }
+
+      const variant = item.variantId
+        ? product.product_variants.find(
+            (candidate) => candidate.id === item.variantId && candidate.product_id === product.id,
+          )
+        : null;
+
+      if (item.variantId && !variant) {
+        return NextResponse.json(
+          { error: `Varian produk "${item.name}" sudah tidak tersedia` },
+          { status: 400 },
+        );
+      }
+
+      canonicalItems.push({
+        ...item,
+        price: Math.max(0, Math.round(item.price)),
+        quantity: normalizeShippingQuantity(item.quantity),
+        weight: normalizeShippingWeight(
+          variant?.weight_grams ?? product.weight_grams ?? item.weight,
+        ),
+      });
+    }
+
+    const totalWeight = calculateTotalShippingWeight(canonicalItems);
 
     // 3. Ambil Pengaturan Toko (Origin)
     const { data: settings } = await supabase.from('store_settings').select('*').single();
@@ -127,9 +260,10 @@ export async function POST(req: NextRequest) {
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 
-    if (cachedRate) {
+    const cachedOptions = readCachedShippingOptions(cachedRate?.rates_data);
+    if (cachedOptions) {
       console.log('💰 CACHE HIT: Menggunakan harga ongkir tersimpan. Hemat Rp 5!');
-      return NextResponse.json(cachedRate.rates_data);
+      return NextResponse.json(cachedOptions);
     }
 
     const apiKey = await getIntegrationSecret('biteship', 'api_key', 'BITESHIP_API_KEY');
@@ -160,12 +294,12 @@ export async function POST(req: NextRequest) {
       origin_area_id: originAreaId,
       destination_area_id: destinationAreaId,
       couriers: BITESHIP_COURIERS,
-      items: items.map((item) => ({
+      items: canonicalItems.map((item) => ({
         name: item.name || 'Produk binder Bananasbindery',
         description: item.description || item.name || 'Produk binder Bananasbindery',
         value: item.price || 0,
         quantity: item.quantity || 1,
-        weight: item.weight || 500, // gram — konsisten dengan CartItem.weight
+        weight: item.weight,
       })),
     };
 
@@ -185,7 +319,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(biteshipPayload),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as BiteshipRatesResponse;
 
     if (!response.ok) {
       console.error('BITESHIP_API_ERROR_DETAIL:', JSON.stringify(data, null, 2));
@@ -200,26 +334,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Format output untuk UI
-    const results = (
-      data.pricing as Array<{
-        courier_code: string;
-        courier_service_code: string;
-        courier_name: string;
-        courier_service_name: string;
-        price: number;
-        duration: string;
-      }>
-    ).map((p) => ({
-      id: `${p.courier_code}_${p.courier_service_code}`,
-      courier_code: p.courier_code,
-      courier_name: p.courier_name,
-      service_code: p.courier_service_code,
-      service_name: p.courier_service_name,
-      name: `${p.courier_name} - ${p.courier_service_name}`,
-      price: p.price,
-      etd: p.duration,
-      description: p.courier_service_name, // fallback
-    }));
+    const results = sortShippingOptionsByPrice(
+      (data.pricing ?? []).map(
+        (pricing): ShippingOption => ({
+          id: `${pricing.courier_code}_${pricing.courier_service_code}`,
+          courier_code: pricing.courier_code,
+          courier_name: pricing.courier_name,
+          service_code: pricing.courier_service_code,
+          service_name: pricing.courier_service_name,
+          name: `${pricing.courier_name} - ${pricing.courier_service_name}`,
+          price: pricing.price,
+          etd: pricing.duration,
+          description: pricing.courier_service_name,
+        }),
+      ),
+    );
 
     // 7. Simpan Hasil ke Cache (upsert — refresh row lama yang sudah expired
     //    tanpa kena duplicate key pada unique constraint).
@@ -230,8 +359,8 @@ export async function POST(req: NextRequest) {
           destination_area_id: destinationAreaId,
           total_weight: totalWeight,
           couriers_list: BITESHIP_COURIERS,
-          rates_data: results,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          rates_data: results as unknown as Json,
+          expires_at: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
         },
         { onConflict: 'origin_area_id,destination_area_id,total_weight,couriers_list' },
       );
