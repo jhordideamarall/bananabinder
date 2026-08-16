@@ -472,8 +472,8 @@ export default function CheckoutPage() {
         onClose={() => setIsAddressSheetOpen(false)}
         onSuccess={(addr) => {
           setGuestAddress(addr);
-          // Alamat hasil simpan (guest yang baru verifikasi OTP maupun user lama)
-          // sudah punya id real dari DB — pakai langsung supaya query ongkir aktif.
+          // Alamat guest maupun user lama sudah punya id real dari DB.
+          // Pakai langsung supaya query ongkir aktif tanpa langkah verifikasi tambahan.
           if (addr.id) {
             setSelectedAddressId(addr.id);
           }

@@ -1,5 +1,14 @@
 # UI Optimization Log
 
+## 2026-08-16 — Customer Auth dan Checkout Tanpa OTP
+
+- File: `apps/web/app/(auth)/login/page.tsx`
+- File: `apps/web/app/(auth)/register/page.tsx`
+- File: `apps/web/components/checkout/address-sheet.tsx`
+- Perubahan: form mobile auth memakai email/password biasa; checkout guest langsung menyimpan alamat melalui anonymous session tanpa sheet kode OTP.
+- Rationale: menghapus ketergantungan pengiriman WhatsApp/Fonnte dari critical path order, menjaga form tetap ramah viewport mobile, dan mempertahankan ownership order melalui Supabase Auth/RLS.
+- Revert: kembalikan halaman auth dan address sheet ke implementasi sebelum artifact `068`, lalu nonaktifkan anonymous sign-ins.
+
 ## 2026-06-20 — Manual Payment QR Ratio
 
 - File: `apps/web/app/checkout/page.tsx`

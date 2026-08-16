@@ -2,11 +2,16 @@ import { NextResponse } from 'next/server';
 // The client condition is handled by the server client creation
 import { createClient } from '@/lib/supabase/server';
 
+function safeNextPath(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
+  return value;
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   // if "next" is in search params, use it as the redirection URL
-  const next = searchParams.get('next') ?? '/';
+  const next = safeNextPath(searchParams.get('next'));
 
   if (code) {
     const supabase = await createClient();

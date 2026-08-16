@@ -2,26 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { m } from 'framer-motion';
-import {
-  X,
-  Loader2,
-  Navigation,
-  Check,
-  ExternalLink,
-  ShieldCheck,
-  ArrowRight,
-  Search,
-} from 'lucide-react';
+import { X, Loader2, Navigation, Check, ExternalLink, Search } from 'lucide-react';
 import { getDetailedAddress } from '@bananasbindery/core';
 import { createClient } from '@/lib/supabase/client';
-import {
-  formatIndonesiaPhone,
-  getOtpSendErrorMessage,
-  getOtpVerifyErrorMessage,
-  requestPhoneOtp,
-  verifyPhoneOtpSession,
-} from '@/lib/auth-otp';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
 import { useLocationStore } from '@/stores/location-store';
@@ -46,9 +31,10 @@ interface AddressSheetProps {
 }
 
 export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: AddressSheetProps) {
+  const router = useRouter();
   const { user } = useAuth();
   const globalLocation = useLocationStore();
-  const [step, setStep] = useState<'list' | 'map' | 'form' | 'otp'>('list');
+  const [step, setStep] = useState<'list' | 'map' | 'form'>('list');
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
   const [coords, setCoords] = useState<[number, number]>(
@@ -69,9 +55,7 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
   const [postalCode, setPostalCode] = useState('');
   const [isDefault, setIsDefault] = useState(true);
 
-  // OTP State
-  const [otpToken, setOtpToken] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [isCreatingGuestSession, setIsCreatingGuestSession] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const supabase = createClient();
@@ -223,7 +207,7 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
     }
   };
 
-  const handleInitiateVerification = async () => {
+  const handleSaveAddress = async () => {
     if (!recipient || !phone || !fullAddress) {
       toast.error('Mohon lengkapi data alamat');
       return;
@@ -233,67 +217,40 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
       return;
     }
 
-    const formattedPhone = formatIndonesiaPhone(phone);
-
     if (user) {
-      await saveAddress(user.id);
+      await saveAddress(user.id, !user.is_anonymous);
       return;
     }
 
-    // Guest user: Send OTP to verify phone
-    setIsVerifying(true);
-    setOtpToken('');
-    setStep('otp');
+    setIsCreatingGuestSession(true);
     try {
-      await requestPhoneOtp({
-        phone: formattedPhone,
-        purpose: 'checkout',
-        name: recipient,
+      const { data, error } = await supabase.auth.signInAnonymously({
+        options: {
+          data: {
+            full_name: recipient.trim(),
+            auth_channel: 'guest_checkout',
+          },
+        },
       });
-
-      toast.success('Kode OTP telah dikirim ke nomor HP kamu');
-    } catch (err) {
-      const error = err as Error;
-      toast.error(getOtpSendErrorMessage(error.message));
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleVerifyAndSave = async () => {
-    if (otpToken.length < 6) {
-      toast.error('Masukkan 6 digit kode OTP');
-      return;
-    }
-
-    const formattedPhone = formatIndonesiaPhone(phone);
-
-    setIsSaving(true);
-    try {
-      const session = await verifyPhoneOtpSession({
-        phone: formattedPhone,
-        token: otpToken,
-        name: recipient,
-        shouldCreateUser: true,
-      });
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: session.email,
-        password: session.password,
-      });
-
       if (error) throw error;
-      if (!data.user) throw new Error('Verifikasi gagal');
+      if (!data.user) throw new Error('Gagal menyiapkan sesi checkout.');
 
-      await saveAddress(data.user.id);
-    } catch (err) {
-      const error = err as Error;
-      toast.error(getOtpVerifyErrorMessage(error.message));
-      setIsSaving(false);
+      await saveAddress(data.user.id, false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal menyiapkan checkout guest.';
+      if (message.toLowerCase().includes('anonymous')) {
+        toast.info('Masuk atau daftar tanpa OTP untuk melanjutkan checkout.');
+        onClose();
+        router.push('/login?next=/checkout');
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setIsCreatingGuestSession(false);
     }
   };
 
-  const saveAddress = async (userId: string) => {
+  const saveAddress = async (userId: string, syncProfileContact: boolean) => {
     setIsSaving(true);
     try {
       // 1. If this is marked as default, unset all other addresses for this user first
@@ -349,7 +306,16 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
 
       if (error) throw error;
 
-      await supabase.from('profiles').update({ phone, name: recipient }).eq('id', userId);
+      if (syncProfileContact) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ phone, name: recipient })
+          .eq('id', userId);
+
+        if (profileError) {
+          console.warn('[checkout/address] Profile contact sync failed:', profileError.code);
+        }
+      }
 
       toast.success('Alamat berhasil disimpan');
 
@@ -382,11 +348,9 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
               ? 'Pilih Alamat'
               : step === 'map'
                 ? 'Pilih Titik Lokasi'
-                : step === 'otp'
-                  ? 'Verifikasi Nomor HP'
-                  : initialData
-                    ? 'Edit Alamat'
-                    : 'Detail Alamat'}
+                : initialData
+                  ? 'Edit Alamat'
+                  : 'Detail Alamat'}
           </h2>
           <button onClick={onClose} className="rounded-full bg-stone p-2 text-ink-3">
             <X size={20} />
@@ -501,7 +465,7 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
                 </button>
               </div>
             </div>
-          ) : step === 'form' ? (
+          ) : (
             <m.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -620,78 +584,18 @@ export function AddressSheet({ isOpen, onClose, onSuccess, initialData }: Addres
                   Kembali
                 </button>
                 <button
-                  onClick={handleInitiateVerification}
-                  disabled={isVerifying || isSaving}
+                  onClick={handleSaveAddress}
+                  disabled={isCreatingGuestSession || isSaving}
                   className="h-14 flex-[2] rounded-2xl bg-primary font-heading text-[15px] font-extrabold text-white shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-70"
                 >
-                  {isVerifying || isSaving ? (
+                  {isCreatingGuestSession || isSaving ? (
                     <JumpingDots />
                   ) : user ? (
                     'Simpan Alamat'
                   ) : (
-                    'Simpan & Verifikasi'
+                    'Simpan & Lanjutkan'
                   )}
                 </button>
-              </div>
-            </m.div>
-          ) : (
-            <m.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex flex-col gap-6 pb-4 text-left"
-            >
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <ShieldCheck size={28} />
-                </div>
-                <p className="text-sm font-medium text-ink-3">
-                  Masukkan 6 digit kode yang dikirim ke <br />
-                  <span className="font-bold text-ink">{phone}</span>
-                </p>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="tel"
-                  maxLength={6}
-                  value={otpToken}
-                  onChange={(e) => setOtpToken(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="h-16 w-full rounded-2xl border-2 border-stone-3 bg-stone/30 text-center font-heading text-[24px] font-bold tracking-[12px] text-ink outline-none focus:border-primary focus:bg-white"
-                  placeholder="xxxxxx"
-                  autoFocus
-                  autoComplete="one-time-code"
-                />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={handleVerifyAndSave}
-                  disabled={isSaving || otpToken.length < 6}
-                  className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-heading text-[15px] font-extrabold text-white shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50"
-                >
-                  {isSaving ? (
-                    <JumpingDots />
-                  ) : (
-                    <>
-                      Verifikasi & Lanjutkan <ArrowRight size={18} />
-                    </>
-                  )}
-                </button>
-                <div className="flex flex-col gap-2 pt-2 text-center">
-                  <button
-                    onClick={handleInitiateVerification}
-                    disabled={isVerifying}
-                    className="font-heading text-[13px] font-bold text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-                  >
-                    {isVerifying ? 'Mengirim ulang...' : 'Kirim ulang kode'}
-                  </button>
-                  <button
-                    onClick={() => setStep('form')}
-                    className="font-heading text-[13px] font-bold text-ink-4 hover:text-ink transition-colors"
-                  >
-                    Ganti Nomor HP
-                  </button>
-                </div>
               </div>
             </m.div>
           )}

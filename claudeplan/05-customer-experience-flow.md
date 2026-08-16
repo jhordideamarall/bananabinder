@@ -4,11 +4,12 @@ Dokumen ini merangkum user flow Bananasbindery untuk konversi tinggi pada penjua
 
 ---
 
-## 🚀 1. Frictionless Onboarding (Login OTP)
+## 🚀 1. Frictionless Onboarding (Tanpa OTP)
 
-- **Keunggulan**: Customer tidak perlu menghafal password.
-- **Flow**: Masukkan Nomor WhatsApp/Email -> Terima Kode OTP -> langsung masuk.
-- **Dampak**: Customer bisa cepat checkout saat menemukan binder/refill yang diinginkan.
+- **Login**: Customer memakai email/password; tidak ada verifikasi kode WhatsApp.
+- **Checkout guest**: App membuat anonymous Supabase session agar order tetap punya `auth.uid()` dan tunduk pada RLS tanpa meminta OTP.
+- **Fallback**: Jika anonymous sign-in belum aktif, customer diarahkan ke login email/password tanpa kehilangan cart.
+- **Dampak**: Customer bisa checkout tanpa ketergantungan device WhatsApp/Fonnte, sementara ownership order tetap terisolasi per session.
 
 ## 📱 2. Mobile-First App-Like Experience
 

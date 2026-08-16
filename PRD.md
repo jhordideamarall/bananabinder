@@ -70,7 +70,8 @@ Required variant dimensions:
 ### 4.3 Cart & Checkout
 
 - Persistent cart
-- Guest-to-auth handoff should not lose cart
+- Guest checkout uses an anonymous Supabase session so orders can be created without OTP
+- If anonymous checkout is unavailable, email/password login handoff must not lose cart
 - Address selection/creation
 - Biteship shipping rates
 - Voucher/promo application

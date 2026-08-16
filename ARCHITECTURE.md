@@ -125,7 +125,8 @@ Rules:
 ### Checkout
 
 ```txt
-cart -> address -> shipping quote -> voucher/pricing -> create pending order RPC -> COD confirmation or QR/rekening instructions -> proof upload
+cart -> permanent/anonymous auth session -> address -> shipping quote -> voucher/pricing
+-> create pending order RPC -> COD confirmation or QR/rekening instructions -> proof upload
 ```
 
 ### Manual Payment Approval
