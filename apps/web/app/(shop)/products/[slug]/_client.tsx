@@ -22,6 +22,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleWishlist, getUserWishlist } from '@/lib/services/wishlist-client';
 import { PageTitle } from '@/components/shared/page-title';
 import { ProductChatLauncher } from './_product-chat-launcher';
+import { toast } from 'sonner';
 
 import type { DetailedProduct } from '@/lib/dummy-products';
 
@@ -150,7 +151,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
   const [hydrated, setHydrated] = useState(false);
   const [activeTab, setActiveTab] = useState<'desc' | 'reviews' | 'shipping'>('desc');
-  const [selectedVariant, setSelectedVariant] = useState<VariantOption | null>(null);
+  const mainProductAvailable = Number(product.stock ?? 99) > 0;
+  const [selectedVariant, setSelectedVariant] = useState<VariantOption | null>(() => {
+    if (mainProductAvailable) return null;
+
+    const availableVariants = (product.variants ?? []).filter(
+      (variant) => Number(variant.stock) > 0,
+    );
+    return availableVariants.length === 1 ? availableVariants[0] : null;
+  });
   const [variantError, setVariantError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
@@ -221,15 +230,17 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
   const handleAddToCart = (directBuy = false) => {
     if (activePrice <= 0) {
-      setVariantError('Harga produk belum valid. Hubungi admin sebelum checkout.');
+      const message = 'Harga produk belum valid. Hubungi admin sebelum checkout.';
+      setVariantError(message);
+      toast.error(message);
       return;
     }
     if (activeStock <= 0) {
-      setVariantError(
-        selectedVariant
-          ? 'Stok varian ini habis.'
-          : 'Stok produk utama habis. Pilih varian yang tersedia atau hubungi admin.',
-      );
+      const message = selectedVariant
+        ? 'Stok varian ini habis.'
+        : 'Stok produk utama habis. Pilih varian yang tersedia atau hubungi admin.';
+      setVariantError(message);
+      toast.error(message);
       return;
     }
 
@@ -486,33 +497,35 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {product.variants && product.variants.length > 0 && (
             <div style={{ marginBottom: 28 }}>
               <p className="t-label" style={{ marginBottom: 14 }}>
-                Varian opsional
+                {mainProductAvailable ? 'Varian opsional' : 'Pilih varian'}
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedVariant(null);
-                  setVariantError(null);
-                  setQuantity(1);
-                }}
-                style={{
-                  minHeight: 38,
-                  borderRadius: 12,
-                  border: selectedVariant
-                    ? '1.5px solid var(--color-stone-3)'
-                    : '2px solid var(--color-primary)',
-                  background: selectedVariant ? '#FFFFFF' : 'var(--color-primary-light)',
-                  color: selectedVariant ? 'var(--color-ink)' : 'var(--color-primary)',
-                  fontFamily: 'var(--font-heading)',
-                  fontWeight: 800,
-                  fontSize: 13,
-                  padding: '0 16px',
-                  marginBottom: 12,
-                  cursor: 'pointer',
-                }}
-              >
-                Produk utama
-              </button>
+              {mainProductAvailable ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedVariant(null);
+                    setVariantError(null);
+                    setQuantity(1);
+                  }}
+                  style={{
+                    minHeight: 38,
+                    borderRadius: 12,
+                    border: selectedVariant
+                      ? '1.5px solid var(--color-stone-3)'
+                      : '2px solid var(--color-primary)',
+                    background: selectedVariant ? '#FFFFFF' : 'var(--color-primary-light)',
+                    color: selectedVariant ? 'var(--color-ink)' : 'var(--color-primary)',
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 800,
+                    fontSize: 13,
+                    padding: '0 16px',
+                    marginBottom: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Produk utama
+                </button>
+              ) : null}
               <VariantSelector
                 variants={product.variants}
                 selectedId={selectedVariant?.id ?? null}

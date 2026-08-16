@@ -1,5 +1,13 @@
 # UI Optimization Log
 
+## 2026-08-16 — Mobile Product Action dan Legacy Cart Recovery
+
+- File: `apps/web/app/(shop)/products/[slug]/_client.tsx`
+- Perubahan: produk dengan stok utama habis dan tepat satu varian tersedia sekarang memilih varian itu otomatis; validasi stok/harga juga muncul sebagai toast dari area bottom action.
+- Rationale: cart tersimpan per perangkat. Item lama di HP dapat kehilangan `variantId`, sedangkan pesan error inline berada di bawah fold sehingga sentuhan tombol terlihat tidak bekerja.
+- Verifikasi: touch emulation viewport 390×844 berhasil menambah varian yang benar dan `Beli Sekarang` berpindah ke `/checkout`.
+- Revert: kembalikan initial state `selectedVariant` ke `null`, tampilkan kembali opsi produk utama tanpa syarat, dan hapus toast validasi.
+
 ## 2026-08-16 — Customer Auth dan Checkout Tanpa OTP
 
 - File: `apps/web/app/(auth)/login/page.tsx`
