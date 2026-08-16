@@ -2,7 +2,7 @@
 
 **Tanggal:** 2026-08-16
 
-**Status:** Implemented; production smoke test dicatat setelah deployment
+**Status:** Live dan terverifikasi di production
 
 **Scope:** Akurasi tarif Biteship, default kurir termurah, penyimpanan alamat customer, dan kontrol COD dari Admin
 
@@ -74,6 +74,15 @@
 - ESLint untuk seluruh file yang disentuh — PASS.
 - `pnpm --filter @bananasbindery/web build` — PASS, 53 halaman generated.
 - `git diff --check` — dijalankan lagi sebelum commit.
+
+## Production Smoke Test
+
+- Deployment `9d2211f` berstatus `READY` dan terpasang pada alias <https://bananasbindery.com>.
+- Endpoint live yang diuji: `POST /api/shipping/rates` memakai sesi anonymous QA sementara dan area tujuan production tanpa menyalin alamat lengkap customer.
+- Payload sengaja mengirim berat browser palsu `1 gram × 2`; server memakai berat katalog `500 gram/unit` dan membuat/membaca cache dengan total canonical `1.000 gram`.
+- Respons berisi 16 opsi valid dan seluruh harga terurut ascending.
+- Pada area uji tersebut, opsi pertama/termurah adalah Lion Parcel Reg Pack Rp8.500; harga tertinggi Rp40.000. Nilai aktual tetap dapat berubah mengikuti alamat, berat katalog, dan tarif Biteship.
+- Akun anonymous dan alamat QA sementara divalidasi kepemilikannya lalu dihapus; cleanup selesai tanpa menyentuh data customer.
 
 ## Rollback
 
